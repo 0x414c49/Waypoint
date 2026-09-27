@@ -1,6 +1,6 @@
 # Visual System — Quiet Workshop
 
-Status: Proposed for visual-direction confirmation
+Status: Confirmed on 2026-09-27
 Depends on: `docs/journeys/confirmed-interaction-model.md`
 
 ## Direction

@@ -1,6 +1,6 @@
 # Information Architecture
 
-Status: Proposed for visual/IA confirmation
+Status: Confirmed on 2026-09-27
 Principle: Today is home; detailed workflows remain contextual.
 
 ## Persistent destinations

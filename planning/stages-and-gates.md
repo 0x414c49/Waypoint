@@ -4,8 +4,8 @@ This file prevents the project from drifting into premature implementation. Work
 
 ## Current position
 
-**Active:** Visual system and information architecture
-**Blocked:** Domain model, API, architecture, and implementation until the preceding decisions are confirmed
+**Active:** Domain/data model
+**Blocked:** API, system architecture, and implementation until the preceding decisions are confirmed
 
 ## Stage 0 — Workspace initialization
 
@@ -67,17 +67,20 @@ Deliverables after UX confirmation:
 - [x] Buttons, states, contribution levels, light/dark behavior
 - [x] Mobile navigation and touch behavior
 
-Gate: explicit confirmation of the Quiet Workshop direction and four-destination information architecture.
+Gate: confirmed on 2026-09-27: Quiet Workshop and the four-destination information architecture were accepted.
 
 ## Stage 6 — Information architecture
 
 - [x] Small navigation model proposed
 - [x] Contextual versus top-level destinations proposed
 
+Gate: confirmed on 2026-09-27.
+
 ## Stage 7 — Domain/data model
 
-- [ ] Models, ownership, invariants, and state transitions
-- [ ] Duplication/speculation/history/SQL migration review
+- [x] Models, ownership, invariants, and state transitions proposed
+- [x] Plan/history boundaries and safe import behavior proposed
+- [x] Duplication/speculation/history/SQL migration review complete
 
 Gate: explicit data-model confirmation.
 

@@ -8,7 +8,7 @@ The product is intentionally **not** a project-management system or a data-entry
 
 ## Current stage
 
-The project has confirmed its product and UX direction and is defining the **visual system and information architecture**. No application code should be written yet.
+The project has confirmed its product, UX, visual system, and information architecture. It is now defining the **domain/data model**. No application code should be written yet.
 
 Start with:
 
@@ -22,7 +22,11 @@ Start with:
 8. [Visual system — Quiet Workshop](docs/design/visual-system.md)
 9. [Information architecture](docs/design/information-architecture.md)
 10. [Visual and IA review](docs/design/design-review.md)
-11. [Working agreement](planning/working-agreement.md)
+11. [Domain and data model](docs/architecture/domain-model.md)
+12. [Task lifecycle](docs/architecture/task-lifecycle.md)
+13. [Plan updates and history](docs/architecture/plan-and-history.md)
+14. [Domain model review](docs/architecture/domain-model-review.md)
+15. [Working agreement](planning/working-agreement.md)
 
 ## Working rule
 

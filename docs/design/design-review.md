@@ -1,6 +1,6 @@
 # Visual and Information Architecture Review
 
-Status: Ready for visual-direction confirmation
+Status: Confirmed on 2026-09-27
 
 ## Outcome
 
@@ -81,13 +81,13 @@ These representative combinations meet WCAG AA for normal text. Component-level 
 - Six-tab navigation including Search and Settings
 - Mobile focus mode that traps the user by hiding navigation for the whole session
 
-## Confirmation requested
+## Confirmed direction
 
-Confirm together:
+Confirmed together:
 
 1. **Quiet Workshop:** warm neutral surfaces, deep teal accent, compact native typography, radii capped at 8px.
 2. **Four destinations:** Today, Quarter, Journey, Decisions.
 3. **Utilities:** Thought and Search in the header/overlay; Settings in overflow.
 4. **Responsive behavior:** bottom navigation remains accessible while the active-session dock sits above it.
 
-After confirmation, mark the visual/IA gate complete and begin the domain/data model. Do not create polished production UI first; the next work is conceptual ownership, invariants, history preservation, and state transitions.
+The next stage is the domain/data model: conceptual ownership, invariants, history preservation, and state transitions. Production UI remains blocked.
