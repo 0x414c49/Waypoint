@@ -1,5 +1,9 @@
 # Visual Design
 
-This stage is intentionally unopened.
+The UX gate was confirmed on 2026-09-27. The proposed design direction is documented in:
 
-Do not define colors, typography, polished components, or high-fidelity screens until the journey and ASCII UX gate is explicitly confirmed.
+- [Visual System — Quiet Workshop](visual-system.md)
+- [Information Architecture](information-architecture.md)
+- [Visual and IA review](design-review.md)
+
+This remains a specification, not production UI. Data, API, architecture, and implementation work remain gated.

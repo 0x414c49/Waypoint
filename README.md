@@ -8,7 +8,7 @@ The product is intentionally **not** a project-management system or a data-entry
 
 ## Current stage
 
-The project is in **product discovery and journey exploration**. No application code should be written yet.
+The project has confirmed its product and UX direction and is defining the **visual system and information architecture**. No application code should be written yet.
 
 Start with:
 
@@ -17,8 +17,12 @@ Start with:
 3. [UX risk register](docs/product/ux-risk-register.md)
 4. [Core journeys](docs/journeys/core-journeys.md)
 5. [ASCII wireframes](docs/journeys/ascii-wireframes.md)
-6. [Preliminary UX evaluation](docs/journeys/ux-evaluation.md)
-7. [Working agreement](planning/working-agreement.md)
+6. [Confirmed interaction model](docs/journeys/confirmed-interaction-model.md)
+7. [Preliminary UX evaluation](docs/journeys/ux-evaluation.md)
+8. [Visual system — Quiet Workshop](docs/design/visual-system.md)
+9. [Information architecture](docs/design/information-architecture.md)
+10. [Visual and IA review](docs/design/design-review.md)
+11. [Working agreement](planning/working-agreement.md)
 
 ## Working rule
 

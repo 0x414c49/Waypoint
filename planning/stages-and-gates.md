@@ -4,8 +4,8 @@ This file prevents the project from drifting into premature implementation. Work
 
 ## Current position
 
-**Active:** Product discovery, journey exploration, and ASCII UX sketches
-**Blocked:** Visual system, domain model, API, architecture, and implementation until the preceding decisions are confirmed
+**Active:** Visual system and information architecture
+**Blocked:** Domain model, API, architecture, and implementation until the preceding decisions are confirmed
 
 ## Stage 0 — Workspace initialization
 
@@ -27,7 +27,7 @@ Deliverables:
 - [x] Representative-plan implications
 - [x] Highest-risk UX assumptions
 
-Gate: confirm that the problem, promise, primary user, and anti-goals are correct.
+Gate: confirmed on 2026-09-27 through approval to continue with the proposed plan.
 
 ## Stage 2 — Journey exploration
 
@@ -37,7 +37,7 @@ Deliverables:
 - [x] Alternatives and recommendations retained
 - [x] Edge cases and likely confusion identified
 
-Gate: choose the primary behaviors for Start, Pause/Resume, Finish, unfinished work, low-energy days, capture, weekly review, decision review, and plan updates.
+Gate: confirmed on 2026-09-27. Recommendations were accepted, including Finish Alternative A.
 
 ## Stage 3 — ASCII UX sketches
 
@@ -54,25 +54,25 @@ Gate: confirm screen hierarchy and interaction model, not visual styling.
 Deliverables:
 
 - [x] Preliminary heuristic evaluation
-- [ ] Feedback incorporated
-- [ ] Final chosen flow recorded
+- [x] Feedback/approval incorporated
+- [x] Final chosen flow recorded
 
-Gate: **explicit UX confirmation required.** Stop here before visual design.
+Gate: confirmed on 2026-09-27. The chosen flow is recorded in `docs/journeys/confirmed-interaction-model.md`.
 
 ## Stage 5 — Visual system
 
 Deliverables after UX confirmation:
 
-- [ ] Typography, spacing, radii, and semantic color tokens
-- [ ] Buttons, states, contribution levels, light/dark behavior
-- [ ] Mobile navigation and touch behavior
+- [x] Typography, spacing, radii, and semantic color tokens
+- [x] Buttons, states, contribution levels, light/dark behavior
+- [x] Mobile navigation and touch behavior
 
-Gate: explicit visual-direction confirmation.
+Gate: explicit confirmation of the Quiet Workshop direction and four-destination information architecture.
 
 ## Stage 6 — Information architecture
 
-- [ ] Small navigation model confirmed
-- [ ] Contextual versus top-level destinations confirmed
+- [x] Small navigation model proposed
+- [x] Contextual versus top-level destinations proposed
 
 ## Stage 7 — Domain/data model
 
