@@ -8,7 +8,7 @@ The product is intentionally **not** a project-management system or a data-entry
 
 ## Current stage
 
-The project has confirmed product, UX, visual, domain, API, and persistence behavior. The consolidated implementation review passed independent A/B verification and was explicitly approved on 2026-09-27. Implementation is now proceeding through the documented vertical slices, beginning with Slice 0.
+The project has confirmed product, UX, visual, domain, API, and persistence behavior. The consolidated implementation review passed independent A/B verification and was explicitly approved on 2026-09-27. Slice 0 passed its implementation gate; work now proceeds to the usable daily-heart Slice 1.
 
 Start with:
 
@@ -41,7 +41,8 @@ Start with:
 27. [Validation plan](planning/validation-plan.md)
 28. [Consolidated implementation gate](planning/implementation-gate.md)
 29. [Final A/B gate audit](planning/final-gate-audit.md)
-30. [Working agreement](planning/working-agreement.md)
+30. [Slice 0 validation evidence](planning/slice-0-validation.md)
+31. [Working agreement](planning/working-agreement.md)
 
 ## Working rule
 

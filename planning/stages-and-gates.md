@@ -4,8 +4,8 @@ This file prevents the project from drifting into premature implementation. Work
 
 ## Current position
 
-**Active:** Slice 0 — executable foundation
-**Blocked:** Slice 1 until the Slice 0 gate passes
+**Active:** Slice 1 — the daily heart
+**Blocked:** Slice 2 until the Slice 1 gate passes
 
 ## Stage 0 — Workspace initialization
 
@@ -111,6 +111,17 @@ One document must summarize confirmed product, UX, visual, domain, API, architec
 - [x] User explicitly approved implementation on 2026-09-27
 
 Production implementation is authorized and proceeds through the documented vertical slices.
+
+## Implementation delivery gates
+
+- [x] Slice 0 — executable foundation passed on 2026-09-27. Evidence: [Slice 0 validation](slice-0-validation.md).
+- [ ] Slice 1 — daily heart
+- [ ] Slice 2 — lived journey
+- [ ] Slice 3 — decisions
+- [ ] Slice 4 — plan lifecycle and Quarter
+- [ ] Slice 5 — search and bounded AI
+
+Each slice must pass its own behavioral, architecture, accessibility, and failure-path evidence before work begins on the next slice.
 
 ## Change discipline
 

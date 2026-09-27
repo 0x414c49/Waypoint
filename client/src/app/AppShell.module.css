@@ -1,0 +1,41 @@
+.shell {
+  min-height: 100%;
+}
+
+.header {
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.headerInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: var(--layout-max);
+  min-height: 64px;
+  margin: 0 auto;
+  padding: 0 var(--space-24);
+}
+
+.wordmark {
+  font-size: var(--text-compact);
+  line-height: var(--line-compact);
+  font-weight: 600;
+}
+
+.main {
+  width: min(100%, var(--layout-focus));
+  margin: 0 auto;
+  padding: var(--space-48) var(--space-24);
+}
+
+@media (max-width: 720px) {
+  .headerInner {
+    min-height: 56px;
+    padding: 0 var(--space-16);
+  }
+
+  .main {
+    padding: var(--space-32) var(--space-16);
+  }
+}
