@@ -1,6 +1,6 @@
 # Domain and Data Model
 
-Status: Proposed for data-model confirmation
+Status: Confirmed on 2026-09-27
 Scope: Storage-neutral logical model; no API or JSON file shape yet
 
 ## Modeling principles
@@ -95,6 +95,7 @@ Quarter
 Rules:
 
 - `startDate <= endDate`.
+- A User cannot have overlapping Quarter date ranges in v1; Today must resolve to at most one current Quarter.
 - `planRevision` is a monotonic integer incremented after each successful plan apply.
 - Quarter status (future/current/past) is derived from dates; do not persist it.
 - Success criteria preserve quarter intent but are not checkboxes or score inputs in the daily path.
@@ -350,8 +351,8 @@ DecisionReview
   id
   decisionId
   reviewedAt
-  outcome                  // HOLDS | ADJUST | SUPERSEDE
-  notes
+  outcome                  // HOLDS | ADJUST | SUPERSEDE | DEFERRED
+  notes?
   nextReviewDate?
   replacementDecisionId?
   createdAt
@@ -360,9 +361,11 @@ DecisionReview
 Rules:
 
 - Reviews are append-only.
+- `DEFERRED` records the confirmed Postpone action and requires `nextReviewDate`; it is not counted as a completed substantive review.
 - The current due date is the latest review’s `nextReviewDate`, otherwise the DecisionRecord’s `initialReviewDate`.
 - Review never overwrites original reasoning.
 - A superseding outcome links to a replacement decision when one exists.
+- Draft → Accepted is an explicit domain transition. Generic Decision editing cannot set status.
 
 Do not duplicate `reviewedAt` or latest outcome onto DecisionRecord.
 

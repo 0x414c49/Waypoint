@@ -1,6 +1,6 @@
 # Domain Model Review
 
-Status: Ready for data-model confirmation
+Status: Confirmed on 2026-09-27
 
 ## Summary
 
@@ -118,6 +118,8 @@ The review identified and included four cheap, important foundations:
 2. Immutable Task plan snapshot at the history boundary
 3. Append-only DecisionReview separate from accepted reasoning
 4. Small TaskLifecycleEvent history for Finish/Skip/Reopen/Undo
+
+API review also confirmed two small rules: Quarter date ranges do not overlap in v1, and postponing a decision review is represented by an append-only `DEFERRED` review with a required next date.
 
 Deliberately deferred because they are not painful foundational seams:
 

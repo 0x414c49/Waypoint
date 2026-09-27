@@ -4,8 +4,8 @@ This file prevents the project from drifting into premature implementation. Work
 
 ## Current position
 
-**Active:** Domain/data model
-**Blocked:** API, system architecture, and implementation until the preceding decisions are confirmed
+**Active:** REST/API and persistence behavior
+**Blocked:** Wider system architecture and implementation until the preceding decisions are confirmed
 
 ## Stage 0 — Workspace initialization
 
@@ -82,14 +82,14 @@ Gate: confirmed on 2026-09-27.
 - [x] Plan/history boundaries and safe import behavior proposed
 - [x] Duplication/speculation/history/SQL migration review complete
 
-Gate: explicit data-model confirmation.
+Gate: confirmed on 2026-09-27. Continue instruction accepted the proposed ownership, lifecycle, and history model.
 
 ## Stage 8 — API and persistence behavior
 
-- [ ] REST endpoints and dashboard aggregation
-- [ ] Use-case-owned task transitions
-- [ ] Error model and important request/response shapes
-- [ ] JSON storage port and safe-write behavior
+- [x] REST endpoints and dashboard aggregation proposed
+- [x] Use-case-owned task transitions proposed
+- [x] Error model and important request/response shapes proposed
+- [x] JSON storage port and safe-write behavior proposed
 
 Gate: explicit API confirmation.
 

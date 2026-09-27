@@ -8,7 +8,7 @@ The product is intentionally **not** a project-management system or a data-entry
 
 ## Current stage
 
-The project has confirmed its product, UX, visual system, and information architecture. It is now defining the **domain/data model**. No application code should be written yet.
+The project has confirmed its product, UX, visual system, information architecture, and domain model. It is now defining **REST/API and persistence behavior**. No application code should be written yet.
 
 Start with:
 
@@ -26,7 +26,12 @@ Start with:
 12. [Task lifecycle](docs/architecture/task-lifecycle.md)
 13. [Plan updates and history](docs/architecture/plan-and-history.md)
 14. [Domain model review](docs/architecture/domain-model-review.md)
-15. [Working agreement](planning/working-agreement.md)
+15. [REST API contract](docs/architecture/api-contract.md)
+16. [Dashboard contract](docs/architecture/dashboard-contract.md)
+17. [Error and conflict contract](docs/architecture/error-contract.md)
+18. [Persistence contract](docs/architecture/persistence-contract.md)
+19. [API and persistence review](docs/architecture/api-review.md)
+20. [Working agreement](planning/working-agreement.md)
 
 ## Working rule
 

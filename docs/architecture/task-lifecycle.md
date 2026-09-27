@@ -1,6 +1,6 @@
 # Task Lifecycle and Invariants
 
-Status: Proposed for data-model confirmation
+Status: Confirmed on 2026-09-27
 
 ## State meanings
 
@@ -178,6 +178,7 @@ Rules:
 - Today’s scheduled item remains Up next while unfinished work is primary.
 - A past untouched Not started item does not automatically displace Today or become overdue debt.
 - Past untouched items may appear neutrally in Quarter or as catch-up candidates on a conditional day.
+- On a `WHEN_CLEAR` day, the catch-up candidate is the most recent untouched past `DEFAULT` Task in the same Milestone. Older Milestones never create automatic backlog debt.
 - A session crossing midnight continues to own Today; the new day’s planned item becomes Up next.
 
 ## Ten-minute intention

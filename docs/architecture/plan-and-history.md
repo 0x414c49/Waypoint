@@ -1,6 +1,6 @@
 # Plan Updates and Historical Truth
 
-Status: Proposed for data-model confirmation
+Status: Confirmed on 2026-09-27
 
 ## Principle
 
@@ -72,6 +72,8 @@ No write occurs during preview.
 9. Record the Quarter’s current `planRevision` as the preview base.
 
 Validation failure returns the complete useful error set where practical and performs no writes.
+
+An unknown Quarter ID produces an explicit **Create quarter** preview mode. It is never fuzzy-matched to an existing Quarter by title or dates. Apply creates the Quarter only after the same preview/validation step and still rejects a date range that overlaps another Quarter for the User.
 
 ## Preview categories
 
