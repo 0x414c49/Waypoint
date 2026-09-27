@@ -1,6 +1,6 @@
 # Release Scope and Vertical Slices
 
-Status: Proposed for the consolidated implementation gate
+Status: Accepted for implementation on 2026-09-27
 
 ## Scope rule
 

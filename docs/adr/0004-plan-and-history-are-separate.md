@@ -1,6 +1,6 @@
 # ADR-0004: Separate current plan from historical context
 
-Status: Accepted foundation — 2026-09-27; Milestone-boundary amendment proposed for final gate
+Status: Accepted, including Milestone-boundary amendment — 2026-09-27
 
 ## Context
 

@@ -1,6 +1,6 @@
 # Learning Plan YAML Format — Version 1
 
-Status: Proposed normative contract for implementation  
+Status: Accepted normative contract for implementation on 2026-09-27
 Media type at the API boundary: JSON wrapper containing YAML source, as defined in the API contract
 
 ## Goals

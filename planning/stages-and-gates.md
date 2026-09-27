@@ -4,8 +4,8 @@ This file prevents the project from drifting into premature implementation. Work
 
 ## Current position
 
-**Active:** Explicit user approval of the independently verified implementation gate
-**Blocked:** Application implementation until the final implementation gate is explicitly approved
+**Active:** Slice 0 — executable foundation
+**Blocked:** Slice 1 until the Slice 0 gate passes
 
 ## Stage 0 — Workspace initialization
 
@@ -108,9 +108,9 @@ Gate: documented and ready for explicit confirmation through the consolidated im
 One document must summarize confirmed product, UX, visual, domain, API, architecture, v1 scope, and deferred scope.
 
 - [x] Consolidated review passes final independent A/B verification on 2026-09-27
-- [ ] User explicitly approves implementation
+- [x] User explicitly approved implementation on 2026-09-27
 
-Only then may production code begin, following vertical slices.
+Production implementation is authorized and proceeds through the documented vertical slices.
 
 ## Change discipline
 

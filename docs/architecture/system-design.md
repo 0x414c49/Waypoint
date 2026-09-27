@@ -1,6 +1,6 @@
 # System Design
 
-Status: Proposed for the consolidated implementation gate
+Status: Accepted for implementation on 2026-09-27
 
 ## Architectural shape
 
@@ -81,6 +81,9 @@ Rules:
 - Adapters implement ports and contain replaceable technical details.
 - `shared` contains API contracts, not domain entities, persistence types, mutable stores, or a generic utility dumping ground.
 - Features may use shared UI/contracts but do not reach into another feature's internals.
+- Route/page components compose focused feature components; they do not grow into whole-feature implementations.
+- Extract a component when it gains its own interaction, state, validation, reuse, or meaningful test boundary. Do not extract markup-only wrappers that obscure the screen hierarchy.
+- Component boundaries follow responsibility and comprehension rather than an arbitrary line-count quota; a file that owns multiple independent interactions must be split.
 
 ## Component responsibilities
 

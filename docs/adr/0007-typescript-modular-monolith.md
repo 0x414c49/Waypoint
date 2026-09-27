@@ -1,6 +1,6 @@
 # ADR-0007: TypeScript modular monolith
 
-Status: Proposed — 2026-09-27
+Status: Accepted — 2026-09-27
 
 ## Context
 

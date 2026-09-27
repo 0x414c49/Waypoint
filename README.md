@@ -8,7 +8,7 @@ The product is intentionally **not** a project-management system or a data-entry
 
 ## Current stage
 
-The project has confirmed product, UX, visual, domain, API, and persistence behavior. The consolidated implementation review has passed independent A/B verification and now awaits **explicit user approval**. No application code should be written until that approval.
+The project has confirmed product, UX, visual, domain, API, and persistence behavior. The consolidated implementation review passed independent A/B verification and was explicitly approved on 2026-09-27. Implementation is now proceeding through the documented vertical slices, beginning with Slice 0.
 
 Start with:
 
@@ -47,4 +47,4 @@ Start with:
 
 Each stage must leave a written decision behind. Later work must cite those decisions, and any change to a confirmed decision must be recorded in [the decision log](planning/decision-log.md).
 
-Implementation is blocked until the consolidated implementation gate is explicitly approved.
+Implementation follows the approved consolidated gate and must pass each slice's evidence checks before the next slice begins.

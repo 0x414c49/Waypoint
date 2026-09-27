@@ -1,6 +1,6 @@
 # ADR-0008: Local loopback single-process runtime
 
-Status: Proposed — 2026-09-27
+Status: Accepted — 2026-09-27
 
 ## Context
 
