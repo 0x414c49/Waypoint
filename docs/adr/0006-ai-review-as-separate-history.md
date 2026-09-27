@@ -10,6 +10,10 @@ AI advice may be useful evidence, but it is generated, repeatable, and fallible.
 
 Use an `AIReviewer` port and persist each successful result as its own append-only `AIReview` linked to a target. V1 uses a deterministic stub. AI output never changes Task, Decision, plan, score, or outcome.
 
+## Why
+
+Generated advice is useful evidence but not human truth; separating it preserves provenance and prevents silent authority over the learning record.
+
 ## Consequences
 
 - Generated advice remains distinguishable and auditable.

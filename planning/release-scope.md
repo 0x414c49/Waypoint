@@ -15,24 +15,24 @@ Deliver:
 - one root TypeScript package and quality scripts
 - React/Vite shell and Fastify same-origin server
 - shared transport-schema location
-- LocalUserProvider, injected Clock/IdGenerator, and logging baseline
+- LocalCurrentUserProvider, injected Clock/IdGenerator, and logging baseline
 - JsonJourneyStore initialization, validation, safe write, and recovery diagnostics
-- strict plan parser plus create-Quarter preview/apply application path, exercised by the representative fixture but never auto-completed or silently seeded
 - Quiet Workshop tokens, responsive shell, and accessible primitives
 
-Gate: the app starts locally, serves one origin, persists a no-history state safely, and passes store failure-path tests. No generic feature framework is added.
+Gate: the foundation harness starts locally with an injected validated no-history test seed, serves one origin, and passes store failure-path tests. The documented production User/Q4 seed is wired in Slice 1. No generic feature framework is added.
 
 ## Slice 1 — The daily heart
 
 Deliver only the shortest valuable loop:
 
-- Dashboard states needed for Onboarding/Light/Ready/Running/Paused/Finished
-- working Onboarding choices to import YAML or explicitly load the bundled representative plan
+- canonical local User and supplied Q4 plan seed, loaded from the bundled fixture through strict validation but with no import-management UI or execution/completion history
+- Dashboard states needed for Light/Ready/Running/Paused/Finished
 - one Today hero and compact Up next
 - Start, Do 10 minutes, Pause, Resume, Finish, and Undo/Reopen
 - Finish outcome plus optional takeaway
 - one-active-session conflict with Pause and switch
 - automatic elapsed time from Sessions
+- quiet contribution update derived from completed Session time
 - responsive desktop/mobile Today and keyboard/focus basics
 
 Gate: Open → Start → Pause/Resume → Finish → tiny reflection works without manual status or time entry, survives refresh/restart, and preserves exactly one history record per command despite retries.
@@ -63,14 +63,16 @@ Deliver:
 
 Gate: original reasoning remains immutable after Accept, reviews append safely under concurrency, and Decision work never blocks the Today action.
 
-## Slice 4 — Plan updates and Quarter
+## Slice 4 — Plan lifecycle and Quarter
 
 Deliver:
 
-- update preview with history-preservation explanations, acknowledgements, and atomic apply, extending the create-Quarter foundation from Slice 0
+- strict YAML import with validation
+- create/update preview with history-preservation explanations, acknowledgements, and atomic apply
 - normalized current-plan export
 - Quarter overview, FocusArea/Milestone navigation, success criteria, and between-quarter state
-- complete Q4 fixture as the acceptance case
+- Onboarding/empty-plan flow for an explicitly empty store or a future installation without a bundled plan
+- complete in-range Q4 schedule fixture as the acceptance case
 
 Gate: changing a plan cannot silently alter execution history, and an unchanged exported/reimported plan has an empty semantic diff.
 

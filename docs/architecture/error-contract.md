@@ -138,17 +138,20 @@ The response never reveals the earlier request body.
 | HTTP | Code | Meaning / UI behavior |
 |---:|---|---|
 | 400 | `MALFORMED_REQUEST` | JSON/query cannot be parsed |
+| 403 | `UNTRUSTED_ORIGIN` | Reject non-loopback Host or non-approved mutation Origin |
 | 404 | `RESOURCE_NOT_FOUND` | Missing or outside current ownership |
 | 409 | `ACTIVE_SESSION_CONFLICT` | Offer Pause and switch or Cancel |
 | 409 | `INVALID_TASK_TRANSITION` | Refresh and show current allowed actions |
 | 409 | `OPEN_CONTINUATION_CONFLICT` | Link to existing continuation |
 | 409 | `SESSION_OVERLAP` | Explain conflicting interval |
 | 409 | `DECISION_IMMUTABLE` | Accepted reasoning cannot be edited |
+| 409 | `PROMPT_DECISION_CONFLICT` | Prompt ID already belongs to a different Decision relationship |
 | 409 | `IDEMPOTENCY_KEY_REUSED` | Generate a new key for new intent |
 | 409 | `PLAN_REVISION_CHANGED` | Re-run preview |
 | 409 | `ACKNOWLEDGEMENT_REQUIRED` | Present required preservation acknowledgement |
 | 409 | `QUARTER_DATE_OVERLAP` | Explain the existing Quarter range |
 | 410 | `PLAN_PREVIEW_EXPIRED` | Re-run preview |
+| 413 | `PAYLOAD_TOO_LARGE` | Request exceeds its documented byte limit |
 | 412 | `STALE_WRITE` | Refresh resource |
 | 422 | `VALIDATION_FAILED` | Show field/document errors |
 | 428 | `PRECONDITION_REQUIRED` | Client programming/precondition issue |
@@ -174,7 +177,7 @@ The response never reveals the earlier request body.
 - Replace may have succeeded but final durability/response failed: return `STORE_DURABILITY_UNCERTAIN`; client retries with the identical Idempotency-Key.
 - Corruption/schema failure: fail closed, serve no guessed/repaired data, and perform no writes.
 - Missing/ambiguous initialized-store artifacts: return `RECOVERY_REQUIRED`; never seed over an existing or previously initialized directory.
-- API process startup may fail entirely for unrecoverable store validation. If it remains available for a recovery screen, all normal mutations return the corresponding 503 problem.
+- Marker/missing/corrupt/unsupported validation detected at startup stops the process before HTTP listen and reports terminal recovery guidance. Runtime store failures use the corresponding 503 Problem Details response.
 
 ## Logging
 

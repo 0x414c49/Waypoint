@@ -10,6 +10,10 @@ V1 is a private local tool for one learner. It needs inspectable persistence and
 
 Define one whole-state `JourneyStore` port and implement it with `JsonJourneyStore`. Serialize writes in the one process, validate every load/candidate/transition, and publish through temp write, flush, rolling backup, atomic replace, and directory flush where supported.
 
+## Why
+
+This is the smallest persistence design that keeps local data inspectable while making a complete learning action atomic and replaceable behind a real seam.
+
 ## Consequences
 
 - Data remains human-readable and the domain is storage-neutral.

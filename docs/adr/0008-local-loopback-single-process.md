@@ -10,6 +10,10 @@ V1 has no authentication and stores private reflection locally. Network exposure
 
 Run one fixed-port Node.js process bound only to loopback. Serve frontend and API from one origin, restrict Host/Origin, and serialize JsonJourneyStore writes with one in-process mutex. Stop startup on port conflict.
 
+## Why
+
+The no-auth privacy model and whole-file JSON transaction are honest only when one private local process owns the runtime and data directory.
+
 ## Consequences
 
 - Local privacy and JSON write assumptions are explicit.

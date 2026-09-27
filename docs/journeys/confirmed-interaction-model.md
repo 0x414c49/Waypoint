@@ -42,7 +42,8 @@ The app recommends one item using current reality before calendar order:
 3. Today’s scheduled item appears as **Up next** while unfinished work is open.
 4. With no open item, today’s scheduled plan item becomes the Ready item.
 5. On a conditional Friday, open/catch-up work is recommended before optional exploration.
-6. A light, buffer, holiday, or empty day stays light; the app does not manufacture work.
+6. A date with no eligible Default/When-clear work—such as an explicit rest, holiday, or empty date—stays light; the app does not manufacture work merely from the calendar or Milestone label.
+7. An explicitly Optional plan item may appear as **Only if useful**, but it never becomes the primary Ready hero or future backlog debt on its own.
 
 This is a recommendation policy, not a lock. Secondary actions allow intentionally closing/skipping open work or opening the next item.
 
@@ -113,7 +114,7 @@ The complete interaction must remain under 20 seconds in the normal case. If the
 - A planned ADR Task may contain a `decisionPrompt` with stable Decision ID, suggested title, and optional initial review date.
 - Plan import stores the prompt only; it never creates authored reasoning.
 - **Start decision draft** is a contextual secondary action on that Task.
-- Creating the Draft atomically links it to the Task and captures Task/Quarter snapshots if needed.
+- Creating the Draft atomically links it to the Task and captures Task/Milestone/Quarter snapshots if needed.
 - Accept is explicit and freezes original reasoning.
 - Task Finish and Decision Accept never trigger each other silently.
 

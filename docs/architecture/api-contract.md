@@ -35,6 +35,23 @@ Command POSTs require an `Idempotency-Key` header.
 - Replay lookup happens before stale-write checks, allowing a lost successful response to be recovered with its original precondition.
 - A deliberate later action uses a new key.
 
+Fingerprinting happens only after JSON/query headers and request schemas validate. The server applies documented defaults, preserves array order, sorts object keys recursively for canonical JSON, and includes method, canonical route, normalized validated body, `If-Match`, and other command preconditions. Unknown fields are rejected rather than ignored. Invalid requests create no receipt. Plan Apply fingerprints the exact preview token plus ordered acknowledgement IDs after schema normalization.
+
+## Input bounds
+
+Reject oversized input with `413 PAYLOAD_TOO_LARGE` and excessive valid structure with `422 VALIDATION_FAILED`; never truncate silently.
+
+- Normal JSON request body: 256 KiB. Plan Preview independently enforces both a 2 MiB raw JSON-wrapper limit and a 1 MiB decoded YAML-source limit. Escape-heavy content may reach the raw wrapper limit first.
+- `Idempotency-Key`: 16–128 visible ASCII characters limited to letters, digits, `.`, `_`, `:`, and `-`.
+- Opaque/user-authored IDs: 1–128 characters; title/name: 1–200; short labels/tags: 1–64.
+- At most 20 tags per Task/JourneyEntry and 20 items in each Decision list; one Decision may contain at most 20 options.
+- Description, reflection, Journey text, Decision long-text field, or AI text field: 20,000 characters each.
+- Finish `keyLearning`: 2,000 characters. Search query: 1–200 characters.
+- Paginated `limit`: 1–100, with endpoint defaults defined in route schemas.
+- Plan structure: limits in the version-1 plan contract.
+
+Text limits count Unicode code points after transport decoding. Domain validation rejects empty/whitespace-only values where a field is required.
+
 ## Shared task projection
 
 Task responses distinguish current intent from the context preserved when history began:
@@ -50,7 +67,6 @@ Task responses distinguish current intent from the context preserved when histor
     "plannedDate": "2026-11-03",
     "title": "Partial failure",
     "description": "What happens when the network fails halfway through?",
-    "plannedMinutes": 45,
     "tags": [],
     "recommendationMode": "DEFAULT",
     "removedFromPlanAt": null
@@ -59,14 +75,12 @@ Task responses distinguish current intent from the context preserved when histor
     "capturedAt": "2026-11-03T17:42:00Z",
     "planRevision": 2,
     "plannedDate": "2026-11-03",
-    "title": "Partial failure",
-    "plannedMinutes": 45
+    "title": "Partial failure"
   },
   "displayPlanSource": "HISTORICAL",
   "displayPlan": {
     "plannedDate": "2026-11-03",
-    "title": "Partial failure",
-    "plannedMinutes": 45
+    "title": "Partial failure"
   },
   "timing": {
     "actualSecondsAtGeneratedAt": 1680,
@@ -105,6 +119,14 @@ GET /api/dashboard
 ```
 
 Returns the entire Today screen from one consistent snapshot. See [Dashboard Contract](dashboard-contract.md).
+
+## Activity
+
+```text
+GET /api/activity?from=2026-10-01&to=2026-12-31
+```
+
+Returns one server-derived cell per local date with `sessionSeconds` and contribution `level`. Only closed Sessions contribute; an active interval first appears after a command closes it. The inclusive range is required, may span at most 366 days, and uses the same captured-timezone splitting and exact whole-second level thresholds as Dashboard/Milestone summaries. It returns no streak, target, rank, score, or “missed day” field. Dashboard embeds only the last 14 days; the longer activity read supports Journey in Slice 2.
 
 ## Quarters and milestones
 
@@ -358,7 +380,7 @@ Relationship semantics:
 - explicit `null`: do not link
 - string: validate and link that Task
 
-The same rule applies to optional Milestone/Decision relationships only where inference is defined; they otherwise default to null. Linking an untouched Task captures its TaskPlanSnapshot and its Quarter's initial QuarterIntentSnapshot in the same transaction. Create returns `201 Created`.
+The same rule applies to optional Milestone/Decision relationships only where inference is defined; they otherwise default to null. Linking an untouched Task captures its TaskPlanSnapshot plus containing Milestone/Quarter snapshots. Linking directly to a Milestone captures Milestone/Quarter snapshots even without a Task. Create returns `201 Created`.
 
 `PUT` updates only JourneyEntry-owned fields and requires `If-Match`. Explicit `DELETE` requires `If-Match` and returns `204`. Plan import never reaches these endpoints or records.
 
@@ -376,8 +398,9 @@ POST /api/decisions/:id/review
 
 List filters: `quarterId`, status, `review=due`, cursor, and limit.
 
-- Create produces an independent Draft, requires `Idempotency-Key`, and accepts `{ title, quarterId?, relatedTaskId?, initialReviewDate? }`.
-- Contextual draft creation has an empty body, uses the Task's `decisionPrompt`, requires Task `If-Match` plus `Idempotency-Key`, creates at most that prompt's stable Decision ID, and atomically captures Task/Quarter snapshots when needed.
+- Create produces an independent Draft, requires `Idempotency-Key`, and accepts `{ title, quarterId?, relatedTaskId?, initialReviewDate? }`. A Task link captures Task/Milestone/Quarter snapshots; a direct Quarter link captures QuarterIntentSnapshot.
+- Contextual draft creation has an empty body, uses the Task's `decisionPrompt`, requires Task `If-Match` plus `Idempotency-Key`, creates at most that prompt's stable Decision ID, and atomically captures Task/Milestone/Quarter snapshots when needed.
+- If that prompt's Decision already exists and is linked to the same Task, a later call with a new command key returns `200` with the current Draft/Accepted/Superseded resource and records a no-op receipt. If the stable ID belongs to another relationship, return `409 PROMPT_DECISION_CONFLICT`.
 - PUT replaces editable Draft reasoning and requires `If-Match`. Its complete body contains `title`, optional `decisionDate`, optional `context`, `constraints`, `options`, optional `decision`, optional `consequences`, `assumptions`, optional `falsifier`, and optional `initialReviewDate`.
 - Accepted reasoning rejects PUT with `409 DECISION_IMMUTABLE`.
 - Accept is an explicit command requiring Decision `If-Match` and `Idempotency-Key`; its optional `{ decisionDate }` body supplies the local date when the Draft does not already have one. Accept validates the minimal complete reasoning defined by the domain and never uses generic status mutation.
@@ -461,6 +484,8 @@ Response:
 
 An unknown Quarter ID returns `mode = CREATE_QUARTER`; it is never fuzzy-matched by title/dates.
 
+Create mode returns `basePlanRevision: null`. A successful create starts the new Quarter at `planRevision: 1`; later successful applies increment it by exactly one.
+
 ### Apply
 
 Requires `Idempotency-Key`:
@@ -503,7 +528,7 @@ Week body:
 { "milestoneId": "week-5" }
 ```
 
-Each requires `Idempotency-Key`, creates one completed historical AIReview, and returns `201 Created`. Linking an untouched Task also captures its Task/Quarter snapshots in the same transaction. Provider failure creates no record. The StubAIReviewer completes synchronously in v1. A deliberate new review uses a new key and creates another record; transport retry does not.
+Each requires `Idempotency-Key`, creates one completed historical AIReview, and returns `201 Created`. A Task review captures Task/Milestone/Quarter snapshots; a Week review captures Milestone/Quarter snapshots; a Quarter review captures QuarterIntentSnapshot. Provider failure creates no record. The StubAIReviewer completes synchronously in v1. A deliberate new review uses a new key and creates another record; transport retry does not.
 
 No score is returned. AI cannot mutate its target.
 
@@ -515,6 +540,8 @@ No score is returned. AI cannot mutate its target.
 | 201 | Resource/continuation/review/quarter created |
 | 204 | Explicit JourneyEntry delete |
 | 400 | Malformed JSON/query syntax |
+| 403 | Untrusted Host/Origin for the local runtime |
+| 413 | Request body exceeds the route limit |
 | 404 | Missing or not owned resource |
 | 409 | Domain/concurrency workflow conflict |
 | 410 | Expired plan preview |

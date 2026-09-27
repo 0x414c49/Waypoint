@@ -10,6 +10,10 @@ The app needs strong interaction quality and explicit domain boundaries, but its
 
 Use one TypeScript package containing a React/Vite client, Fastify server, shared transport contracts, pure domain modules, application use cases, and adapter ports. Use explicit imports/factory wiring rather than a service framework.
 
+## Why
+
+One language and deployable keep the local app simple, while module and port boundaries protect the few areas expected to change.
+
 ## Consequences
 
 - One toolchain and process keep implementation approachable.

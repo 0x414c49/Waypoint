@@ -16,10 +16,12 @@ The documents confirm intended behavior, not human performance. Claims such as �
 | Pausing before the Finish sheet is acceptable | Compare cancel/close behavior with users | Users understand the Task is Paused and can recover without surprise; otherwise reopen the interaction decision | Slice 1 prototype |
 | Do 10 minutes reduces low-energy friction | Scenario test | User can state what will happen, begin in one action, and is not auto-finished at ten minutes | Slice 1 |
 | Unfinished work priority feels supportive | Next-day Paused + scheduled-item scenario | User identifies Resume as primary and Up next as non-lost, without interpreting either as overdue guilt | Slice 1 |
+| Holiday/optional work remains genuinely optional | Walk through Week 12 and buffer-reflection dates | Today stays Light, labels the item “Only if useful,” and creates no action/debt when ignored | Slice 1 |
 | Quick Thought is capture-first | Mobile and desktop task | Composer focused in one activation; save requires text only; inferred link is visible/removable | Slice 2 |
 | Weekly review feels generated, not assigned | Review walkthrough | User can explain the week without checking a “review complete” box or reading a score | Slice 2 |
 | Decision review stays secondary | Due-review scenario while work is Ready | User still identifies Start as primary; can postpone in one action | Slice 3 |
 | Plan updates feel safe | Change/remove active and historical Tasks | User predicts what will change and explicitly understands what history is preserved before Apply | Slice 4 |
+| Core mobile actions work one-handed | Run Today, Start, Pause, Resume, Thought, and Finish on a physical phone in both hands separately | Primary controls remain reachable and usable without switching to a desktop layout; text entry may naturally use both hands | Slice 1 |
 
 Use at least one experienced engineer other than the builder for comprehension tests before calling the interaction validated. Record observations, not compliments.
 
@@ -46,17 +48,22 @@ Automated checks are a floor, not proof.
 - Historical milestone membership and `statusAtPeriodEnd` after later carry/reopen/correction.
 - Snapshot capture on Start, Skip, Journey link, Decision link, and AI link.
 - Dashboard Onboarding, future, between-quarter, overlap rejection, and active old-Quarter Task.
+- Dashboard 14-day and full Activity projections split cross-midnight Sessions identically and update after Pause/Finish without persisted counters.
 - Normative Q4 fixture validation and normalized export/reimport empty diff.
 
 ## Persistence failure evidence
 
-- Interrupted initialization is recognized as recovery, never a new empty store.
+- Interrupted `.store.init-*` initialization is recognized as recovery, never ignored or replaced by a new store.
 - Invalid marker/primary/schema fails closed.
 - Failure before replace preserves the prior primary.
 - Simulated uncertain result after replace is safely recovered with the same command key.
 - Valid backup is reported but never silently restored.
 - Store mutex serializes writes and times out with `STORE_BUSY` under a controlled test.
+- Store transition validation rejects plan-owned changes under `STANDARD`, execution changes under `PLAN_APPLY`, the wrong Journey deletion target, and HTTP access to `SCHEMA_MIGRATION`.
+- Updating an existing JourneyEntry from no Milestone/Task link to a valid link captures the required Task/Milestone/Quarter snapshots in that same transaction.
 - Private permissions and loopback-only binding are verified on the supported development platform.
+
+Physical-phone reach testing uses a no-private-data prototype or USB reverse port forwarding (for example Android `adb reverse`) to the unchanged loopback server. Production binding is never relaxed merely to run a usability test.
 
 ## Performance budgets
 

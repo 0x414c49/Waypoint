@@ -8,7 +8,7 @@ The product is intentionally **not** a project-management system or a data-entry
 
 ## Current stage
 
-The project has confirmed product, UX, visual, domain, API, and persistence behavior. It is now completing **system architecture, ADRs, and the consolidated implementation review**. No application code should be written until the final gate is explicitly approved.
+The project has confirmed product, UX, visual, domain, API, and persistence behavior. The consolidated implementation review has passed independent A/B verification and now awaits **explicit user approval**. No application code should be written until that approval.
 
 Start with:
 
@@ -40,7 +40,8 @@ Start with:
 26. [Release scope and slices](planning/release-scope.md)
 27. [Validation plan](planning/validation-plan.md)
 28. [Consolidated implementation gate](planning/implementation-gate.md)
-29. [Working agreement](planning/working-agreement.md)
+29. [Final A/B gate audit](planning/final-gate-audit.md)
+30. [Working agreement](planning/working-agreement.md)
 
 ## Working rule
 

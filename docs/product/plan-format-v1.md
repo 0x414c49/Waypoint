@@ -70,6 +70,7 @@ tasks:
 - Dates are plain `YYYY-MM-DD` calendar dates, never timestamps.
 - Array order is meaningful and becomes the persisted `position`.
 - Parse and validate the entire document before previewing changes.
+- Bounds: at most 100 success criteria, 50 FocusAreas, 200 Milestones, and 5,000 Tasks. API-wide ID/text/tag limits also apply to plan values.
 
 ## Stable IDs
 
@@ -159,7 +160,7 @@ Optional:
 - `description`
 - `plannedMinutes` (positive integer)
 - `tags` (defaults to `[]`)
-- `recommendationMode` (defaults to `DEFAULT`)
+- `recommendationMode` (defaults to `DEFAULT`): `DEFAULT | WHEN_CLEAR | OPTIONAL`
 - `decisionPrompt`
 
 Rules:
@@ -169,6 +170,7 @@ Rules:
 - Array order determines order among tasks with the same date.
 - `DEFAULT` work may become Today’s normal recommendation.
 - `WHEN_CLEAR` work yields to unfinished work and same-Milestone catch-up.
+- `OPTIONAL` work never becomes the automatic Today hero; it may appear as a calm “only if useful” suggestion.
 - The plan cannot supply Task status, Sessions, actual time, outcome, reviews, snapshots, timestamps, or continuation links.
 
 ## Decision prompt

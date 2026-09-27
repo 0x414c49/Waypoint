@@ -8,7 +8,11 @@ V1 is local and single-user, but hard-coding ownership throughout use cases woul
 
 ## Decision
 
-Application use cases depend on `CurrentUserProvider`. The v1 `LocalUserProvider` returns the seeded local User. Do not add authentication fields, profile screens, or fake session infrastructure.
+Application use cases depend on `CurrentUserProvider`. The v1 `LocalCurrentUserProvider` returns the seeded local User. Do not add authentication fields, profile screens, or fake session infrastructure.
+
+## Why
+
+This tiny seam keeps ownership explicit and later authentication replaceable without pretending v1 has a security system it does not need.
 
 ## Consequences
 

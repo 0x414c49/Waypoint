@@ -29,7 +29,7 @@ Legend:
 │ │ What happens when the network fails halfway through      │ │
 │ │ an operation?                                            │ │
 │ │                                                          │ │
-│ │ About 45 min                                             │ │
+│ │ Week 5 · Tue 3 Nov                                      │ │
 │ │                                                          │ │
 │ │                    [ Start session ]                     │ │
 │ │                                                          │ │
@@ -79,7 +79,7 @@ Trade-off: It exposes breadth but asks the learner to parse a dashboard before s
 │ Finish as partial       Skip intentionally                   │
 ├──────────────────────────────────────────────────────────────┤
 │ UP NEXT TODAY                                                │
-│ Partial failure · Systems Reliability · about 45 min    View │
+│ Partial failure · Systems Reliability · Tue 3 Nov       View │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -115,7 +115,7 @@ This state gives permission to follow the plan’s intentional lightness. It doe
 │ Partial failure                                              │
 │                                                              │
 │                            18:42                             │
-│                        about 45m planned                     │
+│                         Week 5 · Tue                         │
 │                                                              │
 │                          [ Pause ]                           │
 │                                                              │
@@ -287,7 +287,7 @@ The overview reports phase and evidence without combining them into a fictional 
 ┌──────────────────────────────────────────────────────────────┐
 │ ← Week 5                                                     │
 │ PARTIAL FAILURE                                  FINISHED    │
-│ Systems Reliability · planned Tue 3 Nov · about 45m          │
+│ Systems Reliability · planned Tue 3 Nov                      │
 ├──────────────────────────────────────────────────────────────┤
 │ OUTCOME                                                      │
 │ Made progress · finished Tue 3 Nov at 20:14                   │
@@ -442,7 +442,7 @@ Added/Changed/Removed is the primary representation. A raw Git-style diff may ex
 │ network fails halfway      │
 │ through an operation?      │
 │                            │
-│ About 45 min               │
+│ Week 5 · Tue 3 Nov         │
 │ Do 10 minutes              │
 │                            │
 │ Mon ✓  Tue Today  Wed Next │

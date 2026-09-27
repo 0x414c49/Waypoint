@@ -39,7 +39,7 @@ Every nontrivial addition has a confirmed use:
 
 - `timeZone` / `timeZoneAtStart`: Today and cross-midnight truth
 - Milestone `mode`: explicit light/buffer/retro weeks in the Q4 plan
-- Task `recommendationMode`: conditional Friday exploration
+- Task `recommendationMode`: normal, when-clear/catch-up-aware, or genuinely optional recommendation semantics
 - Session `intentionMinutes`: Do 10 minutes across refresh
 - TaskLifecycleEvent: truthful Finish/Skip/Reopen/Undo history
 - `planRevision`: stale preview prevention

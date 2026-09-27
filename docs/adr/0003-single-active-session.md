@@ -10,6 +10,10 @@ Concurrent timers would make actual effort ambiguous and force manual cleanup—
 
 Allow at most one active Session per User. Starting or resuming another Task returns an explicit conflict that can atomically Pause current and switch, or cancel.
 
+## Why
+
+One active interval makes elapsed effort and the current Today state unambiguous without asking the learner to reconcile overlapping timers.
+
 ## Consequences
 
 - Elapsed time and the Running hero are unambiguous.

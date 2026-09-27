@@ -10,6 +10,10 @@ The client must not reconstruct Task lifecycle, unfinished-work priority, or Tod
 
 Expose a resource/action REST API. `GET /api/dashboard` returns one consistent tagged Today projection. Commands use explicit action endpoints, ETags, idempotency keys, and RFC 9457 Problem Details.
 
+## Why
+
+One server-owned projection prevents the browser from duplicating lifecycle and recommendation rules while REST keeps the boundary direct and testable.
+
 ## Consequences
 
 - The browser stays a thin interaction layer.

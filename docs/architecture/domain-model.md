@@ -156,6 +156,7 @@ Milestone
   endDate
   mode           // STANDARD | LIGHT | BUFFER | RETRO
   position
+  intentSnapshot?
   createdAt
   updatedAt
   removedFromPlanAt?
@@ -165,7 +166,27 @@ Rules:
 
 - Milestone dates must sit within the Quarter.
 - `mode` represents explicit plan intent and supports light, buffer, and retrospective weeks without manufacturing normal work.
+- Milestone `mode` frames the period but does not override an individual Task's `recommendationMode`; a LIGHT week may still contain explicitly planned Default work.
 - Weekly totals and review content are generated from tasks/sessions; they are not fields on Milestone.
+
+### Milestone intent snapshot
+
+When a Milestone first gains durable history, capture one immutable boundary:
+
+```text
+MilestoneIntentSnapshot
+  capturedAt
+  planRevision
+  timeZoneAtCapture
+  title
+  description?
+  startDate
+  endDate
+  mode
+  position
+```
+
+This preserves the named period and its cutoff for historical summaries after a plan update. Current Milestone fields may still change through an accepted plan import.
 
 ## Task
 
@@ -185,7 +206,7 @@ Task
   plannedMinutes?
   tags[]
   position
-  recommendationMode       // DEFAULT | WHEN_CLEAR
+  recommendationMode       // DEFAULT | WHEN_CLEAR | OPTIONAL
   decisionPrompt?
     decisionId
     suggestedTitle
@@ -205,6 +226,7 @@ Task
 
 - Plan import may write only plan-owned fields.
 - `recommendationMode = WHEN_CLEAR` models conditional exploration such as Friday work that should yield to catch-up. It is plan intent, not a priority score.
+- `recommendationMode = OPTIONAL` marks “only if useful” work that may appear as quiet context but never becomes Today’s Ready hero automatically. The learner may still start it deliberately from context/Quarter.
 - `decisionPrompt` marks planned work that is expected to produce an ADR. It surfaces a contextual draft action but does not create a DecisionRecord during import.
 - `removedFromPlanAt` means only “not in the current plan.” It never means Skipped or Finished.
 - `plannedMinutes` must be positive when present.
@@ -245,7 +267,7 @@ History-bearing actions include:
 - skipping an untouched item
 - linking a JourneyEntry, DecisionRecord, or AIReview to the task
 
-The current plan projection may later change through an accepted import; task history displays the immutable snapshot. This is intentional, bounded duplication that prevents a later rename, date change, or focus-area change from rewriting what the learner actually encountered.
+The same transaction captures the containing MilestoneIntentSnapshot (when the Task has a Milestone) and QuarterIntentSnapshot if absent. The current plan projection may later change through an accepted import; task history displays the immutable snapshot. This is intentional, bounded duplication that prevents a later rename, date change, focus-area change, or period-boundary change from rewriting what the learner actually encountered.
 
 It is not a per-field history, revision chain, or event-sourced plan.
 

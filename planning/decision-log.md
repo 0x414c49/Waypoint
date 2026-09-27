@@ -25,6 +25,10 @@ This log records product and UX decisions before formal architecture ADRs begin.
 | 2026-09-27 | Use a TypeScript modular monolith with React/Vite, Fastify, and TypeBox transport schemas. | Proposed for final gate | One toolchain and one deployable fit the local product while preserving real domain/adapter boundaries. | System design, technology stack, ADR-0007 |
 | 2026-09-27 | Run v1 as one fixed-port loopback process with same-origin frontend/API. | Proposed for final gate | No-auth local use and JSON serialization are honest only inside an explicit private single-process boundary. | System design, ADR-0008 |
 | 2026-09-27 | Implement in vertical slices, validating the daily heart before secondary surfaces. | Proposed for final gate | The complete contract should not become one oversized first delivery. | Release scope, validation plan |
+| 2026-09-27 | Treat holiday/rest work as `OPTIONAL`, distinct from normal and when-clear work. | Proposed for final gate | “Otherwise rest” must never resolve to a required-looking Ready hero or backlog debt. | Plan format, Q4 fixture, Dashboard contract |
+| 2026-09-27 | Snapshot Milestone boundaries at their first history-bearing action. | Proposed for final gate | Later plan edits must not move historical effort or change a period-end state. | Domain model, temporal attribution, ADR-0004 |
+| 2026-09-27 | Pass a closed exceptional-write intent into JourneyStore transactions. | Proposed for final gate | Store transition validation cannot infer plan-apply or explicit-delete authority from old/new state alone. | Persistence contract, system design |
+| 2026-09-27 | Use `data/store` with an explicit marker, abandoned-initialization detection, and the supplied plan as the no-history production seed. | Proposed for final gate | The tracked data parent must not look initialized, and interrupted first writes must fail closed. | Persistence contract, release scope |
 
 ## Entry format for future changes
 

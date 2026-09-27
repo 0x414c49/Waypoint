@@ -15,7 +15,7 @@ Browser
                           ├── pure domain policies/projections
                           └── ports
                                 ├── JourneyStore → JsonJourneyStore
-                                ├── CurrentUserProvider → LocalUserProvider
+                                ├── CurrentUserProvider → LocalCurrentUserProvider
                                 └── AIReviewer → StubAIReviewer
 
 Cross-cutting injected utilities: Clock, IdGenerator, Logger
@@ -27,11 +27,12 @@ This is one deployable system with module boundaries, not distributed services. 
 
 ### Production/local use
 
-- One Node.js process binds a fixed loopback address and port.
+- One Node.js process binds `127.0.0.1:4173`; it never falls back to another address or port.
+- Before binding/listening, startup initializes or validates the default `data/store` and resolves the canonical stored local user; recovery-required state stops startup with terminal guidance.
 - Fastify serves the built frontend and `/api` from the same origin.
 - The browser never reads the JSON store directly.
 - The fixed port is the v1 single-instance authority; startup stops if it cannot bind.
-- No CORS is enabled. Mutating browser requests require an allowed same-origin `Origin`; `Host` is restricted to loopback names/addresses to reduce DNS-rebinding exposure.
+- No CORS is enabled. Production accepts `Host` only as `127.0.0.1:4173` or `localhost:4173`. `POST`, `PUT`, `PATCH`, and `DELETE` require `Origin` exactly `http://127.0.0.1:4173` or `http://localhost:4173`; missing, `null`, or other origins return `403 UNTRUSTED_ORIGIN`. Safe reads still require an allowed Host. Development explicitly adds only the configured Vite proxy origin.
 - V1 is responsive at mobile viewport sizes but is not exposed to a phone over LAN or the public internet. Remote-device use requires a later authenticated deployment design.
 
 ### Development
@@ -102,7 +103,7 @@ Rules:
 
 ### JourneyStore
 
-The confirmed whole-state port has two operations: project from one immutable validated snapshot, and transact once against a private mutable draft. A transaction returns only an immutable committed result/snapshot. JsonJourneyStore implements the safe-write and recovery contract.
+The confirmed whole-state port has two operations: project from one immutable validated snapshot, and transact once against a private mutable draft. Transactions carry the persistence contract's closed intent capability so exceptional plan changes, one explicit Journey deletion, and schema migration can be validated without inferring caller authority. A transaction returns only an immutable committed result/snapshot. JsonJourneyStore implements the safe-write and recovery contract.
 
 ### CurrentUserProvider
 
@@ -139,7 +140,7 @@ Use cases receive these small utilities so timestamps, Today, undo windows, stab
 1. Client sends Task `If-Match` and a fresh `Idempotency-Key`.
 2. Route validates the transport and calls one application command.
 3. Store transaction checks receipt replay first, then Task precondition and single-active-session invariant.
-4. Domain command captures Task/Quarter snapshots if needed, appends/starts the Session, updates the status projection, and records the receipt.
+4. Domain command captures Task/Milestone/Quarter snapshots if needed, appends/starts the Session, updates the status projection, and records the receipt.
 5. The durable commit completes once; a fresh Dashboard is projected from committed state.
 
 ### Finish
@@ -151,7 +152,7 @@ Use cases receive these small utilities so timestamps, Today, undo windows, stab
 
 ### Quick Thought or contextual Decision
 
-One transaction creates the new JourneyEntry or Draft Decision, validates the link, and captures TaskPlanSnapshot plus QuarterIntentSnapshot if this is the Task's first durable history. Plan import never creates either record.
+One transaction creates the new JourneyEntry or Draft Decision, validates the link, and captures TaskPlanSnapshot plus containing Milestone/Quarter snapshots if this is the first durable history. Direct Milestone/Quarter links capture their snapshots even without a Task. Plan import never creates authored history.
 
 ### Plan preview and apply
 

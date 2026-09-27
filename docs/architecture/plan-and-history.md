@@ -59,7 +59,20 @@ A Task becomes history-bearing when its immutable TaskPlanSnapshot is captured. 
 
 Once history-bearing, the Task record cannot be hard-deleted by plan import. History views render plan context from the snapshot.
 
-The same transaction captures QuarterIntentSnapshot when the Quarter first becomes history-bearing. Later imports may update current Quarter intent, while retrospectives can still show the original mantra, success criteria, and focus-area framing.
+The same transaction captures MilestoneIntentSnapshot for the Task's Milestone and QuarterIntentSnapshot when absent.
+
+A Milestone also becomes history-bearing without a Task when:
+
+- a JourneyEntry links directly to it, including a weekly reflection
+- an AIReview targets it as `WEEK`
+
+A Quarter becomes history-bearing without a Task when:
+
+- a DecisionRecord links directly through `quarterId`
+- an AIReview targets it as `QUARTER`
+- one of its Milestones becomes history-bearing
+
+These direct-link actions capture the relevant Milestone/Quarter snapshots in their transaction. Later imports may update current intent, while summaries and retrospectives retain the original period boundary, mantra, success criteria, and focus framing.
 
 ## Preview pipeline
 
@@ -165,9 +178,11 @@ If the base revision changed after preview, reject apply and require a fresh pre
 ## FocusArea and Milestone changes
 
 - Pristine unreferenced records removed from the plan may be deleted.
-- Records referenced by a Task snapshot or preserved Task remain as tombstones with `removedFromPlanAt`.
+- A FocusArea referenced by a preserved Task or TaskPlanSnapshot remains as a tombstone with `removedFromPlanAt`.
+- A Milestone remains as a tombstone when it has an intent snapshot or is referenced by any current/preserved Task, TaskPlanSnapshot, JourneyEntry, or `WEEK` AIReview.
 - A renamed FocusArea or Milestone updates current plan intent; snapshots retain the original display name/title for historical views.
 - Removing a group cannot cascade-delete Tasks or history.
+- Store reference validation runs after these preservation rules; plan apply may never leave a dangling inbound reference.
 
 ## Why one snapshot, not full plan versioning
 
@@ -200,4 +215,5 @@ Those features solve audit/restore scenarios that have not been requested.
 7. History-bearing records are never hard-deleted.
 8. Removed-from-plan is independent from Skipped.
 9. Active conflicts offer no destructive-history resolution.
-10. Export reconstructs current plan intent, not execution records or private reflection, unless a separate history export is explicitly requested later.
+10. Milestone and Quarter snapshots are captured for direct history links even when no Task is involved.
+11. Export reconstructs current plan intent, not execution records or private reflection, unless a separate history export is explicitly requested later.

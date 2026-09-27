@@ -42,6 +42,27 @@ Dashboard is the server-resolved read model for Today. It answers “What should
     "task": {},
     "remainingTodayCount": 0
   },
+  "optionalToday": null,
+  "activityPreview": {
+    "startDate": "2026-10-21",
+    "endDate": "2026-11-03",
+    "days": [
+      { "date": "2026-10-21", "sessionSeconds": 0, "level": 0 },
+      { "date": "2026-10-22", "sessionSeconds": 0, "level": 0 },
+      { "date": "2026-10-23", "sessionSeconds": 0, "level": 0 },
+      { "date": "2026-10-24", "sessionSeconds": 0, "level": 0 },
+      { "date": "2026-10-25", "sessionSeconds": 0, "level": 0 },
+      { "date": "2026-10-26", "sessionSeconds": 0, "level": 0 },
+      { "date": "2026-10-27", "sessionSeconds": 0, "level": 0 },
+      { "date": "2026-10-28", "sessionSeconds": 0, "level": 0 },
+      { "date": "2026-10-29", "sessionSeconds": 0, "level": 0 },
+      { "date": "2026-10-30", "sessionSeconds": 0, "level": 0 },
+      { "date": "2026-10-31", "sessionSeconds": 0, "level": 0 },
+      { "date": "2026-11-01", "sessionSeconds": 0, "level": 0 },
+      { "date": "2026-11-02", "sessionSeconds": 3120, "level": 3 },
+      { "date": "2026-11-03", "sessionSeconds": 1680, "level": 2 }
+    ]
+  },
   "milestoneSummary": {
     "id": "week-5",
     "title": "Week 5",
@@ -118,7 +139,7 @@ ONBOARDING | READY | RUNNING | PAUSED | FINISHED | LIGHT
 No current work recommendation exists. `reason` explains the plan state:
 
 ```text
-PLAN_LIGHT | PLAN_BUFFER | NO_PLANNED_ITEM | ALL_ITEMS_CLOSED | BETWEEN_QUARTERS | QUARTER_NOT_STARTED
+PLAN_LIGHT | PLAN_BUFFER | PLAN_OPTIONAL | NO_PLANNED_ITEM | ALL_ITEMS_CLOSED | BETWEEN_QUARTERS | QUARTER_NOT_STARTED
 ```
 
 Skipped-only days resolve to Light, not Finished or failure. Primary action may be absent; the server never manufactures reflection work merely to fill the page.
@@ -137,9 +158,11 @@ Using User timezone and one consistent snapshot:
    3. otherwise select today’s first `WHEN_CLEAR` Task → Ready.
 6. If no higher-priority recommendation exists and a non-undone Finished event occurred today → Finished.
 7. If no Quarter exists at all → Onboarding.
-8. Otherwise → Light with a semantic reason. With no current Quarter, use `BETWEEN_QUARTERS` or `QUARTER_NOT_STARTED` and return the nearest relevant Quarter summary when one exists.
+8. Otherwise → Light with a semantic reason. With no current Quarter, use `BETWEEN_QUARTERS` or `QUARTER_NOT_STARTED` and return the nearest relevant Quarter summary when one exists. If untouched `OPTIONAL` work is scheduled today, use `PLAN_OPTIONAL` and expose at most one `optionalToday` item without making it the hero or primary action.
 
 Past untouched work from older Milestones never becomes automatic backlog debt. Multiple same-day eligible Tasks use plan `position`; remaining items are summarized quietly rather than rendered as competing hero cards.
+
+Milestone `mode` affects copy/context, not Task eligibility by itself. A LIGHT or BUFFER Milestone can contain explicit Default work; an Optional/rest date remains Light because no eligible hero Task exists.
 
 ## Active Session
 
@@ -176,6 +199,10 @@ SCHEDULED_TODAY | TODAY_WHEN_CLEAR | CATCH_UP | NEXT_PLANNED
 
 When Running/Paused, today’s Default item is preferred as Up next. `remainingTodayCount` reports additional eligible items without displaying a backlog of equal cards.
 
+## Optional today
+
+`optionalToday` is quiet plan context for an untouched `OPTIONAL` item scheduled today. It contains the Task projection and the label **Only if useful**. It never changes Dashboard to Ready, never displaces Running/Paused/Finished, and never creates overdue/catch-up debt. The learner can open or start it deliberately; ignoring it creates no lifecycle event and needs no dismissal.
+
 ## Milestone summary
 
 The Dashboard embeds only compact generated facts needed by Today. Full rows and optional weekly reflection come from the milestone-summary endpoint.
@@ -188,6 +215,22 @@ Counts remain separate:
 - none combine into a score or percentage
 
 When no current Milestone exists, `milestoneSummary` is null rather than fabricating a calendar period.
+
+## Activity preview
+
+Dashboard returns the last 14 local dates ending Today. Every date is present; dates without recorded effort have zero seconds and level 0. Only closed Session intervals contribute. An active Session contributes after Pause, Finish, or another command closes it; its still-running elapsed time is not mixed into the activity projection. Closed intervals are virtually split by their captured timezone using the temporal-attribution rules.
+
+Levels use exact whole-second thresholds so display behavior never depends on rounded minutes:
+
+| Level | Session seconds for the local date |
+|---|---:|
+| 0 | `0` |
+| 1 | `1–899` |
+| 2 | `900–1,799` |
+| 3 | `1,800–3,599` |
+| 4 | `3,600+` |
+
+They are derived display categories, never persisted goals, streaks, ranks, or success scores. Action responses return the freshly generated Dashboard, so Pause/Finish can update the preview without client-side domain calculation.
 
 ## Decision reviews due
 

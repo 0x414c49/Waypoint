@@ -25,7 +25,7 @@ read(project)
   - provide one validated immutable JourneyState snapshot
   - return the projector result
 
-transact(mutate)
+transact(intent, mutate)
   - acquire serialized write authority
   - reload and validate current state
   - clone to a mutable draft
@@ -34,6 +34,22 @@ transact(mutate)
   - commit exactly once or not at all
   - return an immutable committed snapshot/result that cannot retain the mutable draft
 ```
+
+`intent` is a closed infrastructure capability used only where old→new state cannot prove authority:
+
+```text
+STANDARD
+PLAN_APPLY
+JOURNEY_DELETE { journeyEntryId }
+SCHEMA_MIGRATION { fromVersion, toVersion }
+```
+
+- `STANDARD` may create new valid records and change execution-owned/editable records, but may not change plan-owned fields on an existing plan entity or delete history.
+- `PLAN_APPLY` permits current plan-owned additions/changes plus deletion of records proven pristine/unreferenced; it still cannot change execution-owned facts or immutable snapshots.
+- `JOURNEY_DELETE` permits deletion of exactly the named JourneyEntry and no cascading history deletion.
+- `SCHEMA_MIGRATION` is available only to the adapter's explicit version transform and never to an HTTP/application command.
+
+The intent is not persisted as learning history and does not replace application use-case validation. It gives transition validation the minimum authority signal needed to enforce exceptional writes without guessing their caller.
 
 The mutation result distinguishes Changed from No change. Reads and true no-ops do not increment `storeRevision`.
 
@@ -99,10 +115,9 @@ CommandReceipt
   requestFingerprint
   result
     outcomeKind
-    stableResultIds{}
+    createdRecordIds[]
+    affectedRecordIds[]
     outcomeFacts{}
-  createdRecordIds[]
-  affectedRecordIds[]
   committedStoreRevision
   createdAt
 ```
@@ -125,7 +140,7 @@ Validation occurs on every load and before every commit.
 
 - document shape and supported schema version
 - record types, enum values, dates, and timestamps
-- valid captured IANA timezones on Sessions, Quarter intent snapshots, and occurrence-bearing history
+- valid captured IANA timezones on Sessions, Milestone/Quarter intent snapshots, and occurrence-bearing history
 - key equals record ID
 - reference existence and ownership paths
 - same-Quarter relationships
@@ -134,7 +149,7 @@ Validation occurs on every load and before every commit.
 - Task status ↔ active Session invariant
 - DailyReview ↔ Finished event relationship
 - continuation uniqueness
-- plan snapshot threshold and required values
+- Task/Milestone/Quarter snapshot thresholds and required values
 - positive planned minutes
 - non-overlapping Quarter ranges
 
@@ -142,13 +157,14 @@ Validation occurs on every load and before every commit.
 
 Old-to-new comparison protects facts that a candidate alone cannot prove:
 
-- TaskPlanSnapshot immutability
+- TaskPlanSnapshot, MilestoneIntentSnapshot, and QuarterIntentSnapshot immutability
 - Session `taskId` permanence
 - append-only lifecycle events and DecisionReviews
 - accepted Decision reasoning immutability
 - no deletion of history-bearing Tasks
-- no plan-import write to execution records
-- no removal of Sessions/reviews/history except an explicitly authorized JourneyEntry deletion
+- plan-owned changes to existing records occur only under `PLAN_APPLY`
+- `PLAN_APPLY` never writes execution records or immutable snapshots
+- no removal of Sessions/reviews/history except the exact JourneyEntry named by `JOURNEY_DELETE`
 
 Application use cases remain responsible for valid actions; store validation is a final integrity boundary, not a second business-rules framework.
 
@@ -197,17 +213,42 @@ The outcome may have committed. Report `STORE_DURABILITY_UNCERTAIN`; client retr
 - Preserve primary, backup, and diagnostic context.
 - Advertise a validated backup to a future recovery flow, but never auto-restore; silent restore can roll back learning history.
 
-### Initialization and missing artifacts
+### Default location and initialization
+
+The default store directory is `<project>/data/store`, not the tracked `<project>/data` parent. `data/store` must be absent before first run; the repository's `data/.gitkeep` therefore does not look like an initialized store.
 
 The data directory contains a `.journey-store` marker with a random store ID and creation instant. Initialization is an explicit operation:
 
-- If the configured data directory does not exist, build a uniquely named sibling initialization directory containing a flushed marker and validated/flushed primary, flush that directory, atomically rename it to the configured path, then flush the parent where supported. Concurrent initialization has one winner; the loser reopens and validates the winner's store.
+- Before initialization, scan only for siblings matching `.store.init-*`. If the target is absent but any such sibling exists, return `RECOVERY_REQUIRED`; an interrupted initialization is never ignored, promoted, or overwritten automatically.
+- If the configured data directory and initialization siblings do not exist, build a uniquely named `.store.init-<random-id>` sibling containing a flushed marker and validated/flushed primary, flush that directory, atomically rename it to `store`, then flush the parent where supported. Concurrent initialization has one winner; the loser reopens and validates the winner's store.
 - If the directory exists but the marker does not, do not adopt or overwrite it; return `RECOVERY_REQUIRED`.
 - If the marker exists but the primary is missing, return `RECOVERY_REQUIRED` whether or not backup/temp artifacts exist.
-- If the marker and valid primary exist, normal startup may clean abandoned temporary files only after establishing that authority.
+- If the marker and valid primary exist, normal startup may report and clean abandoned commit temp files only after establishing that authority. Initialization siblings are never cleaned automatically because they may contain the only copy of an interrupted first write.
 
-V1 cannot detect deletion of the entire configured data directory followed by recreation at the same path. External backup remains the protection for total directory loss; the application must not imply otherwise.
-- Abandoned temp files are never silently promoted. Clean them only after establishing a valid authoritative primary.
+V1 cannot detect deletion of the entire configured data directory followed by recreation at the same path. External backup remains the protection for total directory loss; the application must not imply otherwise. Abandoned commit temp files are never silently promoted.
+
+### Canonical production seed
+
+The production first run initializes one validated document using one Clock instant:
+
+```text
+schemaVersion = 1
+storeRevision = 0
+writtenAt = initialization instant
+User = { id: local-user, name: Ali, timeZone: Europe/Amsterdam,
+         createdAt: initialization instant }
+Q4 plan = bundled, validated q4-2026-engineering-growth fixture
+Quarter planRevision = 1
+Quarter lastPlanImportedAt = absent
+all generated plan-record createdAt/updatedAt values = initialization instant
+all seeded Task statuses = NOT_STARTED
+execution/history collections = empty
+commandReceipts = empty
+```
+
+The seed contains plan intent, never Sessions, status history, reviews, thoughts, Decisions, AI output, or claimed completion. `LocalCurrentUserProvider` resolves the stored `local-user`; it does not overwrite the stored profile on later starts. Tests may inject an empty or alternate validated seed, but production uses the documented local user and supplied plan.
+
+Initialization/recovery validation happens before the HTTP server listens. `RECOVERY_REQUIRED`, corrupt data, or unsupported schema stops startup and prints a concise terminal diagnostic with the recovery procedure; v1 does not start a partial recovery web server.
 
 ### Unsupported schema
 
