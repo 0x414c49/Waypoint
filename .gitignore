@@ -1,0 +1,22 @@
+# Operating-system and editor files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies and generated output (once implementation begins)
+node_modules/
+dist/
+build/
+coverage/
+*.log
+
+# Local runtime data
+data/*.json
+data/*.tmp
+!data/.gitkeep
