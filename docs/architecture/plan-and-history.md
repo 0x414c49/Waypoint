@@ -20,12 +20,14 @@ Keep three things separate:
 - Focus areas and their plan fields
 - Milestones and their plan fields
 - Task focus/milestone, date, title, description, planned minutes, tags, position, and recommendation mode
+- Optional Task decision prompt
 - Current-plan membership/removal marker
 
 ### Execution-owned
 
 - Task status
 - Task plan snapshot
+- Quarter intent snapshot
 - Sessions and corrections
 - Lifecycle events
 - Daily reviews and outcomes
@@ -56,6 +58,8 @@ A Task becomes history-bearing when its immutable TaskPlanSnapshot is captured. 
 - linking an AIReview
 
 Once history-bearing, the Task record cannot be hard-deleted by plan import. History views render plan context from the snapshot.
+
+The same transaction captures QuarterIntentSnapshot when the Quarter first becomes history-bearing. Later imports may update current Quarter intent, while retrospectives can still show the original mantra, success criteria, and focus-area framing.
 
 ## Preview pipeline
 

@@ -1,6 +1,6 @@
 # REST API Contract
 
-Status: Proposed for API confirmation
+Status: Confirmed on 2026-09-27
 Base path: `/api`
 
 ## Boundary principles
@@ -62,6 +62,12 @@ Task responses distinguish current intent from the context preserved when histor
     "title": "Partial failure",
     "plannedMinutes": 45
   },
+  "displayPlanSource": "HISTORICAL",
+  "displayPlan": {
+    "plannedDate": "2026-11-03",
+    "title": "Partial failure",
+    "plannedMinutes": 45
+  },
   "timing": {
     "actualSecondsAtGeneratedAt": 1680,
     "firstStartedAt": "2026-11-03T17:42:00Z",
@@ -71,7 +77,7 @@ Task responses distinguish current intent from the context preserved when histor
 }
 ```
 
-Quarter/plan views prefer `currentPlan`. Today and history-bearing views prefer `historicalPlan` when present. The server returns the correct presentation projection so the client does not guess.
+`displayPlan` is the endpoint-selected presentation projection and `displayPlanSource` is `CURRENT | HISTORICAL`. Quarter/plan endpoints select current intent. Today, Journey, and history-bearing task contexts select the immutable historical snapshot when present. `currentPlan` and `historicalPlan` remain available where comparison is useful; the client never chooses between them itself.
 
 ## Current user
 
@@ -126,13 +132,13 @@ Historical execution remains in Task/Journey reads.
 
 ### Milestone summary
 
-Generated from Tasks, Sessions, DailyReviews, JourneyEntries, and DecisionReviews. It returns:
+Generated from Tasks, Sessions, DailyReviews, JourneyEntries, and DecisionReviews using the rules in [Temporal Attribution](temporal-attribution.md). It returns:
 
 - milestone context and mode
 - planned/touched/finished/skipped/open item counts
 - actual session seconds and session count
 - outcomes as separate counts
-- chronological task rows
+- chronological task rows with `currentStatus` and `statusAtPeriodEnd`
 - captured thoughts and changed-my-mind count
 - open work
 - at most one optional reflection prompt and existing related JourneyEntry
@@ -352,7 +358,7 @@ Relationship semantics:
 - explicit `null`: do not link
 - string: validate and link that Task
 
-The same rule applies to optional Milestone/Decision relationships only where inference is defined; they otherwise default to null. Create returns `201 Created`.
+The same rule applies to optional Milestone/Decision relationships only where inference is defined; they otherwise default to null. Linking an untouched Task captures its TaskPlanSnapshot and its Quarter's initial QuarterIntentSnapshot in the same transaction. Create returns `201 Created`.
 
 `PUT` updates only JourneyEntry-owned fields and requires `If-Match`. Explicit `DELETE` requires `If-Match` and returns `204`. Plan import never reaches these endpoints or records.
 
@@ -363,17 +369,21 @@ GET /api/decisions
 GET /api/decisions/:id
 POST /api/decisions
 PUT /api/decisions/:id
+POST /api/tasks/:id/decision-draft
 POST /api/decisions/:id/accept
 POST /api/decisions/:id/review
 ```
 
 List filters: `quarterId`, status, `review=due`, cursor, and limit.
 
-- Create produces Draft and requires `Idempotency-Key`.
-- PUT replaces editable Draft reasoning and requires `If-Match`.
+- Create produces an independent Draft, requires `Idempotency-Key`, and accepts `{ title, quarterId?, relatedTaskId?, initialReviewDate? }`.
+- Contextual draft creation has an empty body, uses the Task's `decisionPrompt`, requires Task `If-Match` plus `Idempotency-Key`, creates at most that prompt's stable Decision ID, and atomically captures Task/Quarter snapshots when needed.
+- PUT replaces editable Draft reasoning and requires `If-Match`. Its complete body contains `title`, optional `decisionDate`, optional `context`, `constraints`, `options`, optional `decision`, optional `consequences`, `assumptions`, optional `falsifier`, and optional `initialReviewDate`.
 - Accepted reasoning rejects PUT with `409 DECISION_IMMUTABLE`.
-- Accept is an explicit idempotent command and never generic status mutation.
-- Review appends a DecisionReview.
+- Accept is an explicit command requiring Decision `If-Match` and `Idempotency-Key`; its optional `{ decisionDate }` body supplies the local date when the Draft does not already have one. Accept validates the minimal complete reasoning defined by the domain and never uses generic status mutation.
+- Review requires Decision `If-Match` and `Idempotency-Key` and appends one DecisionReview.
+- A Decision ETag covers the Decision plus its review chain and current due-date projection. Two concurrent reviews with the same prior ETag cannot both append; the loser receives `412 STALE_WRITE`.
+- `SUPERSEDE` atomically appends its review and changes the Decision status to Superseded.
 
 Substantive review:
 
@@ -464,6 +474,8 @@ Requires `Idempotency-Key`:
 
 Inside one serialized transaction it revalidates the token/content, base `planRevision`, required acknowledgements, references, overlap rules, and history preservation; then increments plan revision once.
 
+Receipt replay lookup occurs before preview-token expiry or revision validation. A retry of an already committed apply therefore succeeds even if its ephemeral preview token has since expired.
+
 - Expired/unknown preview: `410 PLAN_PREVIEW_EXPIRED`
 - Changed base: `409 PLAN_REVISION_CHANGED`
 - Missing acknowledgement: `409 ACKNOWLEDGEMENT_REQUIRED`
@@ -491,7 +503,7 @@ Week body:
 { "milestoneId": "week-5" }
 ```
 
-Each requires `Idempotency-Key`, creates one historical AIReview, and returns `201 Created`. The StubAIReviewer completes synchronously in v1. A deliberate new review uses a new key and creates another record; transport retry does not.
+Each requires `Idempotency-Key`, creates one completed historical AIReview, and returns `201 Created`. Linking an untouched Task also captures its Task/Quarter snapshots in the same transaction. Provider failure creates no record. The StubAIReviewer completes synchronously in v1. A deliberate new review uses a new key and creates another record; transport retry does not.
 
 No score is returned. AI cannot mutate its target.
 

@@ -162,12 +162,11 @@ Journey may expose date, task, and “changed my mind” filters for chronologic
 Keep Settings behind the overflow menu. Include only app-wide preferences that exist in v1, such as:
 
 - appearance: system/light/dark
-- timezone and week convention
-- local data/export controls
+- read-only app/data-location information for support and recovery
 
 Do not create profile, team, notification, integration, or permission sections before those capabilities exist.
 
-Quarter selection and plan operations belong in Quarter.
+Appearance is stored in the browser and is not a domain/API setting. Timezone and week-convention controls are deferred until their historical effects have a designed workflow. Plan import/export belongs in Quarter. Low-level recovery is an explicit operator procedure, not a normal Settings control.
 
 ## Navigation behavior during states
 

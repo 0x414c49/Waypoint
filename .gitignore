@@ -17,6 +17,6 @@ coverage/
 *.log
 
 # Local runtime data
-data/*.json
-data/*.tmp
+data/*
+data/.journey-store
 !data/.gitkeep

@@ -108,6 +108,15 @@ The complete interaction must remain under 20 seconds in the normal case. If the
 - Preserves original reasoning verbatim.
 - Adds a dated review outcome rather than editing history.
 
+## Decision creation
+
+- A planned ADR Task may contain a `decisionPrompt` with stable Decision ID, suggested title, and optional initial review date.
+- Plan import stores the prompt only; it never creates authored reasoning.
+- **Start decision draft** is a contextual secondary action on that Task.
+- Creating the Draft atomically links it to the Task and captures Task/Quarter snapshots if needed.
+- Accept is explicit and freezes original reasoning.
+- Task Finish and Decision Accept never trigger each other silently.
+
 ## Plan update
 
 - Preview uses Added, Changed, Removed from future plan, and Historical item preserved.
@@ -151,6 +160,7 @@ Contextual surfaces:
 - Task/session history
 - Week summary
 - Decision review
+- Decision draft/editor
 - Plan preview/apply
 
 No additional top-level destination should be added without product review.

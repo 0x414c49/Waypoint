@@ -4,8 +4,8 @@ This file prevents the project from drifting into premature implementation. Work
 
 ## Current position
 
-**Active:** REST/API and persistence behavior
-**Blocked:** Wider system architecture and implementation until the preceding decisions are confirmed
+**Active:** System architecture, ADRs, and consolidated implementation review
+**Blocked:** Application implementation until the final implementation gate is explicitly approved
 
 ## Stage 0 — Workspace initialization
 
@@ -91,23 +91,23 @@ Gate: confirmed on 2026-09-27. Continue instruction accepted the proposed owners
 - [x] Error model and important request/response shapes proposed
 - [x] JSON storage port and safe-write behavior proposed
 
-Gate: explicit API confirmation.
+Gate: confirmed on 2026-09-27. Continue instruction accepted the proposed API and persistence checkpoint.
 
 ## Stages 9–13 — System design and ADRs
 
-- [ ] Current-user seam
-- [ ] AI-review seam
-- [ ] Component responsibilities and data flows
-- [ ] Failure behavior
-- [ ] Concise ADRs for confirmed choices
+- [x] Current-user seam
+- [x] AI-review seam
+- [x] Component responsibilities and data flows
+- [x] Failure behavior
+- [x] Concise ADRs for confirmed choices
 
-Gate: explicit architecture confirmation.
+Gate: documented and ready for explicit confirmation through the consolidated implementation gate.
 
 ## Stage 14 — Consolidated implementation gate
 
 One document must summarize confirmed product, UX, visual, domain, API, architecture, v1 scope, and deferred scope.
 
-- [ ] Consolidated review complete
+- [x] Consolidated review complete
 - [ ] User explicitly approves implementation
 
 Only then may production code begin, following vertical slices.

@@ -1,6 +1,6 @@
 # Persistence Contract
 
-Status: Proposed for API/persistence confirmation
+Status: Confirmed on 2026-09-27
 
 ## Goal
 
@@ -32,7 +32,7 @@ transact(mutate)
   - run a pure in-memory mutation
   - validate candidate and old→new transition
   - commit exactly once or not at all
-  - return mutation result
+  - return an immutable committed snapshot/result that cannot retain the mutable draft
 ```
 
 The mutation result distinguishes Changed from No change. Reads and true no-ops do not increment `storeRevision`.
@@ -97,7 +97,10 @@ CommandReceipt
   method
   route
   requestFingerprint
-  outcomeKind
+  result
+    outcomeKind
+    stableResultIds{}
+    outcomeFacts{}
   createdRecordIds[]
   affectedRecordIds[]
   committedStoreRevision
@@ -107,7 +110,8 @@ CommandReceipt
 - Receipt key is User + `Idempotency-Key`.
 - Same fingerprint returns the same committed domain outcome without re-running the mutation.
 - Different fingerprint conflicts.
-- Store identifiers/outcome facts, not a duplicate full Dashboard body. Replay reconstructs current representations around the original created/affected IDs and marks `Idempotency-Replayed: true`.
+- Store only the minimal immutable result needed to reproduce command meaning: stable created/affected IDs and outcome facts such as outcome kind or closure event ID. Do not store a duplicate Dashboard body.
+- Replay returns that original committed result plus freshly generated current representations and marks `Idempotency-Replayed: true`; it does not claim to reproduce byte-identical response JSON.
 - The first semantically no-op command still writes one receipt; later retries become true no-write reads.
 - Do not invent receipt expiration in v1; expiration could allow a sufficiently late retry to duplicate history.
 
@@ -121,6 +125,7 @@ Validation occurs on every load and before every commit.
 
 - document shape and supported schema version
 - record types, enum values, dates, and timestamps
+- valid captured IANA timezones on Sessions, Quarter intent snapshots, and occurrence-bearing history
 - key equals record ID
 - reference existence and ownership paths
 - same-Quarter relationships
@@ -149,16 +154,15 @@ Application use cases remain responsible for valid actions; store validation is 
 
 Never silently repair, drop, coerce, or reset a bad record.
 
-## Locking and serialization
+## Process and write serialization
 
-- Use a stable sidecar lock path; never lock the primary JSON inode that will be atomically replaced.
-- Exclusive write authority spans load → mutation → validation → durable replace.
-- Reads use shared locking when reliable; otherwise a short exclusive lock is acceptable for local v1.
-- Prefer OS-released advisory locking.
-- Lock timeout returns retryable `STORE_BUSY`; do not force-delete a supposedly stale lock.
-- Concurrent first starts are serialized.
+- V1 is one local server process bound to a fixed loopback address and port. Binding failure means another instance may own the app; startup stops rather than selecting another port.
+- The data directory is private to that one process. Sharing it across separately configured processes or network filesystems is unsupported.
+- One in-process asynchronous mutex serializes load → mutation → validation → durable replace. Reads take a validated immutable snapshot and never observe a mutable draft.
+- Mutex timeout returns retryable `STORE_BUSY`.
+- The adapter uses no native advisory-lock dependency and makes no unsupported cross-process locking claim.
 
-The application assumes one authoritative store file but remains safe if two local server processes contend through the lock.
+This is an explicit local-v1 constraint. Multi-process serving requires a storage adapter with real transactional concurrency rather than adding a fragile lock-file protocol.
 
 ## Safe commit
 
@@ -170,7 +174,7 @@ All artifacts reside on the same filesystem and in the same data directory.
 4. Write/update one rolling backup of the previous valid primary using its own temp + fsync + atomic rename.
 5. Atomically rename the candidate temporary file over the primary.
 6. `fsync` the containing directory where supported.
-7. Only then return success and release the lock.
+7. Only then return success and release the in-process write mutex.
 
 Never truncate or write the primary in place.
 
@@ -193,10 +197,16 @@ The outcome may have committed. Report `STORE_DURABILITY_UNCERTAIN`; client retr
 - Preserve primary, backup, and diagnostic context.
 - Advertise a validated backup to a future recovery flow, but never auto-restore; silent restore can roll back learning history.
 
-### Missing artifacts
+### Initialization and missing artifacts
 
-- Missing primary and backup on true first run: initialize seeded state.
-- Missing primary while backup/temp exists: `RECOVERY_REQUIRED`; do not assume first run.
+The data directory contains a `.journey-store` marker with a random store ID and creation instant. Initialization is an explicit operation:
+
+- If the configured data directory does not exist, build a uniquely named sibling initialization directory containing a flushed marker and validated/flushed primary, flush that directory, atomically rename it to the configured path, then flush the parent where supported. Concurrent initialization has one winner; the loser reopens and validates the winner's store.
+- If the directory exists but the marker does not, do not adopt or overwrite it; return `RECOVERY_REQUIRED`.
+- If the marker exists but the primary is missing, return `RECOVERY_REQUIRED` whether or not backup/temp artifacts exist.
+- If the marker and valid primary exist, normal startup may clean abandoned temporary files only after establishing that authority.
+
+V1 cannot detect deletion of the entire configured data directory followed by recreation at the same path. External backup remains the protection for total directory loss; the application must not imply otherwise.
 - Abandoned temp files are never silently promoted. Clean them only after establishing a valid authoritative primary.
 
 ### Unsupported schema
@@ -230,7 +240,7 @@ V1 ships only `schemaVersion: 1` and no generic migration framework.
 When version 2 actually exists:
 
 - add one pure deterministic `v1 → v2` transform
-- acquire exclusive lock
+- acquire the process write mutex
 - validate source
 - transform in memory
 - validate target and transition
@@ -248,6 +258,8 @@ Appropriate for local private v1:
 - at most one pre-migration backup
 - fail-closed diagnostics
 - later explicit recovery action
+
+Manual recovery procedure: stop the server, preserve all artifacts, validate the backup with the same schema/integrity checks, explicitly copy it into a new primary through the durable-write path, and restart. Never auto-restore or delete the damaged primary. Recovery can lose changes made after the rolling backup; the operator must be told that before confirming.
 
 Out of scope:
 

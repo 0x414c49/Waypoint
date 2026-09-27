@@ -1,6 +1,6 @@
 # API and Persistence Review
 
-Status: Ready for API/persistence confirmation
+Status: Historical gate record; confirmed on 2026-09-27 and refined by the system-architecture review
 
 ## Outcome
 
@@ -56,7 +56,7 @@ The proposed REST boundary covers every confirmed journey while keeping lifecycl
 ## Persistence correctness
 
 - Read models use one validated snapshot/revision.
-- Mutations serialize under a stable sidecar lock.
+- Mutations serialize under the single local process's write mutex.
 - Candidate and old→new transition validation occur before publish.
 - Changed state is written to a same-directory temp, validated, flushed, backed up once, atomically replaced, and directory-flushed where supported.
 - Failed writes cannot publish half a Task transition or plan update.
@@ -114,7 +114,7 @@ These are not design blockers but must be tested during implementation:
 - atomic Pause current and switch
 - Finish opened then browser closed
 - Session correction overlap
-- store lock timeout
+- store mutex timeout
 - failure before and after atomic replace
 - invalid/corrupt primary with valid backup present
 - plan preview becomes stale before apply
@@ -130,6 +130,6 @@ Confirm together:
 3. RFC 9457 problem details and structured conflict resolutions
 4. ETag + Idempotency-Key behavior
 5. Single JourneyStore unit-of-work port
-6. Human-readable JSON with locking, validation, temp + fsync + backup + replace
+6. Human-readable JSON with single-process serialization, validation, temp + fsync + backup + replace
 
-After confirmation, the next stage is the concise system design, component responsibilities, end-to-end data flows, failure behavior, and architecture decision records.
+This checkpoint was confirmed and fed the later system design, architecture review, and ADRs. Its earlier sidecar-lock assumption was explicitly refined to a single-process mutex.

@@ -1,6 +1,6 @@
 # ASCII UX Sketches
 
-Status: Interaction sketches only—no visual-system decisions
+Status: Historical interaction sketches; hierarchy confirmed and visual direction defined separately
 Purpose: Confirm hierarchy, state, and actions before choosing colors or styling
 
 Legend:

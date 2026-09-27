@@ -1,6 +1,6 @@
 # Dashboard Contract
 
-Status: Proposed for API confirmation
+Status: Confirmed on 2026-09-27
 Endpoint: `GET /api/dashboard`
 
 ## Responsibility
@@ -77,8 +77,15 @@ Task objects use the shared Task projection from the API contract. `href` values
 ## Dashboard states
 
 ```text
-READY | RUNNING | PAUSED | FINISHED | LIGHT
+ONBOARDING | READY | RUNNING | PAUSED | FINISHED | LIGHT
 ```
+
+### Onboarding
+
+- No Quarter exists for the User.
+- `quarter`, `hero.task`, `activeSession`, `upNext`, and `milestoneSummary` are null.
+- The one primary action is Import plan; a secondary action may load the representative example.
+- The empty state explains the daily loop in one sentence and does not invent sample completion data.
 
 ### Running
 
@@ -111,7 +118,7 @@ READY | RUNNING | PAUSED | FINISHED | LIGHT
 No current work recommendation exists. `reason` explains the plan state:
 
 ```text
-PLAN_LIGHT | PLAN_BUFFER | NO_PLANNED_ITEM | ALL_ITEMS_CLOSED
+PLAN_LIGHT | PLAN_BUFFER | NO_PLANNED_ITEM | ALL_ITEMS_CLOSED | BETWEEN_QUARTERS | QUARTER_NOT_STARTED
 ```
 
 Skipped-only days resolve to Light, not Finished or failure. Primary action may be absent; the server never manufactures reflection work merely to fill the page.
@@ -120,16 +127,17 @@ Skipped-only days resolve to Light, not Finished or failure. Primary action may 
 
 Using User timezone and one consistent snapshot:
 
-1. Resolve at most one current Quarter. Overlapping Quarter dates are invalid in v1.
-2. If a Session is active, select its Task → Running.
-3. Otherwise select the Paused Task with the most recent effective Session activity → Paused.
-4. Otherwise select the first Not started `DEFAULT` Task scheduled today by plan position → Ready.
-5. On a day containing `WHEN_CLEAR` work:
+1. Resolve at most one current Quarter plus the nearest past/future Quarter. Overlapping Quarter dates are invalid in v1.
+2. If a Session is active, select its Task → Running even when its Quarter is no longer date-current.
+3. Otherwise select the Paused Task with the most recent effective Session activity → Paused, including an open Task from a just-ended Quarter.
+4. When a current Quarter exists, select the first Not started `DEFAULT` Task scheduled today by plan position → Ready.
+5. When a current Quarter contains `WHEN_CLEAR` work today:
    1. find the most recent untouched past `DEFAULT` Task in the same Milestone;
    2. if one exists, recommend it as Catch up → Ready;
    3. otherwise select today’s first `WHEN_CLEAR` Task → Ready.
 6. If no higher-priority recommendation exists and a non-undone Finished event occurred today → Finished.
-7. Otherwise → Light with a semantic reason.
+7. If no Quarter exists at all → Onboarding.
+8. Otherwise → Light with a semantic reason. With no current Quarter, use `BETWEEN_QUARTERS` or `QUARTER_NOT_STARTED` and return the nearest relevant Quarter summary when one exists.
 
 Past untouched work from older Milestones never becomes automatic backlog debt. Multiple same-day eligible Tasks use plan `position`; remaining items are summarized quietly rather than rendered as competing hero cards.
 
@@ -187,9 +195,10 @@ A Decision is due when:
 
 - status is Accepted
 - it is not superseded
-- its latest DecisionReview `nextReviewDate`, otherwise initial review date, is on or before Today
+- if it has reviews, the latest DecisionReview has a non-null `nextReviewDate` on or before Today
+- if it has no reviews, its initial review date is on or before Today
 
-A Deferred review updates the next date and is not a substantive completed review. Dashboard returns at most three items plus total count. The UI presents this as quiet secondary context—never red urgency or the primary action.
+A review with no next date clears the due schedule; the initial date never becomes active again. A Deferred review requires and updates the next date but is not a substantive completed review. Dashboard returns at most three items plus total count. The UI presents this as quiet secondary context—never red urgency or the primary action.
 
 ## Completion receipt versus Dashboard
 

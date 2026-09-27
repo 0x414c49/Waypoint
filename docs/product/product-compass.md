@@ -1,6 +1,6 @@
 # Product Compass
 
-Status: Draft for product/UX confirmation
+Status: Confirmed on 2026-09-27
 Last updated: 2026-09-27
 
 ## One sentence
@@ -90,6 +90,8 @@ The representative plan includes more than repeated habits:
 Therefore the product must support structured intent without forcing every item into the same completion ritual. A 45-minute technical experiment and a leadership conversation can share the same simple session loop while keeping different context.
 
 ## Success signals
+
+These are product targets, not observed facts. They are tested through the [validation plan](../../planning/validation-plan.md) during the relevant implementation slice.
 
 - The primary action is understood within three seconds.
 - Start, Pause, and Resume each take one interaction.

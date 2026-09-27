@@ -160,6 +160,34 @@ Sessions and actual time remain on the source. A source may have at most one dir
 9. A failed mutation leaves no half-created Session, mismatched status, duplicate continuation, or duplicate review.
 10. Outcome describes learning result; it is never inferred from elapsed time.
 
+## Deterministic status projection
+
+Task `status` is validated against Sessions and lifecycle events using this algorithm:
+
+1. Order lifecycle events by monotonic per-Task `sequence`.
+2. Validate every Reopened event:
+   - `undoesEventId` references the same Task’s latest effective Finished or Skipped event;
+   - that closure has not already been reopened;
+   - the Reopened event occurs later;
+   - Reopened cannot reference another Reopened/Carried-forward event, so cycles are impossible.
+3. Mark a Finished/Skipped closure ineffective for current state when one valid later Reopened event refers to it. Keep both records as history.
+4. Find the latest effective Finished or Skipped closure.
+5. Project current status:
+   - if an active Session exists and no effective terminal closure follows its start: `IN_PROGRESS`;
+   - else if an effective terminal closure exists: `FINISHED` or `SKIPPED` according to that closure;
+   - else if at least one Session exists: `PAUSED`;
+   - else: `NOT_STARTED`.
+
+Additional event-chain rules:
+
+- Each Finished event has exactly one DailyReview.
+- Skipped has no required review.
+- A new terminal closure is valid only when the Task is currently nonterminal.
+- A Session created after a terminal closure requires a later valid Reopened event first.
+- Paused therefore always has prior Session history.
+- Carried-forward is informational and must accompany the source’s Finished event and one linked continuation in the same transaction; it does not independently determine status.
+- Stored Task status must equal the projection after every transaction and on load.
+
 ## Today recommendation
 
 Unfinished work means a started, nonterminal Task—normally Paused.

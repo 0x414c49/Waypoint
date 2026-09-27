@@ -1,13 +1,14 @@
 # Architecture
 
-Product behavior, UX, visual direction, and the domain/data model are confirmed. Domain documentation:
+Product behavior, UX, visual direction, domain model, API, and persistence behavior are confirmed. Domain documentation:
 
 - [Domain and data model](domain-model.md)
 - [Task lifecycle and invariants](task-lifecycle.md)
 - [Plan updates and historical truth](plan-and-history.md)
 - [Domain model review](domain-model-review.md)
+- [Temporal attribution and historical summaries](temporal-attribution.md)
 
-The proposed API/persistence checkpoint is documented in:
+The confirmed API/persistence checkpoint is documented in:
 
 - [REST API contract](api-contract.md)
 - [Dashboard contract](dashboard-contract.md)
@@ -15,7 +16,14 @@ The proposed API/persistence checkpoint is documented in:
 - [Persistence contract](persistence-contract.md)
 - [API and persistence review](api-review.md)
 
-Wider system architecture and implementation remain gated.
+The proposed final system architecture is documented in:
+
+- [System design](system-design.md)
+- [Technology stack](technology-stack.md)
+- [Architecture review](architecture-review.md)
+- [Architecture decision records](../adr/README.md)
+
+Implementation remains gated by `planning/implementation-gate.md`.
 
 The design tracks three intentionally small seams:
 
@@ -23,4 +31,4 @@ The design tracks three intentionally small seams:
 - `CurrentUserProvider`
 - `AIReviewer`
 
-`JourneyStore` is specified in the persistence checkpoint. `CurrentUserProvider`, `AIReviewer`, and the full component design remain for the next architecture stage. These are not implementation instructions yet.
+All three seams and their v1 adapters are specified in the system design. These remain design constraints, not authorization to begin implementation before the final gate.

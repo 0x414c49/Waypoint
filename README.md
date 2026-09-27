@@ -8,7 +8,7 @@ The product is intentionally **not** a project-management system or a data-entry
 
 ## Current stage
 
-The project has confirmed its product, UX, visual system, information architecture, and domain model. It is now defining **REST/API and persistence behavior**. No application code should be written yet.
+The project has confirmed product, UX, visual, domain, API, and persistence behavior. It is now completing **system architecture, ADRs, and the consolidated implementation review**. No application code should be written until the final gate is explicitly approved.
 
 Start with:
 
@@ -31,7 +31,16 @@ Start with:
 17. [Error and conflict contract](docs/architecture/error-contract.md)
 18. [Persistence contract](docs/architecture/persistence-contract.md)
 19. [API and persistence review](docs/architecture/api-review.md)
-20. [Working agreement](planning/working-agreement.md)
+20. [Plan YAML format](docs/product/plan-format-v1.md)
+21. [Representative Q4 mapping review](planning/q4-plan-mapping-review.md)
+22. [System design](docs/architecture/system-design.md)
+23. [Technology stack](docs/architecture/technology-stack.md)
+24. [Architecture review](docs/architecture/architecture-review.md)
+25. [Architecture decision records](docs/adr/README.md)
+26. [Release scope and slices](planning/release-scope.md)
+27. [Validation plan](planning/validation-plan.md)
+28. [Consolidated implementation gate](planning/implementation-gate.md)
+29. [Working agreement](planning/working-agreement.md)
 
 ## Working rule
 

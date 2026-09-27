@@ -1,6 +1,6 @@
 # Core Journey Exploration
 
-Status: Draft—recommendations require UX confirmation
+Status: Historical exploration; selected choices are recorded in `confirmed-interaction-model.md`
 Representative scenario: Q4 2026 Engineering Growth Plan
 
 ## Proposed interaction model
@@ -334,6 +334,43 @@ The app needs a recommendation policy, not the fiction that the plan always cont
 
 ---
 
+## Journey J — Create a decision record
+
+**Journey:** Turn planned ADR work into a durable decision
+
+**User goal:** Capture a real engineering decision from the current learning item without navigating to an empty database form.
+
+**Entry point:** A Task whose plan contains `decisionPrompt`; Today/task detail shows **Start decision draft** as a contextual secondary action.
+
+**Happy path:**
+
+1. The user opens Start decision draft from the ADR learning item.
+2. The app creates/opens one Draft linked to the Task and pre-fills only the suggested title and initial review date.
+3. The user writes Context, Constraints, Options, Decision, Consequences, Assumptions, and Falsifier as the real work requires.
+4. Draft autosaves or saves explicitly without changing the Task lifecycle.
+5. **Accept decision** freezes the original reasoning and schedules review when a date exists.
+6. Returning to Today keeps Start/Pause/Resume/Finish as the primary learning action.
+
+**Primary action:** Save draft while authoring; Accept decision when complete.
+
+**Secondary actions:** Return to learning item; leave as Draft.
+
+**Possible confusion:** Plan import must not create a DecisionRecord merely because a prompt exists. A Draft is created only through user intent. Accepting the decision does not automatically finish the learning Task, and finishing the Task does not silently accept the decision.
+
+**Mobile considerations:** Use one vertical document flow with collapsible guidance; do not place all ADR fields in a cramped modal. Save/Accept remains sticky only while editing.
+
+**A/B alternatives:**
+
+- **A — Contextual creation from ADR Task:** clear origin, light prefill, no database browsing.
+- **B — Global Decisions “New” form:** flexible but disconnects planned learning from the artifact.
+- **C — Create Draft during plan import:** convenient but fabricates execution records before the learner acts.
+
+**Recommendation:** A, while retaining a global New decision action for genuinely unplanned decisions later.
+
+**Why:** It makes ADR creation a natural output of the learning session rather than tracker administration, while preserving the distinction between planned intent and authored reasoning.
+
+---
+
 ## Cross-journey rules
 
 - Planned minutes are guidance, never a countdown or score.
@@ -354,3 +391,4 @@ The app needs a recommendation policy, not the fiction that the plan always cont
 4. Confirm “Do 10 minutes” as a normal session intention.
 5. Confirm weekly review has no completion status.
 6. Confirm decision reviews remain secondary to Today.
+7. Confirm contextual Decision creation remains separate from Task completion.

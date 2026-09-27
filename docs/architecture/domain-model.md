@@ -88,6 +88,7 @@ Quarter
     position
   planRevision
   lastPlanImportedAt?
+  intentSnapshot?
   createdAt
   updatedAt
 ```
@@ -100,6 +101,29 @@ Rules:
 - Quarter status (future/current/past) is derived from dates; do not persist it.
 - Success criteria preserve quarter intent but are not checkboxes or score inputs in the daily path.
 - YAML format `version`, storage `schemaVersion`, and Quarter `planRevision` are different concepts.
+
+### Quarter intent snapshot
+
+When the Quarter first gains durable execution history, capture one immutable baseline:
+
+```text
+QuarterIntentSnapshot
+  capturedAt
+  planRevision
+  timeZoneAtCapture
+  title
+  description?
+  mantra?
+  startDate
+  endDate
+  successCriteria[]
+  focusAreas[]
+    id
+    name
+    targetMinutes?
+```
+
+This preserves the intent used by later quarter retrospectives without storing every imported plan revision. Current Quarter fields may continue to reflect accepted plan updates.
 
 ## FocusArea
 
@@ -162,6 +186,10 @@ Task
   tags[]
   position
   recommendationMode       // DEFAULT | WHEN_CLEAR
+  decisionPrompt?
+    decisionId
+    suggestedTitle
+    initialReviewDate?
   removedFromPlanAt?
 
   // Execution-owned fields
@@ -177,6 +205,7 @@ Task
 
 - Plan import may write only plan-owned fields.
 - `recommendationMode = WHEN_CLEAR` models conditional exploration such as Friday work that should yield to catch-up. It is plan intent, not a priority score.
+- `decisionPrompt` marks planned work that is expected to produce an ADR. It surfaces a contextual draft action but does not create a DecisionRecord during import.
 - `removedFromPlanAt` means only “not in the current plan.” It never means Skipped or Finished.
 - `plannedMinutes` must be positive when present.
 - `actualMinutes`, percent complete, and manual progress do not exist.
@@ -207,6 +236,7 @@ TaskPlanSnapshot
   plannedMinutes?
   tags[]
   recommendationMode
+  decisionPrompt?
 ```
 
 History-bearing actions include:
@@ -254,8 +284,10 @@ Sessions already explain Start, Pause, and Resume. A small append-only record pr
 TaskLifecycleEvent
   id
   taskId
+  sequence         // monotonic within Task
   type             // FINISHED | SKIPPED | REOPENED | CARRIED_FORWARD
   occurredAt
+  timeZoneAtOccurrence
   relatedTaskId?   // continuation created by carry-forward
   undoesEventId?   // Reopen/Undo relationship
   createdAt
@@ -295,6 +327,7 @@ JourneyEntry
   id
   userId
   occurredAt
+  timeZoneAtOccurrence
   text
   tags[]
   relatedTaskId?
@@ -325,18 +358,18 @@ DecisionRecord
   relatedTaskId?
   supersedesDecisionId?
   title
-  decisionDate
+  decisionDate?
   status                    // DRAFT | ACCEPTED | SUPERSEDED
-  context
-  constraints
+  context?
+  constraints[]
   options[]
     id
     title
     description
     strengths[]
     weaknesses[]
-  decision
-  consequences
+  decision?
+  consequences?
   assumptions[]
   falsifier?
   initialReviewDate?
@@ -351,6 +384,7 @@ DecisionReview
   id
   decisionId
   reviewedAt
+  timeZoneAtReview
   outcome                  // HOLDS | ADJUST | SUPERSEDE | DEFERRED
   notes?
   nextReviewDate?
@@ -362,9 +396,12 @@ Rules:
 
 - Reviews are append-only.
 - `DEFERRED` records the confirmed Postpone action and requires `nextReviewDate`; it is not counted as a completed substantive review.
-- The current due date is the latest review’s `nextReviewDate`, otherwise the DecisionRecord’s `initialReviewDate`.
+- If no review exists, the current due date is `initialReviewDate`.
+- After any review exists, the current due date is that latest review’s `nextReviewDate`; when absent, the Decision is not due.
+- On Accept, `initialReviewDate` must be on/after `decisionDate`. Any `nextReviewDate` must be later than the review's local date; Deferred therefore always postpones rather than remaining immediately due.
 - Review never overwrites original reasoning.
-- A superseding outcome links to a replacement decision when one exists.
+- A Supersede outcome atomically marks the original DecisionRecord Superseded and links a replacement when one exists.
+- Draft may be sparse so creating it does not become an ADR form tax. Accept requires a non-empty title, context, decision, and decision date; options, constraints, consequences, assumptions, and falsifier remain useful but optional.
 - Draft → Accepted is an explicit domain transition. Generic Decision editing cannot set status.
 
 Do not duplicate `reviewedAt` or latest outcome onto DecisionRecord.
@@ -380,20 +417,21 @@ AIReview
   targetType              // TASK | WEEK | QUARTER | DECISION
   targetId
   provider
-  status                  // PENDING | COMPLETED | FAILED
+  model?
   summary?
   strengths[]
   gaps[]
   suggestedFollowUp?
   questions[]
-  createdAt
-  completedAt?
+  generatedAt
+  timeZoneAtGeneration
 ```
 
 Rules:
 
 - `WEEK` targets a Milestone representing a week.
 - Provider is `stub` in v1; it remains historical provenance when real providers arrive.
+- V1 writes only completed reviews. Provider failure creates no AIReview; pending/failed job state does not exist without asynchronous processing.
 - No AI score exists because the product rejects aggregate learning-quality scoring.
 - AI advice cannot mutate plans, task state, human reflection, decisions, or history.
 - The target union is validated by the application. A future SQL adapter may enforce it with separate nullable foreign keys or a target table without changing application behavior.

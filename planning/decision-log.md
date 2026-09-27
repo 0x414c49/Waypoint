@@ -17,10 +17,14 @@ This log records product and UX decisions before formal architecture ADRs begin.
 | 2026-09-27 | Keep Task status as a backend-owned current projection and Sessions/events as history facts. | Confirmed | Today needs clear current state while reopen/skip/finish history must remain truthful. | Domain model, lifecycle |
 | 2026-09-27 | Store one DailyReview per finish occurrence and separate DecisionReview records. | Confirmed | Reopen/re-finish and ADR hindsight must not overwrite prior reasoning. | Domain model |
 | 2026-09-27 | Derive totals, weekly summaries, contributions, recommendations, progress, and scores. | Confirmed | Persisting these creates synchronization and tracker maintenance without adding truth. | Domain model review |
-| 2026-09-27 | Use a REST API as the frontend’s stable boundary with one server-resolved Dashboard response. | Proposed | The client must not join storage-shaped fragments or recreate Today rules. | API contract, dashboard contract |
-| 2026-09-27 | Use RFC 9457 Problem Details, ETags, and command idempotency receipts. | Proposed | Structured conflicts, stale-write protection, and safe retries address distinct failure modes. | Error contract, API contract |
-| 2026-09-27 | Use one JourneyStore unit-of-work port and JsonJourneyStore for v1. | Proposed | A small whole-state boundary is sufficient for local scale and avoids repository/ORM scaffolding. | Persistence contract |
-| 2026-09-27 | Persist JSON through validation, locking, temp write, fsync, one rolling backup, and atomic replace. | Proposed | This protects human-readable local data without speculative recovery infrastructure. | Persistence contract |
+| 2026-09-27 | Use a REST API as the frontend’s stable boundary with one server-resolved Dashboard response. | Confirmed | The client must not join storage-shaped fragments or recreate Today rules. | API contract, dashboard contract |
+| 2026-09-27 | Use RFC 9457 Problem Details, ETags, and command idempotency receipts. | Confirmed | Structured conflicts, stale-write protection, and safe retries address distinct failure modes. | Error contract, API contract |
+| 2026-09-27 | Use one JourneyStore unit-of-work port and JsonJourneyStore for v1. | Confirmed | A small whole-state boundary is sufficient for local scale and avoids repository/ORM scaffolding. | Persistence contract |
+| 2026-09-27 | Persist JSON through validation, a single-process write mutex, temp write, fsync, one rolling backup, and atomic replace. | Confirmed, refined | This protects human-readable local data without a native-lock dependency or unsupported multi-process guarantee. | Persistence contract, system design |
+| 2026-09-27 | Use a strict version-1 YAML plan format and the complete Q4 plan as its acceptance fixture. | Proposed for final gate | Today needs explicit stable structure without interpreting prose or importing execution. | Plan format, Q4 mapping review |
+| 2026-09-27 | Use a TypeScript modular monolith with React/Vite, Fastify, and TypeBox transport schemas. | Proposed for final gate | One toolchain and one deployable fit the local product while preserving real domain/adapter boundaries. | System design, technology stack, ADR-0007 |
+| 2026-09-27 | Run v1 as one fixed-port loopback process with same-origin frontend/API. | Proposed for final gate | No-auth local use and JSON serialization are honest only inside an explicit private single-process boundary. | System design, ADR-0008 |
+| 2026-09-27 | Implement in vertical slices, validating the daily heart before secondary surfaces. | Proposed for final gate | The complete contract should not become one oversized first delivery. | Release scope, validation plan |
 
 ## Entry format for future changes
 

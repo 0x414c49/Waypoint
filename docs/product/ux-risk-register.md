@@ -1,10 +1,10 @@
 # UX Risk Register
 
-Status: Open assumptions to validate before implementation
+Status: Open empirical assumptions; validation planned during prototype and implementation
 
 These are the highest-risk product assumptions. They are not implementation risks; they determine whether the product feels helpful or becomes another chore.
 
-| # | Assumption | Why it is risky | How to test before implementation | Guardrail |
+| # | Assumption | Why it is risky | How to validate | Guardrail |
 |---|---|---|---|---|
 | 1 | The plan can identify one clear “today” item. | The Q4 example may contain a main task, ADR, leadership rep, and optional exploration on the same day. A false single choice can hide important intent. | Walk through normal, overloaded, buffer, holiday, and no-plan dates using the example. | Home may show one primary item plus quiet context, never several equal calls to action. |
 | 2 | A single active session matches real learning behavior. | The learner may switch devices or jump between related items. Silent conflicts would be confusing. | Simulate refresh, second-task start, accidental duplicate click, and stale browser state. | One server-owned active session; conflicts explain the current task and offer “Pause and switch.” |

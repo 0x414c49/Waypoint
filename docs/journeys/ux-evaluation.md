@@ -1,6 +1,6 @@
 # Preliminary UX Evaluation
 
-Status: Draft evaluation—awaiting confirmation
+Status: Historical heuristic evaluation; interaction choices confirmed, empirical validation still planned
 Evaluated concept: Focused Today with state-aware controls and the recommended journey choices
 
 ## Recommended concept in one paragraph

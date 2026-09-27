@@ -1,6 +1,6 @@
 # Error, Conflict, and Concurrency Contract
 
-Status: Proposed for API confirmation
+Status: Confirmed on 2026-09-27
 
 ## Problem Details
 
@@ -117,7 +117,7 @@ Mismatched ETag:
 }
 ```
 
-The server never silently applies intent to a stale resource. Idempotency replay is checked first so a retry of a previously committed command returns its original response rather than Stale write.
+The server never silently applies intent to a stale resource. Idempotency replay is checked first so a retry of a previously committed command returns its original committed result plus current representations rather than Stale write.
 
 ## Idempotency conflict
 
@@ -154,6 +154,7 @@ The response never reveals the earlier request body.
 | 428 | `PRECONDITION_REQUIRED` | Client programming/precondition issue |
 | 500 | `INTERNAL_ERROR` | Unexpected failure; no internals leaked |
 | 503 | `STORE_BUSY` | Retry later; may include `Retry-After` |
+| 503 | `RECOVERY_REQUIRED` | Stop normal startup/writes and follow explicit recovery guidance |
 | 503 | `STORE_CORRUPT` | Stop mutations and guide to recovery |
 | 503 | `STORE_SCHEMA_UNSUPPORTED` | App cannot safely read this data version |
 | 503 | `STORE_WRITE_FAILED` | Prior state remains authoritative |
@@ -172,6 +173,7 @@ The response never reveals the earlier request body.
 - Before atomic replace: prior primary file remains authoritative; return `STORE_WRITE_FAILED`.
 - Replace may have succeeded but final durability/response failed: return `STORE_DURABILITY_UNCERTAIN`; client retries with the identical Idempotency-Key.
 - Corruption/schema failure: fail closed, serve no guessed/repaired data, and perform no writes.
+- Missing/ambiguous initialized-store artifacts: return `RECOVERY_REQUIRED`; never seed over an existing or previously initialized directory.
 - API process startup may fail entirely for unrecoverable store validation. If it remains available for a recovery screen, all normal mutations return the corresponding 503 problem.
 
 ## Logging
