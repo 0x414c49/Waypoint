@@ -36,6 +36,7 @@ beforeEach(async () => {
     store,
     currentUserProvider: new LocalCurrentUserProvider(store),
     idGenerator: ids,
+    clock: new FixedClock(new Date("2026-09-27T10:00:00.000Z")),
     logger: createStructuredLogger("silent"),
     allowedHosts: new Set(["127.0.0.1:4173", "localhost:4173"]),
     allowedMutationOrigins: new Set([

@@ -1,0 +1,339 @@
+.page {
+  display: grid;
+  gap: var(--space-32);
+}
+
+.pageHeader,
+.sectionHeading,
+.dialogHeader,
+.dialogActions,
+.completion,
+.errorBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-16);
+}
+
+.pageHeader p,
+.pageHeader h1,
+.hero p,
+.hero h2,
+.contextRow p,
+.contextRow h3,
+.dialog p,
+.dialog h2,
+.sectionHeading h2,
+.loadError h1,
+.loadError p {
+  margin-top: 0;
+}
+
+.pageHeader p,
+.pageHeader h1,
+.contextRow p,
+.contextRow h3,
+.sectionHeading h2 {
+  margin-bottom: 0;
+}
+
+.pageTitle {
+  margin: var(--space-4) 0 0;
+  font-size: var(--text-h1);
+  line-height: var(--line-h1);
+}
+
+.eyebrow,
+.contextLabel {
+  color: var(--color-text-secondary);
+  font-size: var(--text-metadata);
+  line-height: var(--line-metadata);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.localStatus {
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+}
+
+.hero {
+  display: grid;
+  gap: var(--space-16);
+}
+
+.hero h2 {
+  margin-bottom: 0;
+  font-size: var(--text-hero);
+  line-height: var(--line-hero);
+}
+
+.heroDescription {
+  max-width: 58ch;
+  margin-bottom: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-large);
+  line-height: var(--line-body-large);
+}
+
+.guidance,
+.timerGuidance {
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+  line-height: var(--line-small);
+}
+
+.timer {
+  display: grid;
+  width: max-content;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: var(--text-timer);
+  line-height: var(--line-timer);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.timerGuidance {
+  font-family: var(--font-sans);
+  font-weight: 400;
+}
+
+.primaryActions,
+.secondaryActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.secondaryActions {
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--color-border);
+}
+
+.context {
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.contextRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-16);
+  padding: var(--space-16) 0;
+}
+
+.contextRow + .contextRow {
+  border-top: 1px solid var(--color-border);
+}
+
+.contextRow h3 {
+  margin-top: var(--space-4);
+  font-size: var(--text-body);
+  line-height: var(--line-body);
+}
+
+.contextRow p:not(.contextLabel) {
+  margin: var(--space-4) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+}
+
+.activity {
+  min-width: 0;
+}
+
+.sectionHeading h2 {
+  font-size: var(--text-h2);
+  line-height: var(--line-h2);
+}
+
+.sectionHeading span {
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+}
+
+.activityGrid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 11px;
+  gap: var(--space-4);
+  width: max-content;
+  margin-top: var(--space-12);
+}
+
+.activityCell {
+  width: 11px;
+  height: 11px;
+  border-radius: var(--radius-small);
+  background: var(--color-contribution-0);
+}
+
+.activityCell[data-level="1"] { background: var(--color-contribution-1); }
+.activityCell[data-level="2"] { background: var(--color-contribution-2); }
+.activityCell[data-level="3"] { background: var(--color-contribution-3); }
+.activityCell[data-level="4"] { background: var(--color-contribution-4); }
+
+.completion,
+.errorBanner {
+  padding: var(--space-12) var(--space-16);
+  border-radius: var(--radius-control);
+}
+
+.completion {
+  color: var(--color-success);
+  background: var(--color-success-soft);
+}
+
+.errorBanner {
+  color: var(--color-error);
+  background: var(--color-error-soft);
+}
+
+.backdrop {
+  position: fixed;
+  z-index: 10;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--space-16);
+  background: rgb(15 20 18 / 48%);
+}
+
+.dialog {
+  width: min(100%, 520px);
+  max-height: calc(100vh - var(--space-32));
+  overflow-y: auto;
+  padding: var(--space-24);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-surface);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-raised);
+}
+
+.dialog h2 {
+  margin-bottom: 0;
+  font-size: var(--text-h1);
+  line-height: var(--line-h1);
+}
+
+.dialogTask {
+  margin: var(--space-16) 0;
+  color: var(--color-text-secondary);
+}
+
+.outcomes {
+  display: grid;
+  gap: var(--space-8);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.outcomes legend,
+.textareaLabel {
+  margin-bottom: var(--space-8);
+  font-size: var(--text-compact);
+  font-weight: 600;
+}
+
+.outcome {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  min-height: 48px;
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+
+.outcome[data-selected="true"] {
+  padding: 7px 11px;
+  border: 2px solid var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.outcome input {
+  accent-color: var(--color-accent);
+}
+
+.fieldError {
+  margin: var(--space-8) 0 0;
+  color: var(--color-error);
+  font-size: var(--text-small);
+}
+
+.textareaLabel {
+  display: block;
+  margin-top: var(--space-24);
+}
+
+.textareaLabel span {
+  color: var(--color-text-secondary);
+  font-weight: 400;
+}
+
+.dialog textarea {
+  display: block;
+  width: 100%;
+  min-height: 88px;
+  padding: var(--space-12);
+  resize: vertical;
+  color: var(--color-text);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+}
+
+.dialogActions {
+  justify-content: flex-end;
+  margin-top: var(--space-24);
+}
+
+.loading,
+.loadError {
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 720px) {
+  .pageHeader {
+    align-items: flex-start;
+  }
+
+  .localStatus {
+    max-width: 92px;
+    text-align: right;
+  }
+
+  .primaryActions > button {
+    flex: 1 1 100%;
+  }
+
+  .contextRow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .contextRow > button {
+    width: 100%;
+  }
+
+  .backdrop {
+    align-items: end;
+    padding: 0;
+  }
+
+  .dialog {
+    width: 100%;
+    max-height: calc(100vh - var(--space-24));
+    padding: var(--space-24) var(--space-16) calc(var(--space-24) + env(safe-area-inset-bottom));
+    border-radius: var(--radius-surface) var(--radius-surface) 0 0;
+  }
+
+  .dialogActions > button {
+    flex: 1;
+  }
+}

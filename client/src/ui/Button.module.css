@@ -9,7 +9,7 @@
   line-height: var(--line-compact);
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 120ms, border-color 120ms;
+  transition: opacity 120ms;
 }
 
 .primary {

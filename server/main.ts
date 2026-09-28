@@ -1,16 +1,27 @@
 import { resolve } from "node:path";
 import { JsonJourneyStore, StoreError } from "./adapters/json-store/index.js";
 import { LocalCurrentUserProvider } from "./adapters/local-current-user-provider.js";
-import { createNoHistorySeed } from "./domain/journey-state.js";
+import { createProductionSeed } from "./domain/production-seed.js";
 import { buildApp } from "./http/build-app.js";
 import { createStructuredLogger } from "./infrastructure/structured-logger.js";
-import { SystemClock } from "./ports/clock.js";
+import { SystemClock, type Clock } from "./ports/clock.js";
 import { RandomIdGenerator } from "./ports/id-generator.js";
 
 async function start(): Promise<void> {
   const development = process.env.JOURNEY_ENV === "development";
   const port = development ? 4174 : 4173;
-  const clock = new SystemClock();
+  const fixedNow = process.env.JOURNEY_ENV === "test" ? process.env.JOURNEY_FIXED_NOW : undefined;
+  let testInstant = fixedNow ? Date.parse(fixedNow) : 0;
+  const clock: Clock = fixedNow
+    ? {
+        now() {
+          const result = new Date(testInstant);
+          testInstant += 1_000;
+          return result;
+        },
+      }
+    : new SystemClock();
+  if (Number.isNaN(clock.now().valueOf())) throw new Error("JOURNEY_FIXED_NOW must be an ISO instant.");
   const idGenerator = new RandomIdGenerator();
   const logger = createStructuredLogger(process.env.LOG_LEVEL ?? "info");
   const directory = resolve(process.cwd(), process.env.JOURNEY_STORE_DIR ?? "data/store");
@@ -18,7 +29,7 @@ async function start(): Promise<void> {
     directory,
     clock,
     idGenerator,
-    seed: createNoHistorySeed,
+    seed: createProductionSeed,
   });
 
   try {
@@ -38,6 +49,7 @@ async function start(): Promise<void> {
       store,
       currentUserProvider: new LocalCurrentUserProvider(store),
       idGenerator,
+      clock,
       logger,
       allowedHosts: development
         ? new Set([...hostPort("5173"), ...hostPort("4174")])

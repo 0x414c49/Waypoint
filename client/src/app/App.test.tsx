@@ -1,20 +1,40 @@
 import { render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App.js";
 
-describe("foundation shell", () => {
-  it("shows an honest readiness state without dead product navigation", () => {
+const lightDashboard = {
+  dataRevision: 1,
+  generatedAt: "2026-09-27T08:00:00.000Z",
+  today: "2026-09-27",
+  timeZone: "Europe/Amsterdam",
+  quarter: { id: "q4", title: "Q4", planRevision: 1 },
+  state: "LIGHT",
+  hero: { state: "LIGHT", reason: "NO_PLANNED_ITEM", task: null, timing: null, primaryAction: null, secondaryActions: [] },
+  activeSession: null,
+  upNext: null,
+  optionalToday: null,
+  activityPreview: { startDate: "2026-09-14", endDate: "2026-09-27", days: [] },
+  milestoneSummary: null,
+  decisionReviewsDue: { count: 0, items: [] },
+};
+
+describe("application shell", () => {
+  beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(lightDashboard))));
+  });
+
+  it("opens Today without dead product navigation", async () => {
     render(
       <MemoryRouter>
         <App />
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole("heading", { name: "Your learning space is ready." })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "Today" })).toBeTruthy();
     expect(screen.queryByRole("navigation")).toBeNull();
-    expect(screen.getByText("Stored locally on this device")).toBeTruthy();
+    expect(screen.getByText("Stored on this device")).toBeTruthy();
   });
 
   it("switches appearance with an accessible target", async () => {

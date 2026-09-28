@@ -27,7 +27,8 @@
     "pino": "10.3.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "react-router-dom": "7.18.4"
+    "react-router-dom": "7.18.4",
+    "yaml": "2.8.1"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",

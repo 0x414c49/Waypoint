@@ -4,8 +4,8 @@ This file prevents the project from drifting into premature implementation. Work
 
 ## Current position
 
-**Active:** Slice 1 — the daily heart
-**Blocked:** Slice 2 until the Slice 1 gate passes
+**Active:** Slice 2 — the lived journey
+**Blocked:** Slice 3 until the Slice 2 gate passes
 
 ## Stage 0 — Workspace initialization
 
@@ -115,7 +115,7 @@ Production implementation is authorized and proceeds through the documented vert
 ## Implementation delivery gates
 
 - [x] Slice 0 — executable foundation passed on 2026-09-27. Evidence: [Slice 0 validation](slice-0-validation.md).
-- [ ] Slice 1 — daily heart
+- [x] Slice 1 — daily heart passed on 2026-09-28. Evidence: [Slice 1 validation](slice-1-validation.md).
 - [ ] Slice 2 — lived journey
 - [ ] Slice 3 — decisions
 - [ ] Slice 4 — plan lifecycle and Quarter

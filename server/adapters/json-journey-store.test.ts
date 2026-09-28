@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { mkdtemp, rm } from "node:fs/promises";
 import { afterEach, describe, expect, it } from "vitest";
 import { createNoHistorySeed, type JourneyState } from "../domain/journey-state.js";
+import { createProductionSeed } from "../domain/production-seed.js";
 import { FixedClock } from "../ports/clock.js";
 import { SequenceIdGenerator } from "../ports/id-generator.js";
 import { STANDARD_INTENT } from "../ports/journey-store.js";
@@ -270,7 +271,9 @@ describe("JsonJourneyStore commits", () => {
 describe("transition authority", () => {
   it("prevents PLAN_APPLY from deleting execution history", () => {
     const before = createNoHistorySeed(instant.toISOString());
-    before.records.sessions["session-1"] = { id: "session-1" };
+    (before.records.sessions as unknown as Record<string, { id: string }>)["session-1"] = {
+      id: "session-1",
+    };
     const after = structuredClone(before);
     delete after.records.sessions["session-1"];
 
@@ -299,5 +302,70 @@ describe("transition authority", () => {
     expect(serializeJourneyState(state).indexOf('"a"')).toBeLessThan(
       serializeJourneyState(state).indexOf('"z"'),
     );
+  });
+
+  it("allows execution projection changes while protecting plan fields and snapshots", () => {
+    const before = createProductionSeed(instant.toISOString());
+    const taskId = "2026-11-03-partial-failure";
+    const afterStatus = structuredClone(before);
+    afterStatus.records.tasks[taskId]!.status = "PAUSED";
+    expect(() => assertJourneyStateTransition(before, afterStatus, STANDARD_INTENT)).not.toThrow();
+
+    const withSnapshot = structuredClone(before);
+    withSnapshot.records.tasks[taskId]!.planSnapshot = {
+      capturedAt: instant.toISOString(),
+      planRevision: 1,
+      milestoneId: "q4-2026-w05",
+      milestoneTitle: "Week 5",
+      focusAreaId: "q4-2026-systems",
+      focusAreaName: "Systems Reliability",
+      plannedDate: "2026-11-03",
+      title: "Partial failure",
+      description: "Run an experiment where the network fails halfway through an operation.",
+      tags: [],
+      recommendationMode: "DEFAULT",
+    };
+    const changedSnapshot = structuredClone(withSnapshot);
+    changedSnapshot.records.tasks[taskId]!.planSnapshot!.title = "Rewritten history";
+    expect(() =>
+      assertJourneyStateTransition(withSnapshot, changedSnapshot, STANDARD_INTENT),
+    ).toThrow(StoreError);
+  });
+
+  it("protects ownership fields from plan apply and rejects unsafe deletion", () => {
+    const before = createProductionSeed(instant.toISOString());
+    const changedOwner = structuredClone(before);
+    changedOwner.records.tasks["2026-11-03-partial-failure"]!.quarterId = "other-quarter";
+    expect(() =>
+      assertJourneyStateTransition(before, changedOwner, { kind: "PLAN_APPLY" }),
+    ).toThrow(StoreError);
+
+    const deletesReferencedTask = structuredClone(before);
+    const taskId = "2026-11-03-partial-failure";
+    deletesReferencedTask.records.tasks[taskId]!.planSnapshot = {
+      capturedAt: instant.toISOString(),
+      planRevision: 1,
+      milestoneId: "q4-2026-w05",
+      milestoneTitle: "Week 5",
+      focusAreaId: "q4-2026-systems",
+      focusAreaName: "Systems Reliability",
+      plannedDate: "2026-11-03",
+      title: "Partial failure",
+      description: "Run an experiment where the network fails halfway through an operation.",
+      tags: [],
+      recommendationMode: "DEFAULT",
+    };
+    const afterDelete = structuredClone(deletesReferencedTask);
+    delete afterDelete.records.tasks[taskId];
+    expect(() =>
+      assertJourneyStateTransition(deletesReferencedTask, afterDelete, { kind: "PLAN_APPLY" }),
+    ).toThrow(StoreError);
+
+    const pristine = createProductionSeed(instant.toISOString());
+    const deletePristine = structuredClone(pristine);
+    delete deletePristine.records.tasks[taskId];
+    expect(() =>
+      assertJourneyStateTransition(pristine, deletePristine, { kind: "PLAN_APPLY" }),
+    ).not.toThrow();
   });
 });

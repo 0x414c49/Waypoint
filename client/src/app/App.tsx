@@ -1,12 +1,12 @@
 import { Route, Routes } from "react-router-dom";
-import { FoundationPage } from "../features/foundation/FoundationPage.js";
+import { TodayPage } from "../features/today/TodayPage.js";
 import { AppShell } from "./AppShell.js";
 
 export function App() {
   return (
     <Routes>
       <Route element={<AppShell />}>
-        <Route index element={<FoundationPage />} />
+        <Route index element={<TodayPage />} />
       </Route>
     </Routes>
   );

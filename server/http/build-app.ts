@@ -6,18 +6,22 @@ import { resolve } from "node:path";
 import {
   CurrentUserSchema,
   ProblemDetailsSchema,
-  type ProblemDetails,
 } from "../../shared/contracts/index.js";
 import type { CurrentUserProvider } from "../adapters/local-current-user-provider.js";
 import type { JourneyStore } from "../ports/journey-store.js";
 import type { IdGenerator } from "../ports/id-generator.js";
+import type { Clock } from "../ports/clock.js";
 import type { Logger } from "pino";
 import { StoreError } from "../adapters/json-store/index.js";
+import { AppError } from "../application/app-error.js";
+import { problem } from "./problem.js";
+import { registerTodayRoutes } from "./today-routes.js";
 
 interface BuildAppOptions {
   readonly store: JourneyStore;
   readonly currentUserProvider: CurrentUserProvider;
   readonly idGenerator: IdGenerator;
+  readonly clock: Clock;
   readonly logger: Logger;
   readonly allowedHosts: ReadonlySet<string>;
   readonly allowedMutationOrigins: ReadonlySet<string>;
@@ -26,25 +30,6 @@ interface BuildAppOptions {
 }
 
 const mutatingMethods = new Set(["POST", "PUT", "PATCH", "DELETE"]);
-
-function problem(
-  traceId: string,
-  path: string,
-  code: string,
-  title: string,
-  status: number,
-  detail: string,
-): ProblemDetails {
-  return {
-    type: `urn:journey-tracker:problem:${code.toLowerCase().replaceAll("_", "-")}`,
-    title,
-    status,
-    code,
-    detail,
-    instance: path,
-    traceId,
-  };
-}
 
 export async function buildApp(options: BuildAppOptions) {
   const app = fastify({
@@ -105,6 +90,8 @@ export async function buildApp(options: BuildAppOptions) {
       });
     },
   );
+
+  registerTodayRoutes(app, options);
 
   if (options.registerTestRoutes) {
     app.post(
@@ -170,6 +157,23 @@ export async function buildApp(options: BuildAppOptions) {
         );
     }
 
+    if (error instanceof AppError) {
+      return reply
+        .code(error.status)
+        .type("application/problem+json")
+        .send(
+          problem(
+            request.id,
+            request.url,
+            error.code,
+            error.title,
+            error.status,
+            error.message,
+            error.extensions,
+          ),
+        );
+    }
+
     const fastifyError = error as typeof error & {
       code?: string;
       statusCode?: number;
@@ -191,7 +195,14 @@ export async function buildApp(options: BuildAppOptions) {
         );
     }
 
-    if (fastifyError.statusCode === 400 || fastifyError.validation) {
+    if (fastifyError.validation) {
+      return reply
+        .code(422)
+        .type("application/problem+json")
+        .send(problem(request.id, request.url, "VALIDATION_FAILED", "The request is not valid", 422, "Correct the request values and try again."));
+    }
+
+    if (fastifyError.statusCode === 400) {
       return reply
         .code(400)
         .type("application/problem+json")
