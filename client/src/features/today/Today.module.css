@@ -155,6 +155,12 @@
   font-size: var(--text-small);
 }
 
+.sectionHeading a {
+  color: var(--color-accent);
+  font-size: var(--text-small);
+  font-weight: 600;
+}
+
 .activityGrid {
   display: grid;
   grid-auto-flow: column;

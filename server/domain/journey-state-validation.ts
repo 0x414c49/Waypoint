@@ -200,8 +200,24 @@ function validateTasks(state: JourneyState, errors: string[]): void {
       continuationSources.add(task.continuationOfTaskId);
       const source = state.records.tasks[task.continuationOfTaskId];
       if (!source) errors.push(`${path}/continuationOfTaskId: source task does not exist`);
-      else if (state.records.quarters[source.quarterId]?.userId !== quarter?.userId) {
-        errors.push(`${path}/continuationOfTaskId: source task must belong to same user`);
+      else if (source.id === task.id) {
+        errors.push(`${path}/continuationOfTaskId: task cannot continue itself`);
+      } else if (source.quarterId !== task.quarterId) {
+        errors.push(`${path}/continuationOfTaskId: source task must belong to the same quarter`);
+      } else if (!Object.values(state.records.taskLifecycleEvents).some(
+        (event) => event.taskId === source.id && event.type === "CARRIED_FORWARD" && event.relatedTaskId === task.id,
+      )) {
+        errors.push(`${path}/continuationOfTaskId: source task must have a matching CARRIED_FORWARD event`);
+      }
+      const seen = new Set([task.id]);
+      let ancestor = source;
+      while (ancestor?.continuationOfTaskId) {
+        if (seen.has(ancestor.id)) {
+          errors.push(`${path}/continuationOfTaskId: continuation chain must not contain a cycle`);
+          break;
+        }
+        seen.add(ancestor.id);
+        ancestor = state.records.tasks[ancestor.continuationOfTaskId];
       }
     }
     instant(errors, `${path}/createdAt`, task.createdAt);
@@ -251,7 +267,9 @@ function validateExecutionRecords(state: JourneyState, errors: string[]): void {
     for (let index = 0; index < sessions.length; index += 1) {
       const left = sessions[index]!;
       for (const right of sessions.slice(index + 1)) {
-        const intervalsOverlap =
+        const leftIsEmpty = left.endedAt !== undefined && left.startedAt === left.endedAt;
+        const rightIsEmpty = right.endedAt !== undefined && right.startedAt === right.endedAt;
+        const intervalsOverlap = !leftIsEmpty && !rightIsEmpty &&
           (right.endedAt === undefined || left.startedAt < right.endedAt) &&
           (left.endedAt === undefined || right.startedAt < left.endedAt);
         if (intervalsOverlap) {
@@ -284,6 +302,23 @@ function validateExecutionRecords(state: JourneyState, errors: string[]): void {
     for (let index = 1; index < ordered.length; index += 1) {
       if (ordered[index]!.occurredAt < ordered[index - 1]!.occurredAt) {
         errors.push(`/records/taskLifecycleEvents: task ${taskId} occurredAt must not move backwards with sequence`);
+      }
+    }
+    for (const event of ordered) {
+      if (event.type !== "CARRIED_FORWARD") continue;
+      const related = event.relatedTaskId ? state.records.tasks[event.relatedTaskId] : undefined;
+      const previous = ordered[event.sequence - 2];
+      if (!related || related.continuationOfTaskId !== taskId) {
+        errors.push(`/records/taskLifecycleEvents/${event.id}: CARRIED_FORWARD must link the source's continuation`);
+      }
+      if (!previous || previous.type !== "FINISHED" || previous.occurredAt !== event.occurredAt) {
+        errors.push(`/records/taskLifecycleEvents/${event.id}: CARRIED_FORWARD must immediately accompany a FINISHED event`);
+      }
+      const review = previous
+        ? Object.values(state.records.dailyReviews).find((candidate) => candidate.finishEventId === previous.id)
+        : undefined;
+      if (!review || review.outcome !== "PARTIAL") {
+        errors.push(`/records/taskLifecycleEvents/${event.id}: CARRIED_FORWARD requires a Partial finish review`);
       }
     }
   }
@@ -320,13 +355,76 @@ function validateExecutionRecords(state: JourneyState, errors: string[]): void {
     const historyBearing = sessions.length > 0 || events.length > 0 || Object.values(state.records.dailyReviews).some((review) => review.taskId === task.id);
     if (!historyBearing) continue;
     if (!task.planSnapshot) errors.push(`/records/tasks/${task.id}/planSnapshot: required once task has history`);
-    const milestone = task.milestoneId ? state.records.milestones[task.milestoneId] : undefined;
+    const milestoneId = task.planSnapshot?.milestoneId ?? task.milestoneId;
+    const milestone = milestoneId ? state.records.milestones[milestoneId] : undefined;
     if (milestone && !milestone.intentSnapshot) {
       errors.push(`/records/milestones/${milestone.id}/intentSnapshot: required once a contained task has history`);
     }
     const quarter = state.records.quarters[task.quarterId];
     if (quarter && !quarter.intentSnapshot) {
       errors.push(`/records/quarters/${quarter.id}/intentSnapshot: required once a contained task has history`);
+    }
+  }
+}
+
+function validateJourneyEntries(state: JourneyState, errors: string[]): void {
+  for (const entry of Object.values(state.records.journeyEntries)) {
+    const path = `/records/journeyEntries/${entry.id}`;
+    const user = state.records.users[entry.userId];
+    const task = entry.relatedTaskId ? state.records.tasks[entry.relatedTaskId] : undefined;
+    const milestone = entry.relatedMilestoneId
+      ? state.records.milestones[entry.relatedMilestoneId]
+      : undefined;
+    if (!user) errors.push(`${path}/userId: user does not exist`);
+    if (entry.relatedTaskId && !task) errors.push(`${path}/relatedTaskId: task does not exist`);
+    if (entry.relatedMilestoneId && !milestone) {
+      errors.push(`${path}/relatedMilestoneId: milestone does not exist`);
+    }
+    if (entry.relatedDecisionId && !state.records.decisionRecords[entry.relatedDecisionId]) {
+      errors.push(`${path}/relatedDecisionId: decision does not exist`);
+    }
+    const taskQuarter = task ? state.records.quarters[task.quarterId] : undefined;
+    const milestoneQuarter = milestone ? state.records.quarters[milestone.quarterId] : undefined;
+    if (taskQuarter && taskQuarter.userId !== entry.userId) {
+      errors.push(`${path}/relatedTaskId: task must belong to the entry user`);
+    }
+    if (milestoneQuarter && milestoneQuarter.userId !== entry.userId) {
+      errors.push(`${path}/relatedMilestoneId: milestone must belong to the entry user`);
+    }
+    if (task && milestone && task.quarterId !== milestone.quarterId) {
+      errors.push(`${path}: related task and milestone must belong to the same quarter`);
+    }
+    instant(errors, `${path}/occurredAt`, entry.occurredAt);
+    instant(errors, `${path}/createdAt`, entry.createdAt);
+    if (entry.updatedAt) instant(errors, `${path}/updatedAt`, entry.updatedAt);
+    if (entry.updatedAt && entry.updatedAt < entry.createdAt) {
+      errors.push(`${path}/updatedAt: must not precede createdAt`);
+    }
+    if (!isIanaTimeZone(entry.timeZoneAtOccurrence)) {
+      errors.push(`${path}/timeZoneAtOccurrence: expected an IANA time zone`);
+    }
+    if (task) {
+      if (!task.planSnapshot) {
+        errors.push(`/records/tasks/${task.id}/planSnapshot: required once linked from Journey`);
+      }
+      const milestoneId = task.planSnapshot?.milestoneId ?? task.milestoneId;
+      const containingMilestone = milestoneId
+        ? state.records.milestones[milestoneId]
+        : undefined;
+      if (containingMilestone && !containingMilestone.intentSnapshot) {
+        errors.push(`/records/milestones/${containingMilestone.id}/intentSnapshot: required once linked from Journey`);
+      }
+      if (taskQuarter && !taskQuarter.intentSnapshot) {
+        errors.push(`/records/quarters/${taskQuarter.id}/intentSnapshot: required once linked from Journey`);
+      }
+    }
+    if (milestone) {
+      if (!milestone.intentSnapshot) {
+        errors.push(`/records/milestones/${milestone.id}/intentSnapshot: required once linked from Journey`);
+      }
+      if (milestoneQuarter && !milestoneQuarter.intentSnapshot) {
+        errors.push(`/records/quarters/${milestoneQuarter.id}/intentSnapshot: required once linked from Journey`);
+      }
     }
   }
 }
@@ -344,9 +442,9 @@ export function validateJourneyState(value: unknown): string[] {
       if (key !== record.id) errors.push(`/records/${collectionName}/${key}: map key must equal id`);
     }
   }
-  for (const collectionName of ["journeyEntries", "decisionRecords", "decisionReviews", "aiReviews"] as const) {
+  for (const collectionName of ["decisionRecords", "decisionReviews", "aiReviews"] as const) {
     for (const key of Object.keys(state.records[collectionName])) {
-      errors.push(`/records/${collectionName}/${key}: ${collectionName} records are not enabled in Slice 1`);
+      errors.push(`/records/${collectionName}/${key}: ${collectionName} records are not enabled in the current release slice`);
     }
   }
   for (const [key, user] of Object.entries(state.records.users)) {
@@ -357,6 +455,7 @@ export function validateJourneyState(value: unknown): string[] {
   validateQuarterAndPlanRecords(state, errors);
   validateTasks(state, errors);
   validateExecutionRecords(state, errors);
+  validateJourneyEntries(state, errors);
 
   for (const [key, receipt] of Object.entries(state.commandReceipts)) {
     if (!state.records.users[receipt.userId]) errors.push(`/commandReceipts/${key}/userId: referenced user does not exist`);

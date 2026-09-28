@@ -70,6 +70,33 @@ describe("Today dashboard projection", () => {
     expect(dashboard.activeSession?.sessionElapsedSecondsAtGeneratedAt).toBe(1_200);
     expect(dashboard.activityPreview.days.at(-1)?.sessionSeconds).toBe(0);
   });
+
+  it("attributes compact milestone effort and thoughts by occurrence rather than current membership", () => {
+    const state = createProductionSeed(seededAt);
+    const currentTask = state.records.tasks["2026-11-03-partial-failure"]!;
+    const laterTask = Object.values(state.records.tasks).find((task) => task.milestoneId !== currentTask.milestoneId)!;
+    currentTask.status = "IN_PROGRESS";
+    state.records.sessions.active = {
+      id: "active", taskId: currentTask.id, startedAt: "2026-11-03T16:40:00.000Z",
+      timeZoneAtStart: "Europe/Amsterdam", createdAt: "2026-11-03T16:40:00.000Z", updatedAt: "2026-11-03T16:40:00.000Z",
+    };
+    state.records.sessions.closed = {
+      id: "closed", taskId: laterTask.id, startedAt: "2026-11-03T16:00:00.000Z", endedAt: "2026-11-03T16:10:00.000Z",
+      timeZoneAtStart: "Europe/Amsterdam", createdAt: "2026-11-03T16:00:00.000Z", updatedAt: "2026-11-03T16:10:00.000Z",
+    };
+    state.records.journeyEntries.thought = {
+      id: "thought", userId: "local-user", occurredAt: "2026-11-03T17:00:00.000Z", timeZoneAtOccurrence: "Europe/Amsterdam",
+      text: "A changed view", tags: [], changedMyMind: true, createdAt: "2026-11-03T17:00:00.000Z",
+    };
+
+    const dashboard = projectDashboard(state, "local-user", new Date("2026-11-03T17:00:00.000Z"));
+    expect(dashboard.milestoneSummary).toMatchObject({
+      sessionSeconds: 600,
+      sessionCount: 1,
+      thoughtCount: 1,
+      changedMyMindCount: 1,
+    });
+  });
 });
 describe("temporal attribution", () => {
   it("splits a closed interval across the captured local midnight", () => {

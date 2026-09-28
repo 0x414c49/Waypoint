@@ -11,6 +11,7 @@ interface TodayHeroProps {
   onPause: (task: TaskProjection) => void;
   onResume: (task: TaskProjection) => void;
   onFinish: (task: TaskProjection) => void;
+  onThought: () => void;
 }
 
 const stateCopy = {
@@ -29,6 +30,7 @@ export function TodayHero({
   onPause,
   onResume,
   onFinish,
+  onThought,
 }: TodayHeroProps) {
   const task = dashboard.hero.task;
   const state = dashboard.state;
@@ -93,6 +95,7 @@ export function TodayHero({
 
       {(state === "RUNNING" || state === "PAUSED" || state === "READY") ? (
         <div className={styles.secondaryActions}>
+          <Button variant="ghost" onClick={onThought}>+ Thought</Button>
           {(state === "RUNNING" || state === "PAUSED") ? (
             <Button variant="ghost" disabled={busy} onClick={() => onFinish(task)}>
               Finish item

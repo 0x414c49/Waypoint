@@ -16,6 +16,7 @@ import { StoreError } from "../adapters/json-store/index.js";
 import { AppError } from "../application/app-error.js";
 import { problem } from "./problem.js";
 import { registerTodayRoutes } from "./today-routes.js";
+import { registerJourneyRoutes } from "./journey-routes.js";
 
 interface BuildAppOptions {
   readonly store: JourneyStore;
@@ -92,6 +93,7 @@ export async function buildApp(options: BuildAppOptions) {
   );
 
   registerTodayRoutes(app, options);
+  registerJourneyRoutes(app, options);
 
   if (options.registerTestRoutes) {
     app.post(

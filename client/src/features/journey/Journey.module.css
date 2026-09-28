@@ -1,0 +1,437 @@
+.page {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-32);
+}
+
+.pageHeading,
+.dialogHeading,
+.dialogActions,
+.inlineActions,
+.sectionHeading,
+.entryMeta,
+.entryLinks {
+  display: flex;
+  align-items: center;
+}
+
+.pageHeading,
+.dialogHeading,
+.sectionHeading {
+  justify-content: space-between;
+  gap: var(--space-16);
+}
+
+.pageHeading h1,
+.pageHeading p,
+.detailHeader h1,
+.detailHeader p,
+.dialog h2,
+.sectionHeading h2,
+.sectionHeading p,
+.detailSection h2,
+.reflection h2,
+.carryForward h2 {
+  margin-top: 0;
+}
+
+.pageHeading h1,
+.detailHeader h1 {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-h1);
+  line-height: var(--line-h1);
+}
+
+.pageHeading p,
+.detailHeader > p,
+.sectionHeading p,
+.muted,
+.contextRemoved {
+  margin-bottom: 0;
+  color: var(--color-text-secondary);
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-12);
+  padding: var(--space-16) 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.filters label,
+.fieldLabel {
+  display: grid;
+  gap: var(--space-4);
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+  font-weight: 600;
+}
+
+.filters input,
+.filters select,
+.fieldLabel input,
+.fieldLabel textarea,
+.dialog textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-8) var(--space-12);
+  color: var(--color-text);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+}
+
+.fieldLabel textarea,
+.dialog textarea {
+  min-height: 104px;
+  resize: vertical;
+}
+
+.checkboxLabel {
+  display: flex !important;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: var(--space-8) !important;
+  min-height: 44px;
+}
+
+.checkboxLabel input {
+  width: 18px;
+  min-height: 18px;
+  accent-color: var(--color-accent);
+}
+
+.activity,
+.detailSection,
+.reflection,
+.carryForward {
+  min-width: 0;
+  padding: var(--space-24) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.sectionHeading h2,
+.sectionHeading p,
+.detailSection h2,
+.reflection h2,
+.carryForward h2 {
+  margin-bottom: var(--space-4);
+}
+
+.sectionHeading span {
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+}
+
+.activityScroller {
+  max-width: 100%;
+  margin-top: var(--space-16);
+  overflow-x: auto;
+}
+
+.activityGrid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 11px;
+  gap: var(--space-4);
+  width: max-content;
+  min-width: 100%;
+}
+
+.activityCell {
+  width: 11px;
+  height: 11px;
+  border-radius: var(--radius-small);
+  background: var(--color-contribution-0);
+}
+
+.activityCell[data-level="1"] { background: var(--color-contribution-1); }
+.activityCell[data-level="2"] { background: var(--color-contribution-2); }
+.activityCell[data-level="3"] { background: var(--color-contribution-3); }
+.activityCell[data-level="4"] { background: var(--color-contribution-4); }
+
+.timeline,
+.sessionList,
+.thoughtList,
+.taskRows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.timelineItem {
+  padding: var(--space-24) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.timelineItem h2 {
+  margin: var(--space-8) 0 var(--space-4);
+  font-size: var(--text-h2);
+  line-height: var(--line-h2);
+}
+
+.entryMeta,
+.entryLinks {
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+}
+
+.entryMeta strong {
+  color: var(--color-accent);
+  font-size: var(--text-metadata);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.entryText {
+  max-width: 62ch;
+  margin: var(--space-8) 0;
+  white-space: pre-wrap;
+}
+
+.entryLinks a,
+.detailHeader a,
+.taskRows a,
+.detailSection a {
+  color: var(--color-accent);
+}
+
+.empty,
+.errorPanel {
+  padding: var(--space-24);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-surface);
+  background: var(--color-surface);
+}
+
+.empty h2,
+.errorPanel h1 {
+  margin-top: 0;
+}
+
+.error {
+  color: var(--color-error);
+}
+
+.backdrop {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--space-16);
+  background: rgb(15 20 18 / 48%);
+}
+
+.dialog {
+  width: min(100%, 520px);
+  margin: auto;
+  padding: var(--space-24);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-surface);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-raised);
+  color: var(--color-text);
+}
+
+.dialogHeading h2 {
+  margin-bottom: 0;
+}
+
+.dialog .fieldLabel,
+.dialog > textarea,
+.inferredContext {
+  margin-top: var(--space-16);
+}
+
+.inferredContext {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  padding: var(--space-8) var(--space-12);
+  background: var(--color-surface-subtle);
+  border-radius: var(--radius-control);
+}
+
+.contextRemoved button {
+  padding: 0;
+  color: var(--color-accent);
+  border: 0;
+  background: none;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.dialogActions,
+.inlineActions {
+  justify-content: flex-end;
+  gap: var(--space-8);
+  margin-top: var(--space-24);
+}
+
+.detailHeader {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.detailHeader .entryMeta {
+  justify-content: space-between;
+}
+
+.historyNotice {
+  padding: var(--space-12);
+  color: var(--color-text-secondary);
+  background: var(--color-surface-subtle);
+  border-radius: var(--radius-control);
+}
+
+.lead {
+  max-width: 62ch;
+  font-size: var(--text-body-large);
+  line-height: var(--line-body-large);
+}
+
+.detailSection blockquote,
+.reflection blockquote {
+  margin: var(--space-16) 0 0;
+  padding-left: var(--space-16);
+  border-left: 2px solid var(--color-accent);
+}
+
+.sessionList li,
+.taskRows li {
+  display: grid;
+  align-items: center;
+  gap: var(--space-12);
+  padding: var(--space-12) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.sessionList li {
+  grid-template-columns: 1fr auto;
+}
+
+.sessionList li > div {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.sessionList span,
+.thoughtList time,
+.taskRows time,
+.taskRows span {
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+}
+
+.thoughtList li {
+  padding: var(--space-12) 0;
+}
+
+.thoughtList p {
+  margin: var(--space-4) 0 0;
+}
+
+.carryForward,
+.reflection {
+  display: grid;
+  gap: var(--space-12);
+}
+
+.carryForward > p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.fieldLabel span {
+  font-weight: 400;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-16);
+  padding: var(--space-16) 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.facts div {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.facts strong {
+  font-size: var(--text-hero);
+}
+
+.facts span {
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+}
+
+.taskRows li {
+  grid-template-columns: 96px minmax(0, 1fr) 120px 64px;
+}
+
+.eyebrow {
+  color: var(--color-text-secondary);
+  font-size: var(--text-metadata);
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 720px) {
+  .pageHeading {
+    align-items: flex-start;
+  }
+
+  .filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sectionHeading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .backdrop {
+    align-items: end;
+    padding: 0 0 calc(64px + env(safe-area-inset-bottom));
+  }
+
+  .dialog {
+    width: 100%;
+    max-width: none;
+    max-height: calc(100dvh - 88px - env(safe-area-inset-bottom));
+    margin: 0;
+    overflow-y: auto;
+    padding: var(--space-24) var(--space-16) calc(var(--space-24) + env(safe-area-inset-bottom));
+    border-radius: var(--radius-surface) var(--radius-surface) 0 0;
+  }
+
+  .dialog input,
+  .dialog textarea,
+  .dialog select {
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  .facts {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .taskRows li {
+    grid-template-columns: 84px minmax(0, 1fr);
+  }
+
+  .taskRows li span {
+    grid-column: 2;
+  }
+}

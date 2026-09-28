@@ -7,14 +7,14 @@ import { addLocalDays, closedSessionSegments, contributionLevel, effectiveSessio
 export type { Dashboard, DashboardState, PlanProjection, TaskProjection } from "./dashboard-types.js";
 
 function mostRecentPaused(state: JourneyState, tasks: TaskRecord[]): TaskRecord | undefined {
+  const latestByTask = new Map<string, string>();
+  for (const session of Object.values(state.records.sessions)) {
+    const latest = latestByTask.get(session.taskId);
+    if (!latest || session.startedAt > latest) latestByTask.set(session.taskId, session.startedAt);
+  }
   return tasks
     .filter((task) => task.status === "PAUSED")
-    .map((task) => ({
-      task,
-      latest: Object.values(state.records.sessions)
-        .filter((session) => session.taskId === task.id)
-        .reduce((latest, session) => (session.startedAt > latest ? session.startedAt : latest), ""),
-    }))
+    .map((task) => ({ task, latest: latestByTask.get(task.id) ?? "" }))
     .sort((left, right) => right.latest.localeCompare(left.latest))[0]?.task;
 }
 
@@ -91,11 +91,16 @@ export function projectDashboard(state: JourneyState, userId: string, now: Date)
     (task) => task.status === "NOT_STARTED" && task.recommendationMode === "OPTIONAL",
   );
 
+  const ownedTaskIds = new Set(ownedTasks.map((task) => task.id));
+  const closedSegmentsBySession = Object.values(state.records.sessions)
+    .filter((session) => ownedTaskIds.has(session.taskId) && session.endedAt)
+    .map((session) => ({ session, segments: closedSessionSegments(session) }));
+  const activitySeconds = new Map<string, number>();
+  for (const { segments } of closedSegmentsBySession) {
+    for (const segment of segments) activitySeconds.set(segment.date, (activitySeconds.get(segment.date) ?? 0) + segment.seconds);
+  }
   const activityDays = Array.from({ length: 14 }, (_, index) => addLocalDays(today, index - 13)).map((date) => {
-    const seconds = Object.values(state.records.sessions).reduce(
-      (total, session) => total + closedSessionSegments(session).filter((part) => part.date === date).reduce((sum, part) => sum + part.seconds, 0),
-      0,
-    );
+    const seconds = activitySeconds.get(date) ?? 0;
     return { date, sessionSeconds: seconds, level: contributionLevel(seconds) };
   });
   const milestone = currentQuarter
@@ -104,9 +109,20 @@ export function projectDashboard(state: JourneyState, userId: string, now: Date)
       )
     : undefined;
   const milestoneTasks = milestone ? ownedTasks.filter((task) => task.milestoneId === milestone.id) : [];
-  const milestoneSessions = milestoneTasks.flatMap((task) =>
-    Object.values(state.records.sessions).filter((session) => session.taskId === task.id),
-  );
+  const milestoneSessions = milestone
+    ? closedSegmentsBySession.filter(({ segments }) => segments.some((segment) => segment.date >= milestone.startDate && segment.date <= milestone.endDate))
+    : [];
+  const milestoneSessionSeconds = milestone
+    ? milestoneSessions.reduce((total, { segments }) => total + segments
+        .filter((segment) => segment.date >= milestone.startDate && segment.date <= milestone.endDate)
+        .reduce((sum, segment) => sum + segment.seconds, 0), 0)
+    : 0;
+  const milestoneThoughts = milestone
+    ? Object.values(state.records.journeyEntries).filter((entry) => {
+        const date = localDate(entry.occurredAt, entry.timeZoneAtOccurrence);
+        return entry.userId === userId && date >= milestone.startDate && date <= milestone.endDate;
+      })
+    : [];
   const nearestQuarter = currentQuarter ?? allQuarters.sort((left, right) => left.startDate.localeCompare(right.startDate))[0];
   let lightReason = "NO_PLANNED_ITEM";
   if (!currentQuarter && nearestQuarter) lightReason = nearestQuarter.startDate > today ? "QUARTER_NOT_STARTED" : "BETWEEN_QUARTERS";
@@ -180,15 +196,15 @@ export function projectDashboard(state: JourneyState, userId: string, now: Date)
             startDate: milestone.startDate,
             endDate: milestone.endDate,
             mode: milestone.mode,
-            sessionSeconds: milestoneSessions.reduce((sum, session) => sum + effectiveSessionSeconds(session, generatedAt), 0),
+            sessionSeconds: milestoneSessionSeconds,
             sessionCount: milestoneSessions.length,
             plannedItemCount: milestoneTasks.length,
             touchedItemCount: milestoneTasks.filter((task) => task.status !== "NOT_STARTED").length,
             finishedItemCount: milestoneTasks.filter((task) => task.status === "FINISHED").length,
             skippedItemCount: milestoneTasks.filter((task) => task.status === "SKIPPED").length,
             openItemCount: milestoneTasks.filter((task) => task.status === "IN_PROGRESS" || task.status === "PAUSED").length,
-            thoughtCount: 0,
-            changedMyMindCount: 0,
+            thoughtCount: milestoneThoughts.length,
+            changedMyMindCount: milestoneThoughts.filter((entry) => entry.changedMyMind).length,
             href: `/api/quarters/${milestone.quarterId}/milestones/${milestone.id}/summary`,
           }
         : null,

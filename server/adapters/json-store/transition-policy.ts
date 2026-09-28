@@ -44,6 +44,7 @@ function canDeletePlanRecord(
       !Object.values(state.records.sessions).some((record) => record.taskId === id) &&
       !Object.values(state.records.taskLifecycleEvents).some((record) => record.taskId === id) &&
       !Object.values(state.records.dailyReviews).some((record) => record.taskId === id) &&
+      !Object.values(state.records.journeyEntries).some((record) => record.relatedTaskId === id) &&
       !Object.values(state.records.tasks).some((record) => record.continuationOfTaskId === id)
     );
   }
@@ -58,7 +59,8 @@ function canDeletePlanRecord(
       !milestone?.intentSnapshot &&
       !Object.values(state.records.tasks).some(
         (task) => task.milestoneId === id || task.planSnapshot?.milestoneId === id,
-      )
+      ) &&
+      !Object.values(state.records.journeyEntries).some((entry) => entry.relatedMilestoneId === id)
     );
   }
   const quarter = state.records.quarters[id];
@@ -75,6 +77,22 @@ export function assertJourneyStateTransition(
   after: JourneyState,
   intent: TransactionIntent,
 ): void {
+  if (intent.kind === "JOURNEY_DELETE") {
+    for (const collectionName of Object.keys(before.records) as Array<keyof JourneyState["records"]>) {
+      if (collectionName === "journeyEntries") continue;
+      if (!equalJson(before.records[collectionName], after.records[collectionName])) {
+        throw new StoreError("STORE_WRITE_FAILED", "Journey deletion cannot change any other records.");
+      }
+    }
+    if (!equalJson(before.commandReceipts, after.commandReceipts)) {
+      throw new StoreError("STORE_WRITE_FAILED", "Journey deletion cannot change command receipts.");
+    }
+    const expectedEntries = { ...before.records.journeyEntries };
+    delete expectedEntries[intent.journeyEntryId];
+    if (!equalJson(expectedEntries, after.records.journeyEntries)) {
+      throw new StoreError("STORE_WRITE_FAILED", "Journey deletion must remove exactly the named entry.");
+    }
+  }
   if (intent.kind !== "SCHEMA_MIGRATION" && !equalJson(before.records.users, after.records.users)) {
     throw new StoreError(
       "STORE_WRITE_FAILED",
@@ -257,18 +275,31 @@ export function assertJourneyStateTransition(
   for (const [id, oldSession] of Object.entries(before.records.sessions)) {
     const next = after.records.sessions[id];
     if (!next) continue;
-    const immutableFields = [
-      "id", "taskId", "startedAt", "timeZoneAtStart", "intentionMinutes", "createdAt", "correctedAt",
-    ] as const;
-    if (
-      !equalJson(
-        fields(oldSession as unknown as Record<string, unknown>, immutableFields),
-        fields(next as unknown as Record<string, unknown>, immutableFields),
-      ) ||
-      (oldSession.endedAt !== undefined && oldSession.endedAt !== next.endedAt)
-    ) {
-      throw new StoreError("STORE_WRITE_FAILED", "Session facts are immutable after they close.");
+    const permanentFields = ["id", "taskId", "timeZoneAtStart", "intentionMinutes", "createdAt"] as const;
+    if (!equalJson(
+      fields(oldSession as unknown as Record<string, unknown>, permanentFields),
+      fields(next as unknown as Record<string, unknown>, permanentFields),
+    )) throw new StoreError("STORE_WRITE_FAILED", "Session ownership and capture facts are immutable.");
+    const intervalChanged = oldSession.startedAt !== next.startedAt || oldSession.endedAt !== next.endedAt;
+    if (!intervalChanged) continue;
+    const normalClose = oldSession.endedAt === undefined && next.endedAt !== undefined &&
+      oldSession.startedAt === next.startedAt && oldSession.correctedAt === next.correctedAt;
+    const correction = next.correctedAt !== undefined && next.correctedAt === next.updatedAt &&
+      next.correctedAt !== oldSession.correctedAt &&
+      (oldSession.endedAt === undefined ? next.endedAt === undefined : next.endedAt !== undefined);
+    if (!normalClose && !correction) {
+      throw new StoreError("STORE_WRITE_FAILED", "Session intervals change only through close or explicit correction.");
     }
+  }
+
+  for (const [id, oldEntry] of Object.entries(before.records.journeyEntries)) {
+    const next = after.records.journeyEntries[id];
+    if (!next) continue;
+    const immutableFields = ["id", "userId", "occurredAt", "timeZoneAtOccurrence", "createdAt"] as const;
+    if (!equalJson(
+      fields(oldEntry as unknown as Record<string, unknown>, immutableFields),
+      fields(next as unknown as Record<string, unknown>, immutableFields),
+    )) throw new StoreError("STORE_WRITE_FAILED", "Journey occurrence and ownership are immutable.");
   }
 
   for (const collectionName of ["taskLifecycleEvents", "dailyReviews"] as const) {

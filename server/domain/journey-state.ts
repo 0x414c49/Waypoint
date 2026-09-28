@@ -1,6 +1,7 @@
 export {
   CommandReceiptSchema,
   DailyReviewRecordSchema,
+  JourneyEntryRecordSchema,
   FocusAreaRecordSchema,
   MilestoneIntentSnapshotSchema,
   MilestoneRecordSchema,
@@ -13,6 +14,7 @@ export {
   UserRecordSchema,
   type CommandReceipt,
   type DailyReviewRecord,
+  type JourneyEntryRecord,
   type FocusAreaRecord,
   type MilestoneIntentSnapshot,
   type MilestoneRecord,

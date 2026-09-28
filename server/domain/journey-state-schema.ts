@@ -11,6 +11,7 @@ import {
   TaskRecordSchema,
   UtcInstantSchema,
   UserRecordSchema,
+  JourneyEntryRecordSchema,
 } from "./journey-records.js";
 
 const recordMap = <T extends TSchema>(schema: T) => Type.Record(RecordIdSchema, schema);
@@ -29,7 +30,7 @@ export const JourneyStateSchema = Type.Object({
     sessions: recordMap(SessionRecordSchema),
     taskLifecycleEvents: recordMap(TaskLifecycleEventRecordSchema),
     dailyReviews: recordMap(DailyReviewRecordSchema),
-    journeyEntries: recordMap(laterSliceRecord),
+    journeyEntries: recordMap(JourneyEntryRecordSchema),
     decisionRecords: recordMap(laterSliceRecord),
     decisionReviews: recordMap(laterSliceRecord),
     aiReviews: recordMap(laterSliceRecord),

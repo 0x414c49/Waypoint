@@ -203,4 +203,52 @@ describe("JourneyState execution invariants", () => {
       expect.stringContaining("occurredAt must not move backwards with sequence"),
     );
   });
+
+  it("requires ownership and immutable plan context for linked Journey entries", () => {
+    const state = createProductionSeed(instant);
+    const task = state.records.tasks["2026-10-05-go-foundations"]!;
+    state.records.journeyEntries.thought = {
+      id: "thought",
+      userId: "local-user",
+      occurredAt: instant,
+      timeZoneAtOccurrence: "Europe/Amsterdam",
+      text: "The retry belongs above transport.",
+      tags: [],
+      relatedTaskId: task.id,
+      changedMyMind: false,
+      createdAt: instant,
+    };
+    expect(validateJourneyState(state)).toEqual(expect.arrayContaining([
+      expect.stringContaining("planSnapshot: required once linked from Journey"),
+      expect.stringContaining("intentSnapshot: required once linked from Journey"),
+    ]));
+    addSnapshots(state, task);
+    expect(validateJourneyState(state)).toEqual([]);
+    state.records.journeyEntries.thought.userId = "missing-user";
+    expect(validateJourneyState(state)).toEqual(expect.arrayContaining([
+      expect.stringContaining("userId: user does not exist"),
+      expect.stringContaining("task must belong to the entry user"),
+    ]));
+  });
+
+  it("treats a closed zero-duration session as an empty non-overlapping interval", () => {
+    const state = createProductionSeed(instant);
+    const first = state.records.tasks["2026-10-05-go-foundations"]!;
+    const second = state.records.tasks["2026-10-06-timeouts"]!;
+    addSnapshots(state, first);
+    addSnapshots(state, second);
+    first.status = "PAUSED";
+    second.status = "PAUSED";
+    state.records.sessions.normal = {
+      id: "normal", taskId: first.id,
+      startedAt: "2026-10-05T10:00:00.000Z", endedAt: "2026-10-05T11:00:00.000Z",
+      timeZoneAtStart: "Europe/Amsterdam", createdAt: instant, updatedAt: instant,
+    };
+    state.records.sessions.empty = {
+      id: "empty", taskId: second.id,
+      startedAt: "2026-10-05T10:30:00.000Z", endedAt: "2026-10-05T10:30:00.000Z",
+      timeZoneAtStart: "Europe/Amsterdam", createdAt: instant, updatedAt: instant,
+    };
+    expect(validateJourneyState(state)).toEqual([]);
+  });
 });

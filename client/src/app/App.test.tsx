@@ -25,7 +25,7 @@ describe("application shell", () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(lightDashboard))));
   });
 
-  it("opens Today without dead product navigation", async () => {
+  it("opens Today with only completed product destinations", async () => {
     render(
       <MemoryRouter>
         <App />
@@ -33,7 +33,10 @@ describe("application shell", () => {
     );
 
     expect(await screen.findByRole("heading", { name: "Today" })).toBeTruthy();
-    expect(screen.queryByRole("navigation")).toBeNull();
+    expect(screen.getAllByRole("link", { name: "Today" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("link", { name: "Journey" }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole("link", { name: "Quarter" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Decisions" })).toBeNull();
     expect(screen.getByText("Stored on this device")).toBeTruthy();
   });
 

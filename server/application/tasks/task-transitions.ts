@@ -3,6 +3,7 @@ import type { IdGenerator } from "../../ports/id-generator.js";
 import { AppError, notFound } from "../app-error.js";
 import { taskEtag } from "../task-etag.js";
 import type { ActiveSessionResolution, CommandOutcome, TaskCommandRequest } from "./task-command-types.js";
+import { captureTaskPlanContext } from "../history/capture-plan-context.js";
 
 export function assertTaskOwner(state: JourneyState, taskId: string, userId: string): TaskRecord {
   const task = state.records.tasks[taskId];
@@ -18,56 +19,6 @@ function invalidTransition(task: TaskRecord): never {
   throw new AppError(409, "INVALID_TASK_TRANSITION", "That action is not available", "Refresh the item to see its current actions.", {
     current: { taskId: task.id, status: task.status },
   });
-}
-
-function capturePlanContext(state: JourneyState, task: TaskRecord, timeZone: string, occurredAt: string): void {
-  if (task.planSnapshot) return;
-  const quarter = state.records.quarters[task.quarterId]!;
-  const area = task.focusAreaId ? state.records.focusAreas[task.focusAreaId] : undefined;
-  const milestone = task.milestoneId ? state.records.milestones[task.milestoneId] : undefined;
-  task.planSnapshot = {
-    capturedAt: occurredAt,
-    planRevision: quarter.planRevision,
-    ...(area ? { focusAreaId: area.id, focusAreaName: area.name } : {}),
-    ...(milestone ? { milestoneId: milestone.id, milestoneTitle: milestone.title } : {}),
-    plannedDate: task.plannedDate,
-    title: task.title,
-    ...(task.description ? { description: task.description } : {}),
-    ...(task.plannedMinutes ? { plannedMinutes: task.plannedMinutes } : {}),
-    tags: [...task.tags],
-    recommendationMode: task.recommendationMode,
-    ...(task.decisionPrompt ? { decisionPrompt: structuredClone(task.decisionPrompt) } : {}),
-  };
-  if (milestone && !milestone.intentSnapshot) {
-    milestone.intentSnapshot = {
-      capturedAt: occurredAt,
-      planRevision: quarter.planRevision,
-      timeZoneAtCapture: timeZone,
-      title: milestone.title,
-      ...(milestone.description ? { description: milestone.description } : {}),
-      startDate: milestone.startDate,
-      endDate: milestone.endDate,
-      mode: milestone.mode,
-      position: milestone.position,
-    };
-  }
-  if (!quarter.intentSnapshot) {
-    quarter.intentSnapshot = {
-      capturedAt: occurredAt,
-      planRevision: quarter.planRevision,
-      timeZoneAtCapture: timeZone,
-      title: quarter.title,
-      ...(quarter.description ? { description: quarter.description } : {}),
-      ...(quarter.mantra ? { mantra: quarter.mantra } : {}),
-      startDate: quarter.startDate,
-      endDate: quarter.endDate,
-      successCriteria: structuredClone(quarter.successCriteria),
-      focusAreas: Object.values(state.records.focusAreas)
-        .filter((candidate) => candidate.quarterId === quarter.id && !candidate.removedFromPlanAt)
-        .sort((left, right) => left.position - right.position)
-        .map((candidate) => ({ id: candidate.id, name: candidate.name, ...(candidate.targetMinutes ? { targetMinutes: candidate.targetMinutes } : {}) })),
-    };
-  }
 }
 
 function endSession(state: JourneyState, sessionId: string, occurredAt: string): TaskRecord {
@@ -137,7 +88,7 @@ export function applyTaskTransition(
     if (!(task.status === "IN_PROGRESS" && currentActiveSession(state)?.taskId === task.id)) {
       if (task.status !== expected) invalidTransition(task);
       affectedTaskIds.push(...pauseAndSwitch(state, task, request.body.activeSessionResolution, occurredAt));
-      capturePlanContext(state, task, timeZone, occurredAt);
+      captureTaskPlanContext(state, task, timeZone, occurredAt);
       outcome.sessionId = createSession(state, task, ids.generate(), occurredAt, timeZone, request.action === "start" ? request.body.intentionMinutes : undefined);
     }
   } else if (request.action === "pause") {
@@ -169,6 +120,14 @@ export function applyTaskTransition(
     Object.assign(outcome, { finishEventId: finishEvent.id, reviewId, outcome: request.body.outcome, undoUntil: new Date(now.valueOf() + 5 * 60 * 1000).toISOString() });
   } else {
     if (task.status !== "FINISHED" && task.status !== "SKIPPED") invalidTransition(task);
+    const openContinuation = Object.values(state.records.tasks).find((candidate) =>
+      candidate.continuationOfTaskId === task.id && candidate.status !== "FINISHED" && candidate.status !== "SKIPPED",
+    );
+    if (openContinuation) {
+      throw new AppError(409, "OPEN_CONTINUATION_EXISTS", "This work already continues elsewhere", "Open the continuation instead of reopening its source.", {
+        current: { continuation: { id: openContinuation.id, status: openContinuation.status } },
+      });
+    }
     const closure = state.records.taskLifecycleEvents[request.body.closureEventId ?? ""];
     const latest = Object.values(state.records.taskLifecycleEvents)
       .filter((event) => event.taskId === task.id && (event.type === "FINISHED" || event.type === "SKIPPED") && !Object.values(state.records.taskLifecycleEvents).some((later) => later.type === "REOPENED" && later.undoesEventId === event.id))

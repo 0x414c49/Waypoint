@@ -194,6 +194,22 @@ export const DailyReviewRecordSchema = Type.Object({
 }, { additionalProperties: false });
 export type DailyReviewRecord = Static<typeof DailyReviewRecordSchema>;
 
+export const JourneyEntryRecordSchema = Type.Object({
+  id: RecordIdSchema,
+  userId: RecordIdSchema,
+  occurredAt: UtcInstantSchema,
+  timeZoneAtOccurrence: Type.String({ minLength: 1, maxLength: 100 }),
+  text: longText,
+  tags: Type.Array(Type.String({ minLength: 1, maxLength: 64 }), { maxItems: 20 }),
+  relatedTaskId: Type.Optional(RecordIdSchema),
+  relatedMilestoneId: Type.Optional(RecordIdSchema),
+  relatedDecisionId: Type.Optional(RecordIdSchema),
+  changedMyMind: Type.Boolean(),
+  createdAt: UtcInstantSchema,
+  updatedAt: Type.Optional(UtcInstantSchema),
+}, { additionalProperties: false });
+export type JourneyEntryRecord = Static<typeof JourneyEntryRecordSchema>;
+
 export const CommandReceiptSchema = Type.Object({
   userId: RecordIdSchema,
   key: Type.String({ minLength: 1, maxLength: 128, pattern: "^[A-Za-z0-9._:-]+$" }),

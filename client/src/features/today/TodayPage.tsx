@@ -56,6 +56,7 @@ export function TodayPage() {
     setDashboard((current) =>
       current && current.dataRevision > incoming.dataRevision ? current : incoming,
     );
+    window.dispatchEvent(new CustomEvent("journey:dashboard-changed", { detail: incoming }));
   }, []);
 
   const refresh = useCallback(async (signal?: AbortSignal) => {
@@ -241,6 +242,7 @@ export function TodayPage() {
           onPause={pause}
           onResume={resume}
           onFinish={(task) => void openFinish(task)}
+          onThought={() => window.dispatchEvent(new Event("journey:open-thought"))}
         />
         <TodayContext
           upNext={dashboard.upNext}
@@ -248,7 +250,7 @@ export function TodayPage() {
           busy={busy}
           onOpen={openContextTask}
         />
-        <ActivityPreview activity={dashboard.activityPreview} />
+        <ActivityPreview activity={dashboard.activityPreview} milestone={dashboard.milestoneSummary} />
       </div>
 
       {finishTask ? (

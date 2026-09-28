@@ -59,6 +59,6 @@ export function projectTask(state: JourneyState, task: TaskRecord, generatedAt: 
       firstStartedAt: sessions[0]?.startedAt ?? null,
       runningSince: active?.startedAt ?? null,
     },
-    availableActions: task.status === "NOT_STARTED" ? ["START", "DO_TEN_MINUTES"] : task.status === "IN_PROGRESS" ? ["PAUSE", "FINISH"] : task.status === "PAUSED" ? ["RESUME", "FINISH"] : ["REOPEN"],
+    availableActions: task.status === "NOT_STARTED" ? ["START", "DO_TEN_MINUTES"] : task.status === "IN_PROGRESS" ? ["PAUSE", "FINISH", "CARRY_FORWARD"] : task.status === "PAUSED" ? ["RESUME", "FINISH", "CARRY_FORWARD"] : ["REOPEN"],
   };
 }

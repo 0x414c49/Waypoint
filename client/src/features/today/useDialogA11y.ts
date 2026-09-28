@@ -6,11 +6,12 @@ const focusable =
 export function useDialogA11y(
   dialogRef: RefObject<HTMLElement | null>,
   onClose: () => void,
+  backgroundSelector = "#today-content",
 ): void {
   useEffect(() => {
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const page = document.getElementById("today-content");
-    if (page) page.inert = true;
+    const background = [...document.querySelectorAll<HTMLElement>(backgroundSelector)];
+    for (const element of background) element.inert = true;
     const first = dialogRef.current?.querySelector<HTMLElement>(focusable);
     first?.focus();
 
@@ -36,8 +37,8 @@ export function useDialogA11y(
     document.addEventListener("keydown", onKeyDown);
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      if (page) page.inert = false;
+      for (const element of background) element.inert = false;
       previousFocus?.focus();
     };
-  }, [dialogRef, onClose]);
+  }, [backgroundSelector, dialogRef, onClose]);
 }

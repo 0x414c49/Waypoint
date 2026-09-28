@@ -151,6 +151,7 @@ The response never reveals the earlier request body.
 | 409 | `ACKNOWLEDGEMENT_REQUIRED` | Present required preservation acknowledgement |
 | 409 | `QUARTER_DATE_OVERLAP` | Explain the existing Quarter range |
 | 410 | `PLAN_PREVIEW_EXPIRED` | Re-run preview |
+| 410 | `IDEMPOTENT_RESULT_DELETED` | Use a new key only for a genuinely new Journey thought |
 | 413 | `PAYLOAD_TOO_LARGE` | Request exceeds its documented byte limit |
 | 412 | `STALE_WRITE` | Refresh resource |
 | 422 | `VALIDATION_FAILED` | Show field/document errors |
