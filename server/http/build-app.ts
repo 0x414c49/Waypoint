@@ -20,6 +20,10 @@ import { registerJourneyRoutes } from "./journey-routes.js";
 import { registerDecisionRoutes } from "./decision-routes.js";
 import { registerQuarterRoutes } from "./quarter-routes.js";
 import { registerPlanRoutes } from "./plan-routes.js";
+import { registerSearchRoutes } from "./search-routes.js";
+import { registerAIRoutes } from "./ai-routes.js";
+import { StubAIReviewer } from "../adapters/stub-ai-reviewer.js";
+import type { AIReviewer } from "../ports/ai-reviewer.js";
 
 interface BuildAppOptions {
   readonly store: JourneyStore;
@@ -31,6 +35,7 @@ interface BuildAppOptions {
   readonly allowedMutationOrigins: ReadonlySet<string>;
   readonly serveFrontend?: boolean;
   readonly registerTestRoutes?: boolean;
+  readonly aiReviewer?: AIReviewer;
 }
 
 const mutatingMethods = new Set(["POST", "PUT", "PATCH", "DELETE"]);
@@ -243,6 +248,8 @@ export async function buildApp(options: BuildAppOptions) {
   registerDecisionRoutes(app, options);
   registerQuarterRoutes(app, options);
   registerPlanRoutes(app, options);
+  registerSearchRoutes(app, options);
+  registerAIRoutes(app, { ...options, reviewer: options.aiReviewer ?? new StubAIReviewer() });
 
   return app;
 }

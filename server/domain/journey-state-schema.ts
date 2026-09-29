@@ -1,6 +1,7 @@
 import { Type, type Static, type TSchema } from "@sinclair/typebox";
 import {
   CommandReceiptSchema,
+  AIReviewRecordSchema,
   DailyReviewRecordSchema,
   DecisionRecordSchema,
   DecisionReviewRecordSchema,
@@ -17,7 +18,6 @@ import {
 } from "./journey-records.js";
 
 const recordMap = <T extends TSchema>(schema: T) => Type.Record(RecordIdSchema, schema);
-const laterSliceRecord = Type.Object({ id: RecordIdSchema }, { additionalProperties: true });
 
 export const JourneyStateSchema = Type.Object({
   schemaVersion: Type.Literal(1),
@@ -35,7 +35,7 @@ export const JourneyStateSchema = Type.Object({
     journeyEntries: recordMap(JourneyEntryRecordSchema),
     decisionRecords: recordMap(DecisionRecordSchema),
     decisionReviews: recordMap(DecisionReviewRecordSchema),
-    aiReviews: recordMap(laterSliceRecord),
+    aiReviews: recordMap(AIReviewRecordSchema),
   }, { additionalProperties: false }),
   commandReceipts: Type.Record(Type.String({ minLength: 1 }), CommandReceiptSchema),
 }, { additionalProperties: false, $id: "JourneyState" });

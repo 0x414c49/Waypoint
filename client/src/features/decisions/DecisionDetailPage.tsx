@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "../../ui/Button.js";
+import { AIReviewPanel } from "../utilities/AIReviewPanel.js";
 import { DecisionEditor } from "./DecisionEditor.js";
 import { OriginalReasoning } from "./OriginalReasoning.js";
 import { ReviewComposer } from "./ReviewComposer.js";
@@ -98,6 +99,7 @@ export function DecisionDetailPage() {
       ) : (
         <>
           <OriginalReasoning decision={detail} />
+          <AIReviewPanel targetType="DECISION" targetId={detail.id} targetTitle={detail.title} canGenerate={detail.status === "ACCEPTED"} />
           {detail.status === "ACCEPTED" ? (
             <ReviewComposer busy={busy} onSubmit={async (input: { outcome: DecisionReviewOutcome; notes?: string; nextReviewDate?: string }) => run(() => addDecisionReview(detail.id, detail.etag, input))} />
           ) : <p className={styles.historyNotice}>This decision was superseded. Its original reasoning and reviews remain intact.</p>}

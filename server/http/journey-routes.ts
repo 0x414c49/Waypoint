@@ -23,6 +23,7 @@ import { AppError } from "../application/app-error.js";
 import { projectActivity } from "../application/journey/activity.js";
 import { JourneyCommandService, type JourneyEntryInput } from "../application/journey/journey-command-service.js";
 import { projectJourneyTimeline } from "../application/journey/journey-timeline.js";
+import { projectJourneyEntry } from "../application/journey/journey-projection.js";
 import { projectMilestoneSummary } from "../application/journey/milestone-summary.js";
 import { SessionCorrectionService } from "../application/journey/session-correction-service.js";
 import { projectSession } from "../application/journey/session-projection.js";
@@ -100,6 +101,16 @@ export function registerJourneyRoutes<TLogger extends FastifyBaseLogger>(app: Fa
     const userId = await options.currentUserProvider.getCurrentUserId();
     const query = request.query as { from?: string; to?: string; taskId?: string; milestoneId?: string; changedMyMind?: boolean; type?: "THOUGHT" | "SESSION" | "TASK_FINISHED" | "WEEKLY_REFLECTION" | "DECISION_REVIEW"; cursor?: string; limit?: number };
     return options.store.read((state) => projectJourneyTimeline(state, userId, { ...query, limit: query.limit ?? 50 }));
+  });
+  app.get("/api/journey/:id", { schema: { params: Params, response: { 200: JourneyEntrySchema } } }, async (request, reply) => {
+    const userId = await options.currentUserProvider.getCurrentUserId();
+    const id = (request.params as { id: string }).id;
+    const entry = await options.store.read((state) => {
+      const target = state.records.journeyEntries[id];
+      if (!target || target.userId !== userId) throw new AppError(404, "RESOURCE_NOT_FOUND", "Resource not found", "That local resource does not exist.");
+      return projectJourneyEntry(state, target);
+    });
+    return reply.header("ETag", entry.etag).send(entry);
   });
   app.post("/api/journey", { schema: { body: EntryCreateBody, response: { 201: JourneyEntrySchema } } }, async (request, reply) => {
     const result = await entries.create(request.body as JourneyEntryInput, commandKey(request.headers));

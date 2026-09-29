@@ -261,6 +261,27 @@ export const DecisionReviewRecordSchema = Type.Object({
 }, { additionalProperties: false });
 export type DecisionReviewRecord = Static<typeof DecisionReviewRecordSchema>;
 
+export const AIReviewTargetTypeSchema = Type.Union([
+  Type.Literal("TASK"), Type.Literal("WEEK"), Type.Literal("QUARTER"), Type.Literal("DECISION"),
+]);
+export type AIReviewTargetType = Static<typeof AIReviewTargetTypeSchema>;
+export const AIReviewRecordSchema = Type.Object({
+  id: RecordIdSchema,
+  userId: RecordIdSchema,
+  targetType: AIReviewTargetTypeSchema,
+  targetId: RecordIdSchema,
+  provider: Type.String({ minLength: 1, maxLength: 80 }),
+  model: Type.Optional(Type.String({ minLength: 1, maxLength: 120 })),
+  summary: Type.Optional(longText),
+  strengths: Type.Array(longText, { maxItems: 20 }),
+  gaps: Type.Array(longText, { maxItems: 20 }),
+  suggestedFollowUp: Type.Optional(longText),
+  questions: Type.Array(longText, { maxItems: 20 }),
+  generatedAt: UtcInstantSchema,
+  timeZoneAtGeneration: Type.String({ minLength: 1, maxLength: 100 }),
+}, { additionalProperties: false });
+export type AIReviewRecord = Static<typeof AIReviewRecordSchema>;
+
 export const CommandReceiptSchema = Type.Object({
   userId: RecordIdSchema,
   key: Type.String({ minLength: 1, maxLength: 128, pattern: "^[A-Za-z0-9._:-]+$" }),

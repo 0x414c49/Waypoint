@@ -1,0 +1,152 @@
+.backdrop {
+  position: fixed;
+  z-index: 30;
+  inset: 0;
+  display: grid;
+  place-items: start center;
+  overflow-y: auto;
+  padding: clamp(16px, 8vh, 72px) 16px 24px;
+  background: rgb(20 26 31 / 48%);
+}
+
+.dialog {
+  display: grid;
+  width: min(100%, 680px);
+  max-height: min(82vh, 820px);
+  gap: 16px;
+  overflow: hidden;
+  padding: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-surface);
+  background: var(--color-surface);
+  box-shadow: 0 18px 54px rgb(20 26 31 / 18%);
+}
+
+.heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.heading h2,
+.heading p,
+.group h3 {
+  margin: 0;
+}
+
+.heading h2 {
+  font-size: var(--text-h2);
+  line-height: var(--line-h2);
+}
+
+.eyebrow {
+  margin-bottom: 4px !important;
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+}
+
+.searchField input {
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 16px;
+  color: var(--color-text);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  font: 400 var(--text-body)/var(--line-body) var(--font-sans);
+}
+
+.results {
+  display: grid;
+  gap: 20px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.group {
+  display: grid;
+  gap: 8px;
+}
+
+.group h3 {
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+}
+
+.group ul {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.group li + li {
+  border-top: 1px solid var(--color-border);
+}
+
+.group a {
+  display: grid;
+  gap: 4px;
+  padding: 12px 8px;
+  border-radius: var(--radius-control);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.group a:hover {
+  background: var(--color-surface-subtle);
+}
+
+.group strong {
+  font-weight: 600;
+}
+
+.resultMeta,
+.excerpt,
+.hint {
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+}
+
+.hint,
+.error {
+  margin: 0;
+  padding: 12px;
+  border-radius: var(--radius-control);
+  background: var(--color-surface-subtle);
+}
+
+.error {
+  color: var(--color-error);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+@media (max-width: 720px) {
+  .backdrop {
+    display: block;
+    padding: 0;
+    background: var(--color-surface);
+  }
+
+  .dialog {
+    width: 100%;
+    max-height: 100dvh;
+    min-height: 100dvh;
+    gap: 16px;
+    padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}

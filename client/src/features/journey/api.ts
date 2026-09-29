@@ -58,6 +58,14 @@ export async function getJourney(filters: JourneyFilters, signal?: AbortSignal, 
   return read<JourneyResponse>(response);
 }
 
+export async function getJourneyEntry(entryId: string, signal?: AbortSignal): Promise<JourneyEntry> {
+  const response = await fetch(`/api/journey/${encodeURIComponent(entryId)}`, {
+    headers: { Accept: "application/json" },
+    ...(signal ? { signal } : {}),
+  });
+  return read<JourneyEntry>(response);
+}
+
 export async function createJourneyEntry(input: {
   text: string;
   relatedTaskId?: string | null;

@@ -163,7 +163,9 @@ Preview strictly parses the normative YAML format, validates it, diffs plan-owne
 
 ### AI review
 
-The application checks receipt replay, reads a minimal target/context snapshot, calls the AIReviewer outside a store transaction, then opens one transaction that checks receipt replay again, revalidates target/link context, and appends the generated AIReview. If a concurrent identical command already won, the unused generated result is discarded and the committed result is replayed. The stub is synchronous; no queue or worker exists.
+The application checks receipt replay, reads a bounded target/context snapshot, calls the AIReviewer outside a store transaction, then opens one transaction that checks receipt replay again, revalidates target/link context, captures required history snapshots, and appends the generated AIReview. If a concurrent identical command already won, the unused generated result is discarded and the committed result is replayed. Provider failure and a changed target create no review. The stub is synchronous; no queue or worker exists. The frontend labels output as generated advice and keeps its history separate from user-authored reasoning.
+
+Global Search is a read-only query over the current user’s plan, Journey, and Decisions records. It returns grouped result descriptions and canonical IDs, never frontend paths; the client resolves each result to the owning route. A Journey thought can be fetched by ID so a search result opens that exact timeline entry.
 
 ## Failure boundaries
 

@@ -561,6 +561,52 @@ function validateDecisions(state: JourneyState, errors: string[]): void {
   }
 }
 
+function validateAIReviews(state: JourneyState, errors: string[]): void {
+  for (const review of Object.values(state.records.aiReviews)) {
+    const path = `/records/aiReviews/${review.id}`;
+    const user = state.records.users[review.userId];
+    if (!user) errors.push(`${path}/userId: user does not exist`);
+    instant(errors, `${path}/generatedAt`, review.generatedAt);
+    if (!isIanaTimeZone(review.timeZoneAtGeneration)) errors.push(`${path}/timeZoneAtGeneration: expected an IANA time zone`);
+
+    if (review.targetType === "TASK") {
+      const task = state.records.tasks[review.targetId];
+      const quarter = task ? state.records.quarters[task.quarterId] : undefined;
+      if (!task || quarter?.userId !== review.userId) errors.push(`${path}/targetId: target Task must belong to the review user`);
+      else {
+        if (!task.planSnapshot) errors.push(`${path}/targetId: reviewed Task must have a captured plan snapshot`);
+        const milestoneId = task.planSnapshot?.milestoneId ?? task.milestoneId;
+        const milestone = milestoneId ? state.records.milestones[milestoneId] : undefined;
+        if (milestone && !milestone.intentSnapshot) errors.push(`${path}/targetId: reviewed Task milestone must have a captured intent snapshot`);
+        if (!quarter.intentSnapshot) errors.push(`${path}/targetId: reviewed Task Quarter must have a captured intent snapshot`);
+      }
+    } else if (review.targetType === "WEEK") {
+      const milestone = state.records.milestones[review.targetId];
+      const quarter = milestone ? state.records.quarters[milestone.quarterId] : undefined;
+      if (!milestone || quarter?.userId !== review.userId) errors.push(`${path}/targetId: target Week must belong to the review user`);
+      else {
+        if (!milestone.intentSnapshot) errors.push(`${path}/targetId: reviewed Week must have a captured intent snapshot`);
+        if (!quarter.intentSnapshot) errors.push(`${path}/targetId: reviewed Week Quarter must have a captured intent snapshot`);
+      }
+    } else if (review.targetType === "QUARTER") {
+      const quarter = state.records.quarters[review.targetId];
+      if (!quarter || quarter.userId !== review.userId) errors.push(`${path}/targetId: target Quarter must belong to the review user`);
+      else if (!quarter.intentSnapshot) errors.push(`${path}/targetId: reviewed Quarter must have a captured intent snapshot`);
+    } else {
+      const decision = state.records.decisionRecords[review.targetId];
+      if (!decision || decision.userId !== review.userId) errors.push(`${path}/targetId: target Decision must belong to the review user`);
+      else if (decision.relatedTaskId) {
+        const task = state.records.tasks[decision.relatedTaskId];
+        const quarter = task ? state.records.quarters[task.quarterId] : undefined;
+        if (!task?.planSnapshot) errors.push(`${path}/targetId: reviewed Decision Task must have a captured plan snapshot`);
+        if (!quarter?.intentSnapshot) errors.push(`${path}/targetId: reviewed Decision Quarter must have a captured intent snapshot`);
+      } else if (decision.quarterId && !state.records.quarters[decision.quarterId]?.intentSnapshot) {
+        errors.push(`${path}/targetId: reviewed Decision Quarter must have a captured intent snapshot`);
+      }
+    }
+  }
+}
+
 export function validateJourneyState(value: unknown): string[] {
   const errors = [...Value.Errors(JourneyStateSchema, value)].map(
     (error) => `${error.path || "/"}: ${error.message}`,
@@ -574,11 +620,6 @@ export function validateJourneyState(value: unknown): string[] {
       if (key !== record.id) errors.push(`/records/${collectionName}/${key}: map key must equal id`);
     }
   }
-  for (const collectionName of ["aiReviews"] as const) {
-    for (const key of Object.keys(state.records[collectionName])) {
-      errors.push(`/records/${collectionName}/${key}: ${collectionName} records are not enabled in the current release slice`);
-    }
-  }
   for (const [key, user] of Object.entries(state.records.users)) {
     instant(errors, `/records/users/${key}/createdAt`, user.createdAt);
     if (!isIanaTimeZone(user.timeZone)) errors.push(`/records/users/${key}/timeZone: expected an IANA time zone`);
@@ -589,6 +630,7 @@ export function validateJourneyState(value: unknown): string[] {
   validateExecutionRecords(state, errors);
   validateDecisions(state, errors);
   validateJourneyEntries(state, errors);
+  validateAIReviews(state, errors);
 
   for (const [key, receipt] of Object.entries(state.commandReceipts)) {
     if (!state.records.users[receipt.userId]) errors.push(`/commandReceipts/${key}/userId: referenced user does not exist`);

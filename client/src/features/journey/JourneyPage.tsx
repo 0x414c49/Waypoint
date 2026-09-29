@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "../../ui/Button.js";
 import { getDashboard } from "../today/api.js";
 import { ActivityHistory } from "./ActivityHistory.js";
-import { getActivity, getAllTasks, getJourney } from "./api.js";
+import { getActivity, getAllTasks, getJourney, getJourneyEntry } from "./api.js";
 import { JourneyFilters } from "./JourneyFilters.js";
 import { JourneyEntryEditor } from "./JourneyEntryEditor.js";
 import { JourneyTimeline } from "./JourneyTimeline.js";
@@ -25,8 +26,15 @@ export function JourneyPage() {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<JourneyEntry | null>(null);
+  const [searchEntryResult, setSearchEntryResult] = useState<{ entryId: string; entry: JourneyEntry } | null>(null);
+  const [searchEntryFailure, setSearchEntryFailure] = useState<{ entryId: string; message: string } | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const searchResultRef = useRef<HTMLHeadingElement>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchEntryId = searchParams.get("entryId");
+  const searchEntry = searchEntryId && searchEntryResult?.entryId === searchEntryId ? searchEntryResult.entry : null;
+  const searchEntryError = searchEntryId && searchEntryFailure?.entryId === searchEntryId ? searchEntryFailure.message : null;
 
   const load = useCallback((signal?: AbortSignal, cursor?: string) => {
     const activityRequest = cursor
@@ -70,6 +78,25 @@ export function JourneyPage() {
   }, []);
 
   useEffect(() => {
+    if (!searchEntryId) return;
+    const controller = new AbortController();
+    void getJourneyEntry(searchEntryId, controller.signal).then((entry) => {
+      setSearchEntryResult({ entryId: searchEntryId, entry });
+      setSearchEntryFailure((current) => current?.entryId === searchEntryId ? null : current);
+    }).catch((caught: unknown) => {
+      if (caught instanceof DOMException && caught.name === "AbortError") return;
+      setSearchEntryFailure({ entryId: searchEntryId, message: caught instanceof Error ? caught.message : "This thought could not be opened." });
+    });
+    return () => controller.abort();
+  }, [searchEntryId]);
+
+  useEffect(() => {
+    if (!searchEntry) return;
+    searchResultRef.current?.focus({ preventScroll: true });
+    searchResultRef.current?.scrollIntoView?.({ block: "start" });
+  }, [searchEntry]);
+
+  useEffect(() => {
     const refresh = () => {
       setLoading(true);
       setError(null);
@@ -93,6 +120,7 @@ export function JourneyPage() {
     }
     return [...unique].map(([id, title]) => ({ id, title })).sort((a, b) => a.title.localeCompare(b.title));
   }, [taskOptions]);
+  const remainingItems = items.filter((item) => item.id !== searchEntry?.id);
 
   return (
     <div className={styles.page}>
@@ -109,6 +137,12 @@ export function JourneyPage() {
         setNotice(null);
         setFilters(next);
       }} />
+      {searchEntryId && searchEntryError ? <div className={styles.errorPanel} role="alert"><p>{searchEntryError}</p><Button variant="ghost" onClick={() => setSearchParams((current) => { current.delete("entryId"); return current; }, { replace: true })}>Return to Journey</Button></div> : null}
+      {searchEntryId && !searchEntry && !searchEntryError ? <p role="status" className={styles.muted}>Opening the matching thought…</p> : null}
+      {searchEntry ? <section aria-labelledby="journey-search-result-title">
+        <h2 ref={searchResultRef} id="journey-search-result-title" className={styles.searchResultHeading} tabIndex={-1}>Matching Journey entry</h2>
+        <JourneyTimeline items={[searchEntry]} onEdit={setEditing} listLabel="Matching Journey entry" />
+      </section> : null}
       {notice ? <p className={styles.muted} role="status">{notice}</p> : null}
       {error ? (
         <div className={styles.errorPanel} role="alert">
@@ -118,21 +152,24 @@ export function JourneyPage() {
       ) : null}
       {activity ? <ActivityHistory activity={activity} /> : null}
       {loading ? <p role="status" className={styles.muted}>Opening your Journey…</p> : null}
-      {!loading && !error && items.length === 0 ? (
+      {!loading && !error && items.length === 0 && !searchEntryId ? (
         <section className={styles.empty}>
           <h2>No entries here yet.</h2>
           <p>Thoughts, sessions, and outcomes will appear naturally as you use Today.</p>
         </section>
       ) : null}
-      {!loading && items.length > 0 ? <JourneyTimeline items={items} onEdit={setEditing} /> : null}
+      {!loading && remainingItems.length > 0 ? <JourneyTimeline items={remainingItems} onEdit={setEditing} /> : null}
       {nextCursor ? <Button variant="secondary" disabled={loadingMore} onClick={() => { setLoadingMore(true); setError(null); load(undefined, nextCursor); }}>{loadingMore ? "Loading…" : "Load more"}</Button> : null}
       {editing ? <JourneyEntryEditor entry={editing} focusFallbackSelector="#journey-page-title" onClose={() => setEditing(null)} onSaved={(updated) => {
         setItems((current) => current.map((item) => item.type !== "SESSION" && item.type !== "TASK_FINISHED" && item.id === updated.id ? updated : item));
+        setSearchEntryResult((current) => current?.entryId === updated.id ? { ...current, entry: updated } : current);
         setEditing(null);
       }} onDeleted={(entryId) => {
         setItems((current) => current.filter((item) =>
           (item.type !== "THOUGHT" && item.type !== "WEEKLY_REFLECTION") || item.id !== entryId,
         ));
+        setSearchEntryResult((current) => current?.entryId === entryId ? null : current);
+        if (searchEntryId === entryId) setSearchParams((current) => { current.delete("entryId"); return current; }, { replace: true });
         setEditing(null);
         setNotice("Thought removed from Journey.");
       }} /> : null}

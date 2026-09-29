@@ -9,7 +9,7 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe("milestone summary", () => {
   it("distinguishes period-end status from current status", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
+    const summary = {
       dataRevision: 4,
       milestone: {
         id: "week-1", quarterId: "quarter-1", title: "Week 1",
@@ -29,7 +29,10 @@ describe("milestone summary", () => {
         statusAtPeriodEnd: "PAUSED", currentStatus: "FINISHED", actualSecondsAllTime: 600,
       }],
       thoughts: [], changedMyMindCount: 0, openWork: [], reflection: { prompt: null, entry: null },
-    }))));
+    };
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => String(input).startsWith("/api/ai/reviews?")
+      ? new Response(JSON.stringify({ items: [] }))
+      : new Response(JSON.stringify(summary))));
 
     render(
       <MemoryRouter initialEntries={["/quarters/quarter-1/milestones/week-1/summary"]}>
@@ -79,10 +82,13 @@ describe("milestone summary", () => {
       changedMyMindCount: 0,
       reflection: { ...before.reflection, entry: null },
     };
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce(new Response(JSON.stringify(before)))
-      .mockResolvedValueOnce(new Response(null, { status: 204 }))
-      .mockResolvedValueOnce(new Response(JSON.stringify(after)));
+    let summaryReads = 0;
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input).startsWith("/api/ai/reviews?")) return new Response(JSON.stringify({ items: [] }));
+      if (init?.method === "DELETE") return new Response(null, { status: 204 });
+      const value = summaryReads++ === 0 ? before : after;
+      return new Response(JSON.stringify(value));
+    });
     vi.stubGlobal("fetch", fetchMock);
     const user = userEvent.setup();
 
@@ -101,6 +107,7 @@ describe("milestone summary", () => {
 
     expect(await screen.findByText("What should the next part of the journey remember?")).toBeTruthy();
     expect(screen.queryByText(entry.text)).toBeNull();
-    expect(new Headers((fetchMock.mock.calls[1]?.[1] as RequestInit).headers).get("If-Match")).toBe(entry.etag);
+    const deleteCall = fetchMock.mock.calls.find((call) => call[1]?.method === "DELETE");
+    expect(new Headers(deleteCall?.[1]?.headers).get("If-Match")).toBe(entry.etag);
   });
 });

@@ -14,7 +14,7 @@ The daily workflow, Quarter plan preview/export, local-data location, Journey ac
 
 ## Current stage
 
-The project has confirmed product, UX, visual, domain, API, and persistence behavior. The consolidated implementation review passed independent A/B verification and was explicitly approved on 2026-09-27. Slices 0–4 are complete: executable foundation, daily learning loop, lived Journey, durable Decisions, and history-safe plan lifecycle with Quarter navigation. Slice 5 (Search and bounded AI) is next and has not started.
+The project has confirmed product, UX, visual, domain, API, and persistence behavior. The consolidated implementation review passed independent A/B verification and was explicitly approved on 2026-09-27. Slices 0–5 are complete: executable foundation, daily learning loop, lived Journey, durable Decisions, history-safe plan lifecycle with Quarter navigation, global Search, and a bounded local AI-review seam. The v1 completion boundary is reached.
 
 Start with:
 
@@ -54,8 +54,10 @@ Start with:
 34. [Slice 3 validation evidence](planning/slice-3-validation.md)
 35. [Slice 4 implementation map](planning/slice-4-implementation-map.md)
 36. [Slice 4 validation evidence](planning/slice-4-validation.md)
-37. [Working agreement](planning/working-agreement.md)
-38. [Using the app](docs/using-the-app.md)
+37. [Slice 5 implementation map](planning/slice-5-implementation-map.md)
+38. [Slice 5 validation evidence](planning/slice-5-validation.md)
+39. [Working agreement](planning/working-agreement.md)
+40. [Using the app](docs/using-the-app.md)
 
 ## Working rule
 

@@ -1,5 +1,7 @@
 export {
   CommandReceiptSchema,
+  AIReviewRecordSchema,
+  AIReviewTargetTypeSchema,
   DailyReviewRecordSchema,
   DecisionOptionRecordSchema,
   DecisionRecordSchema,
@@ -18,6 +20,8 @@ export {
   TaskRecordSchema,
   UserRecordSchema,
   type CommandReceipt,
+  type AIReviewRecord,
+  type AIReviewTargetType,
   type DailyReviewRecord,
   type DecisionOptionRecord,
   type DecisionRecord,

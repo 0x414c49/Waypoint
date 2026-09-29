@@ -425,3 +425,44 @@ test("plan preview, explicit removal acknowledgement, YAML export and unchanged 
   expect(roundTrip.ok()).toBe(true);
   expect(await roundTrip.json()).toMatchObject({ summary: { added: 0, changed: 0, removed: 0, historicalPreserved: 0, conflicts: 0 }, changes: [] });
 });
+
+test("global Search opens exact Journey and plan context and generated advice survives a rerun", async ({ page }, testInfo) => {
+  await page.goto("/journey");
+  await page.getByRole("button", { name: "+ Thought" }).first().click();
+  const thought = `Search returns to this thought · ${testInfo.project.name}`;
+  const thoughtDialog = page.getByRole("dialog", { name: "Add a thought" });
+  await thoughtDialog.getByRole("textbox", { name: "What is worth keeping?" }).fill(thought);
+  await thoughtDialog.getByRole("button", { name: "Save thought" }).click();
+  await expect(page.getByText(thought)).toBeVisible();
+
+  await page.getByRole("button", { name: "Search" }).click();
+  const searchDialog = page.getByRole("dialog", { name: "Search" });
+  const searchInput = searchDialog.getByRole("searchbox");
+  await expect(searchInput).toBeFocused();
+  await searchInput.fill(thought);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await searchDialog.getByRole("link", { name: new RegExp(thought) }).click();
+  await expect(page).toHaveURL(/\/journey\?entryId=/);
+  await expect(page.getByRole("heading", { name: "Matching Journey entry" })).toBeVisible();
+  await expect(page.getByText(thought)).toBeVisible();
+
+  await page.getByRole("button", { name: "Search" }).click();
+  const secondSearch = page.getByRole("dialog", { name: "Search" });
+  await secondSearch.getByRole("searchbox").fill("Idempotency");
+  await secondSearch.getByRole("link", { name: /Idempotency/ }).first().click();
+  await expect(page).toHaveURL(/\/tasks\/2026-10-20-idempotency$/);
+  await expect(page.getByRole("heading", { name: "Idempotency", exact: true })).toBeVisible();
+
+  const generate = page.getByRole("button", { name: /Generate (reflection|another)/ });
+  await expect(generate).toBeEnabled();
+  await generate.click();
+  await expect(page.getByText("Generated advice · stub").first()).toBeVisible();
+  await page.reload();
+  await expect(page.getByText("Generated advice · stub").first()).toBeVisible();
+  const history = page.getByRole("list", { name: "Generated advice history" });
+  const reviewsBeforeRerun = await history.locator(":scope > li").count();
+  await page.getByRole("button", { name: "Generate another" }).click();
+  await expect(history.locator(":scope > li")).toHaveCount(reviewsBeforeRerun + 1);
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+});

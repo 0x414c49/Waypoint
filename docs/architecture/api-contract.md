@@ -346,6 +346,7 @@ Rules:
 
 ```text
 GET /api/journey
+GET /api/journey/:id
 POST /api/journey
 PUT /api/journey/:id
 DELETE /api/journey/:id
@@ -362,6 +363,8 @@ DELETE /api/journey/:id
 - `WEEKLY_REFLECTION`
 
 Filters: date range, Task, Milestone, `changedMyMind`, item type, cursor, and limit.
+
+`GET /api/journey/:id` returns one owned Thought/weekly reflection for a stable Search deep link and includes its ETag.
 
 ### Create / Quick Thought
 
@@ -435,10 +438,10 @@ Postpone:
 ## Search
 
 ```text
-GET /api/search?q=quorum
+GET /api/search?q=quorum&type=PLAN&quarterId=q4-2026&limit=25
 ```
 
-Optional filters: `type`, `quarterId`, cursor, and limit. Results group by type and contain an excerpt plus canonical resource context IDs. They do not contain frontend route strings.
+`q` is required and contains 1–200 characters (whitespace-only terms are invalid). Optional filters are `type` (`PLAN | JOURNEY | DECISION`), `quarterId`, cursor, and `limit` (1–100, default 25). Search is case- and accent-insensitive and matches the current user’s Quarter plan, Tasks, Focus Areas, Milestones, Journey thoughts, and Decision reasoning/reviews. Results are grouped in plan, Journey, Decisions order and include a type-specific excerpt plus canonical resource/context IDs. They do not contain frontend route strings. Cursors are bound to the query and filters; changing the query requires a fresh search.
 
 No advanced query language exists in v1.
 
@@ -525,6 +528,7 @@ Returns `application/yaml`, an attachment filename, and ETag derived from `planR
 ## AI review stubs
 
 ```text
+GET /api/ai/reviews?targetType=TASK&targetId=task-123
 POST /api/ai/review/task/:id
 POST /api/ai/review/week
 POST /api/ai/review/quarter/:id
@@ -537,7 +541,9 @@ Week body:
 { "milestoneId": "week-5" }
 ```
 
-Each requires `Idempotency-Key`, creates one completed historical AIReview, and returns `201 Created`. A Task review captures Task/Milestone/Quarter snapshots; a Week review captures Milestone/Quarter snapshots; a Quarter review captures QuarterIntentSnapshot. Provider failure creates no record. The StubAIReviewer completes synchronously in v1. A deliberate new review uses a new key and creates another record; transport retry does not.
+The GET endpoint returns the current user’s append-only review history for that owned target. Every POST requires `Idempotency-Key`, creates one completed historical AIReview, and returns `201 Created`. Task, Quarter, and Decision bodies are `{}`; the Week body is shown above. A Task review captures Task/Milestone/Quarter snapshots; a Week review captures Milestone/Quarter snapshots; a Quarter review captures QuarterIntentSnapshot. Decision links retain their existing plan snapshots.
+
+The injected `AIReviewer` receives at most 40 evidence items, each at most 500 characters. V1’s `StubAIReviewer` is deterministic and local; it reports its provider/model and makes no network request. Provider failure returns `503 AI_REVIEW_FAILED` and creates no record. If the target context changes while review generation is underway, the write returns `409 AI_TARGET_CHANGED` and saves no result. Same-key transport retries replay one result; an intentional rerun uses a new key and appends another AIReview.
 
 No score is returned. AI cannot mutate its target.
 
@@ -552,10 +558,10 @@ No score is returned. AI cannot mutate its target.
 | 403 | Untrusted Host/Origin for the local runtime |
 | 413 | Request body exceeds the route limit |
 | 404 | Missing or not owned resource |
-| 409 | Domain/concurrency workflow conflict |
+| 409 | Domain/concurrency workflow conflict (including `AI_TARGET_CHANGED`) |
 | 410 | Expired plan preview |
 | 412 | Stale `If-Match` |
 | 422 | Well-formed but invalid domain/plan content |
 | 428 | Required precondition absent |
 | 500 | Unexpected internal failure |
-| 503 | Store busy, corrupt, unsupported, or safely unavailable |
+| 503 | Store busy/corrupt/unavailable or `AI_REVIEW_FAILED` |

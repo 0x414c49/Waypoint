@@ -150,6 +150,7 @@ The response never reveals the earlier request body.
 | 409 | `PLAN_REVISION_CHANGED` | Re-run preview |
 | 409 | `ACKNOWLEDGEMENT_REQUIRED` | Present required preservation acknowledgement |
 | 409 | `QUARTER_DATE_OVERLAP` | Explain the existing Quarter range |
+| 409 | `AI_TARGET_CHANGED` | Refresh target context and request a new review |
 | 410 | `PLAN_PREVIEW_EXPIRED` | Re-run preview |
 | 410 | `IDEMPOTENT_RESULT_DELETED` | Use a new key only for a genuinely new Journey thought |
 | 413 | `PAYLOAD_TOO_LARGE` | Request exceeds its documented byte limit |
@@ -163,6 +164,7 @@ The response never reveals the earlier request body.
 | 503 | `STORE_SCHEMA_UNSUPPORTED` | App cannot safely read this data version |
 | 503 | `STORE_WRITE_FAILED` | Prior state remains authoritative |
 | 503 | `STORE_DURABILITY_UNCERTAIN` | Retry same idempotency key; do not issue new intent |
+| 503 | `AI_REVIEW_FAILED` | No advice was saved; allow a deliberate retry |
 
 ## Conflict payload rules
 

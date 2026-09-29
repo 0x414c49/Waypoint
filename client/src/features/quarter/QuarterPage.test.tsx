@@ -30,6 +30,7 @@ describe("Quarter plan navigation", () => {
   it("shows intent and opens canonical Focus Area and Milestone views", async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
+      if (url.startsWith("/api/ai/reviews?")) return new Response(JSON.stringify({ items: [] }));
       if (url === "/api/quarters") return new Response(JSON.stringify({ items: [{ id: "q4-2026", title: quarter.title, startDate: quarter.startDate, endDate: quarter.endDate, phase: "CURRENT", planRevision: 1, etag: quarter.etag }] }));
       return new Response(JSON.stringify(quarter));
     });
@@ -64,6 +65,7 @@ describe("Quarter plan navigation", () => {
     const past = { ...quarter, id: "q-past", title: "Q3 2026", startDate: "2026-07-01", endDate: "2026-09-30", phase: "PAST" };
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
+      if (url.startsWith("/api/ai/reviews?")) return new Response(JSON.stringify({ items: [] }));
       if (url === "/api/quarters") return new Response(JSON.stringify({ items: [future, past] }));
       return new Response(JSON.stringify(future));
     });
@@ -75,6 +77,7 @@ describe("Quarter plan navigation", () => {
     const current = { ...quarter, id: "q-current", title: "Q4 2026", phase: "CURRENT" };
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
+      if (url.startsWith("/api/ai/reviews?")) return new Response(JSON.stringify({ items: [] }));
       if (url === "/api/quarters") return new Response(JSON.stringify({ items: [current, past] }));
       return new Response(JSON.stringify(past));
     }));
@@ -87,6 +90,7 @@ describe("Quarter plan navigation", () => {
     let exports = 0;
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
+      if (url.startsWith("/api/ai/reviews?")) return new Response(JSON.stringify({ items: [] }));
       if (url === "/api/quarters") return new Response(JSON.stringify({ items: [{ id: quarter.id, title: quarter.title, startDate: quarter.startDate, endDate: quarter.endDate, phase: quarter.phase, planRevision: 1, etag: quarter.etag }] }));
       if (url === "/api/plans/export/q4-2026") {
         exports += 1;

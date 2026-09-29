@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "../../ui/Button.js";
 import { DecisionContextAction } from "../decisions/DecisionContextAction.js";
+import { AIReviewPanel } from "../utilities/AIReviewPanel.js";
 import { getTaskDetail } from "./api.js";
 import { CarryForwardForm } from "./CarryForwardForm.js";
 import { SessionCorrectionDialog } from "./SessionCorrectionDialog.js";
@@ -61,6 +62,8 @@ export function TaskDetailPage() {
       ) : null}
 
       <TaskSessions sessions={detail.sessions} onCorrect={setCorrecting} />
+
+      <AIReviewPanel targetType="TASK" targetId={task.id} targetTitle={plan.title} />
 
       <section className={styles.detailSection} aria-labelledby="thoughts-title">
         <h2 id="thoughts-title">Thoughts</h2>

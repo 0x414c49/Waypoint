@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { QuickThoughtDialog } from "../features/journey/QuickThoughtDialog.js";
+import { SearchDialog } from "../features/utilities/SearchDialog.js";
 import { createJourneyEntry } from "../features/journey/api.js";
 import type { ThoughtContext } from "../features/journey/types.js";
 import { getDashboard } from "../features/today/api.js";
@@ -16,6 +17,7 @@ export function AppShell() {
   const previousPath = useRef(location.pathname);
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [thoughtOpen, setThoughtOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const refreshDashboard = useCallback(() => {
     const controller = new AbortController();
@@ -78,6 +80,7 @@ export function AppShell() {
           </nav>
           <div className={styles.utilities}>
             <Button variant="ghost" onClick={() => setThoughtOpen(true)}>+ Thought</Button>
+            <Button variant="ghost" onClick={() => setSearchOpen(true)}>Search</Button>
             <ThemeToggle />
           </div>
         </div>
@@ -108,6 +111,7 @@ export function AppShell() {
           }}
         />
       ) : null}
+      {searchOpen ? <SearchDialog onClose={() => setSearchOpen(false)} /> : null}
     </div>
   );
 }

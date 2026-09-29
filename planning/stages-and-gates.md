@@ -4,8 +4,8 @@ This file prevents the project from drifting into premature implementation. Work
 
 ## Current position
 
-**Passed:** Slice 4 — plan lifecycle and Quarter (2026-09-29)
-**Next, not started:** Slice 5 — search and bounded AI
+**Passed:** Slice 5 — global Search and bounded AI (2026-09-29)
+**V1 boundary reached:** Slices 0–5 are delivered. Further product changes require a new scope/decision entry.
 
 ## Stage 0 — Workspace initialization
 
@@ -119,7 +119,7 @@ Production implementation is authorized and proceeds through the documented vert
 - [x] Slice 2 — lived journey passed on 2026-09-28. Evidence: [Slice 2 validation](slice-2-validation.md).
 - [x] Slice 3 — decisions passed on 2026-09-29. Evidence: [Slice 3 validation](slice-3-validation.md).
 - [x] Slice 4 — plan lifecycle and Quarter passed on 2026-09-29. Evidence: [Slice 4 validation](slice-4-validation.md).
-- [ ] Slice 5 — search and bounded AI
+- [x] Slice 5 — global Search and bounded AI passed on 2026-09-29. Evidence: [Slice 5 validation](slice-5-validation.md).
 
 Each slice must pass its own behavioral, architecture, accessibility, and failure-path evidence before work begins on the next slice.
 

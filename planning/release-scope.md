@@ -79,13 +79,15 @@ Gate: changing a plan cannot silently alter execution history, and an unchanged 
 
 ## Slice 5 — Search and bounded AI seam
 
+Status: **Delivered** on 2026-09-29; evidence is recorded in [Slice 5 validation](slice-5-validation.md).
+
 Deliver:
 
-- global search overlay across plan, Journey, and Decisions
-- deterministic StubAIReviewer flows for the confirmed review targets
-- AIReview history clearly labeled as generated advice
+- global Search overlay across plan, Journey, and Decisions, opening the canonical result context
+- deterministic local StubAIReviewer flows for Task, Week, Quarter, and Decision targets
+- append-only AIReview history clearly labeled as generated advice
 
-Gate: search opens canonical context, and AI results can be repeated/failed without mutating or scoring their targets.
+Gate: Search opens canonical context, and AI results can be repeated or fail without changing execution/decision intent or scoring their targets. Only the required history snapshots and a separate AIReview record may be appended.
 
 ## V1 completion boundary
 

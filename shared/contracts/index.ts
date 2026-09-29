@@ -1,6 +1,25 @@
 export { CurrentUserSchema, type CurrentUser } from "./current-user.js";
 export { ProblemDetailsSchema, type ProblemDetails } from "./problem.js";
 export {
+  AIReviewSchema,
+  AIReviewListSchema,
+  AIReviewTargetTypeSchema,
+  type AIReviewContract,
+  type AIReviewListContract,
+  type AIReviewTargetType,
+} from "./ai-reviews.js";
+export {
+  SearchContentTypeSchema,
+  SearchGroupSchema,
+  SearchGroupTypeSchema,
+  SearchResponseSchema,
+  SearchResultSchema,
+  type SearchContentType,
+  type SearchGroupType,
+  type SearchResponseContract,
+  type SearchResultContract,
+} from "./search.js";
+export {
   DecisionDetailSchema,
   DecisionListSchema,
   DecisionOptionSchema,

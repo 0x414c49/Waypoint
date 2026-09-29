@@ -1,6 +1,6 @@
 # Using Engineering Journey Tracker
 
-The tracker is ready to use through Slice 4. It supports the daily learning loop, factual activity history, reflections, durable engineering Decisions, safe plan updates, and Quarter navigation. Search and bounded AI remain in Slice 5.
+The tracker has reached the v1 boundary. It supports the daily learning loop, factual activity history, reflections, durable engineering Decisions, safe plan updates, Quarter navigation, global Search, and optional local generated advice.
 
 ## Start it locally
 
@@ -63,6 +63,10 @@ Use **Decisions** for reasoning you may want to revisit later.
 4. Later add a review: it still holds, you would adjust it, postpone the review, or supersede it.
 
 Accepted reasoning stays read-only. Reviews append hindsight instead of rewriting what you originally knew.
+
+Use **Search** in the top bar to find plan work, a Journey thought, or Decision reasoning. Search opens Tasks, Focus Areas, Milestones, Quarters, and Decisions in their own context; a thought opens at its exact Journey entry.
+
+Task, Week, Quarter, and Accepted Decision views offer an optional **Generate reflection** action. V1 uses a deterministic local stub, not an external AI service. Its output is labeled as generated advice, saved separately as append-only history, and cannot change plan intent, execution state, human-authored Decisions, or a learning score. Generate another appends a new review; a failed generation saves nothing.
 
 ## Useful commands
 

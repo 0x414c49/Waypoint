@@ -120,6 +120,12 @@
   margin-bottom: var(--space-4);
 }
 
+.searchResultHeading {
+  margin-top: 0;
+  font-size: var(--text-h2);
+  line-height: var(--line-h2);
+}
+
 .timeline,
 .sessionList,
 .thoughtList,

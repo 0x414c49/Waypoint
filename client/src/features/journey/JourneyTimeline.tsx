@@ -27,9 +27,9 @@ function heading(item: JourneyItem): string {
   return item.relatedTask?.title ?? item.relatedMilestone?.title ?? "A thought worth keeping";
 }
 
-export function JourneyTimeline({ items, onEdit }: { items: JourneyItem[]; onEdit: (entry: Extract<JourneyItem, { type: "THOUGHT" | "WEEKLY_REFLECTION" }>) => void }) {
+export function JourneyTimeline({ items, onEdit, listLabel = "Journey entries" }: { items: JourneyItem[]; onEdit: (entry: Extract<JourneyItem, { type: "THOUGHT" | "WEEKLY_REFLECTION" }>) => void; listLabel?: string }) {
   return (
-    <ol className={styles.timeline} aria-label="Journey entries">
+      <ol className={styles.timeline} aria-label={listLabel}>
       {items.map((item) => (
         <li key={`${item.type}-${item.id}`} className={styles.timelineItem}>
           <div className={styles.entryMeta}>

@@ -73,7 +73,11 @@ function canDeletePlanRecord(
     !Object.values(after.records.focusAreas).some((record) => record.quarterId === id) &&
     !Object.values(after.records.milestones).some((record) => record.quarterId === id) &&
     !Object.values(after.records.tasks).some((record) => record.quarterId === id) &&
-    !Object.values(after.records.decisionRecords).some((record) => record.quarterId === id)
+    !Object.values(after.records.decisionRecords).some((record) => record.quarterId === id) &&
+    !Object.values(after.records.aiReviews).some((record) => {
+      const review = record as { targetType?: unknown; targetId?: unknown };
+      return review.targetType === "QUARTER" && review.targetId === id;
+    })
   );
 }
 
@@ -368,7 +372,7 @@ export function assertJourneyStateTransition(
     }
   }
 
-  for (const collectionName of ["taskLifecycleEvents", "dailyReviews", "decisionReviews"] as const) {
+  for (const collectionName of ["taskLifecycleEvents", "dailyReviews", "decisionReviews", "aiReviews"] as const) {
     for (const [id, oldRecord] of Object.entries(before.records[collectionName])) {
       const next = after.records[collectionName][id];
       if (next && !equalJson(oldRecord, next)) {
