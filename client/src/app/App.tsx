@@ -1,4 +1,7 @@
 import { Route, Routes } from "react-router-dom";
+import { DecisionDetailPage } from "../features/decisions/DecisionDetailPage.js";
+import { DecisionListPage } from "../features/decisions/DecisionListPage.js";
+import { NewDecisionPage } from "../features/decisions/NewDecisionPage.js";
 import { JourneyPage } from "../features/journey/JourneyPage.js";
 import { MilestoneSummaryPage } from "../features/journey/MilestoneSummaryPage.js";
 import { TaskDetailPage } from "../features/journey/TaskDetailPage.js";
@@ -11,6 +14,9 @@ export function App() {
       <Route element={<AppShell />}>
         <Route index element={<TodayPage />} />
         <Route path="journey" element={<JourneyPage />} />
+        <Route path="decisions" element={<DecisionListPage />} />
+        <Route path="decisions/new" element={<NewDecisionPage />} />
+        <Route path="decisions/:decisionId" element={<DecisionDetailPage />} />
         <Route path="tasks/:taskId" element={<TaskDetailPage />} />
         <Route path="quarters/:quarterId/milestones/:milestoneId/summary" element={<MilestoneSummaryPage />} />
       </Route>

@@ -45,6 +45,7 @@ function canDeletePlanRecord(
       !Object.values(state.records.taskLifecycleEvents).some((record) => record.taskId === id) &&
       !Object.values(state.records.dailyReviews).some((record) => record.taskId === id) &&
       !Object.values(state.records.journeyEntries).some((record) => record.relatedTaskId === id) &&
+      !Object.values(state.records.decisionRecords).some((record) => record.relatedTaskId === id) &&
       !Object.values(state.records.tasks).some((record) => record.continuationOfTaskId === id)
     );
   }
@@ -69,6 +70,7 @@ function canDeletePlanRecord(
     !Object.values(state.records.focusAreas).some((record) => record.quarterId === id) &&
     !Object.values(state.records.milestones).some((record) => record.quarterId === id) &&
     !Object.values(state.records.tasks).some((record) => record.quarterId === id)
+    && !Object.values(state.records.decisionRecords).some((record) => record.quarterId === id)
   );
 }
 
@@ -302,7 +304,47 @@ export function assertJourneyStateTransition(
     )) throw new StoreError("STORE_WRITE_FAILED", "Journey occurrence and ownership are immutable.");
   }
 
-  for (const collectionName of ["taskLifecycleEvents", "dailyReviews"] as const) {
+  for (const [id, oldDecision] of Object.entries(before.records.decisionRecords)) {
+    const next = after.records.decisionRecords[id];
+    if (!next) continue;
+    const immutableIdentity = ["id", "userId", "quarterId", "relatedTaskId", "createdAt"] as const;
+    if (!equalJson(
+      fields(oldDecision as unknown as Record<string, unknown>, immutableIdentity),
+      fields(next as unknown as Record<string, unknown>, immutableIdentity),
+    )) throw new StoreError("STORE_WRITE_FAILED", "Decision identity, ownership, and plan relationships are immutable.");
+
+    if (oldDecision.supersedesDecisionId !== next.supersedesDecisionId) {
+      const linkingReview = Object.values(after.records.decisionReviews).find(
+        (review) => review.outcome === "SUPERSEDE" && review.decisionId === next.supersedesDecisionId && review.replacementDecisionId === id && !before.records.decisionReviews[review.id],
+      );
+      if (oldDecision.supersedesDecisionId || !next.supersedesDecisionId || !linkingReview) {
+        throw new StoreError("STORE_WRITE_FAILED", "Decision supersession links change only with their append-only review.");
+      }
+    }
+
+    if (oldDecision.status !== "DRAFT") {
+      const originalReasoningFields = [
+        "id", "userId", "quarterId", "relatedTaskId", "supersedesDecisionId", "title",
+        "decisionDate", "context", "constraints", "options", "decision", "consequences",
+        "assumptions", "falsifier", "initialReviewDate", "createdAt",
+      ] as const;
+      if (!equalJson(
+        fields(oldDecision as unknown as Record<string, unknown>, originalReasoningFields),
+        fields(next as unknown as Record<string, unknown>, originalReasoningFields),
+      )) throw new StoreError("STORE_WRITE_FAILED", "Accepted Decision reasoning is immutable.");
+      const acceptedToSuperseded = oldDecision.status === "ACCEPTED" && next.status === "SUPERSEDED" &&
+        Object.values(after.records.decisionReviews).some(
+          (review) => review.decisionId === id && review.outcome === "SUPERSEDE" && !before.records.decisionReviews[review.id],
+        );
+      if (oldDecision.status !== next.status && !acceptedToSuperseded) {
+        throw new StoreError("STORE_WRITE_FAILED", "Decision status changes require an explicit domain command.");
+      }
+    } else if (next.status === "SUPERSEDED") {
+      throw new StoreError("STORE_WRITE_FAILED", "A Draft Decision cannot be superseded.");
+    }
+  }
+
+  for (const collectionName of ["taskLifecycleEvents", "dailyReviews", "decisionReviews"] as const) {
     for (const [id, oldRecord] of Object.entries(before.records[collectionName])) {
       const next = after.records[collectionName][id];
       if (next && !equalJson(oldRecord, next)) {

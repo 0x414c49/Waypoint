@@ -210,6 +210,57 @@ export const JourneyEntryRecordSchema = Type.Object({
 }, { additionalProperties: false });
 export type JourneyEntryRecord = Static<typeof JourneyEntryRecordSchema>;
 
+export const DecisionStatusSchema = Type.Union([
+  Type.Literal("DRAFT"), Type.Literal("ACCEPTED"), Type.Literal("SUPERSEDED"),
+]);
+export const DecisionReviewOutcomeSchema = Type.Union([
+  Type.Literal("HOLDS"), Type.Literal("ADJUST"), Type.Literal("SUPERSEDE"), Type.Literal("DEFERRED"),
+]);
+export const DecisionOptionRecordSchema = Type.Object({
+  id: RecordIdSchema,
+  title,
+  description: longText,
+  strengths: Type.Array(longText, { maxItems: 20 }),
+  weaknesses: Type.Array(longText, { maxItems: 20 }),
+}, { additionalProperties: false });
+export type DecisionOptionRecord = Static<typeof DecisionOptionRecordSchema>;
+
+export const DecisionRecordSchema = Type.Object({
+  id: RecordIdSchema,
+  userId: RecordIdSchema,
+  quarterId: Type.Optional(RecordIdSchema),
+  relatedTaskId: Type.Optional(RecordIdSchema),
+  supersedesDecisionId: Type.Optional(RecordIdSchema),
+  title,
+  decisionDate: Type.Optional(date),
+  status: DecisionStatusSchema,
+  context: Type.Optional(longText),
+  constraints: Type.Array(longText, { maxItems: 20 }),
+  options: Type.Array(DecisionOptionRecordSchema, { maxItems: 20 }),
+  decision: Type.Optional(longText),
+  consequences: Type.Optional(longText),
+  assumptions: Type.Array(longText, { maxItems: 20 }),
+  falsifier: Type.Optional(longText),
+  initialReviewDate: Type.Optional(date),
+  createdAt: UtcInstantSchema,
+  updatedAt: UtcInstantSchema,
+}, { additionalProperties: false });
+export type DecisionRecord = Static<typeof DecisionRecordSchema>;
+
+export const DecisionReviewRecordSchema = Type.Object({
+  id: RecordIdSchema,
+  decisionId: RecordIdSchema,
+  sequence: Type.Integer({ minimum: 1 }),
+  reviewedAt: UtcInstantSchema,
+  timeZoneAtReview: Type.String({ minLength: 1, maxLength: 100 }),
+  outcome: DecisionReviewOutcomeSchema,
+  notes: Type.Optional(longText),
+  nextReviewDate: Type.Optional(date),
+  replacementDecisionId: Type.Optional(RecordIdSchema),
+  createdAt: UtcInstantSchema,
+}, { additionalProperties: false });
+export type DecisionReviewRecord = Static<typeof DecisionReviewRecordSchema>;
+
 export const CommandReceiptSchema = Type.Object({
   userId: RecordIdSchema,
   key: Type.String({ minLength: 1, maxLength: 128, pattern: "^[A-Za-z0-9._:-]+$" }),

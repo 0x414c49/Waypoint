@@ -1,5 +1,6 @@
 import type { JourneyState, TaskRecord } from "../../domain/journey-state.js";
 import { sessionEtag } from "../task-etag.js";
+import { currentDecisionDueDate, indexLatestDecisionReviews } from "../decisions/decision-projection.js";
 import type { Dashboard, DashboardState } from "./dashboard-types.js";
 import { projectTask } from "./task-projection.js";
 import { addLocalDays, closedSessionSegments, contributionLevel, effectiveSessionSeconds, localDate } from "./temporal.js";
@@ -130,6 +131,12 @@ export function projectDashboard(state: JourneyState, userId: string, now: Date)
   else if (milestone?.mode === "LIGHT") lightReason = "PLAN_LIGHT";
   else if (milestone?.mode === "BUFFER") lightReason = "PLAN_BUFFER";
   else if (todayTasks.length > 0 && todayTasks.every((task) => task.status === "FINISHED" || task.status === "SKIPPED")) lightReason = "ALL_ITEMS_CLOSED";
+  const latestDecisionReviews = indexLatestDecisionReviews(state);
+  const dueDecisions = Object.values(state.records.decisionRecords)
+    .filter((decision) => decision.userId === userId)
+    .map((decision) => ({ decision, dueDate: currentDecisionDueDate(state, decision, latestDecisionReviews) }))
+    .filter((item): item is { decision: typeof item.decision; dueDate: string } => Boolean(item.dueDate && item.dueDate <= today))
+    .sort((left, right) => left.dueDate.localeCompare(right.dueDate) || left.decision.id.localeCompare(right.decision.id));
 
   return {
     dataRevision: state.storeRevision,
@@ -208,6 +215,9 @@ export function projectDashboard(state: JourneyState, userId: string, now: Date)
             href: `/api/quarters/${milestone.quarterId}/milestones/${milestone.id}/summary`,
           }
         : null,
-    decisionReviewsDue: { count: 0, items: [] },
+    decisionReviewsDue: {
+      count: dueDecisions.length,
+      items: dueDecisions.slice(0, 3).map(({ decision, dueDate }) => ({ decisionId: decision.id, title: decision.title, dueDate })),
+    },
   };
 }

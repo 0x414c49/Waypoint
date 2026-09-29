@@ -405,6 +405,7 @@ Draft reasoning may be edited. Once Accepted, context/options/decision reasoning
 DecisionReview
   id
   decisionId
+  sequence
   reviewedAt
   timeZoneAtReview
   outcome                  // HOLDS | ADJUST | SUPERSEDE | DEFERRED
@@ -417,12 +418,13 @@ DecisionReview
 Rules:
 
 - Reviews are append-only.
+- `sequence` is immutable, unique within one Decision, starts at 1, and increases by exactly one inside the serialized review transaction. It is the durable append order when timestamps are equal.
 - `DEFERRED` records the confirmed Postpone action and requires `nextReviewDate`; it is not counted as a completed substantive review.
 - If no review exists, the current due date is `initialReviewDate`.
 - After any review exists, the current due date is that latest review’s `nextReviewDate`; when absent, the Decision is not due.
 - On Accept, `initialReviewDate` must be on/after `decisionDate`. Any `nextReviewDate` must be later than the review's local date; Deferred therefore always postpones rather than remaining immediately due.
 - Review never overwrites original reasoning.
-- A Supersede outcome atomically marks the original DecisionRecord Superseded and links a replacement when one exists.
+- A Supersede outcome atomically marks the original DecisionRecord Superseded and links a replacement when one exists. An optional replacement must be a same-user Draft, must not be the original or create an ancestry cycle, and receives `supersedesDecisionId = original.id` in that same transaction. A conflicting existing ancestry is rejected. Supersede may remain intentionally unlinked when no replacement exists yet; v1 does not provide a later relinking mutation.
 - Draft may be sparse so creating it does not become an ADR form tax. Accept requires a non-empty title, context, decision, and decision date; options, constraints, consequences, assumptions, and falsifier remain useful but optional.
 - Draft → Accepted is an explicit domain transition. Generic Decision editing cannot set status.
 

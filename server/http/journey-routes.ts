@@ -59,7 +59,7 @@ const TimelineQuery = Type.Object({
   taskId: Type.Optional(Id),
   milestoneId: Type.Optional(Id),
   changedMyMind: Type.Optional(Type.Boolean()),
-  type: Type.Optional(Type.Union([Type.Literal("THOUGHT"), Type.Literal("SESSION"), Type.Literal("TASK_FINISHED"), Type.Literal("WEEKLY_REFLECTION")])),
+  type: Type.Optional(Type.Union([Type.Literal("THOUGHT"), Type.Literal("SESSION"), Type.Literal("TASK_FINISHED"), Type.Literal("WEEKLY_REFLECTION"), Type.Literal("DECISION_REVIEW")])),
   cursor: Type.Optional(Type.String({ maxLength: 500 })),
   limit: Type.Optional(Type.Integer({ minimum: 1, maximum: 100, default: 50 })),
 }, { additionalProperties: false });
@@ -98,7 +98,7 @@ export function registerJourneyRoutes<TLogger extends FastifyBaseLogger>(app: Fa
 
   app.get("/api/journey", { schema: { querystring: TimelineQuery, response: { 200: JourneyTimelineSchema } } }, async (request) => {
     const userId = await options.currentUserProvider.getCurrentUserId();
-    const query = request.query as { from?: string; to?: string; taskId?: string; milestoneId?: string; changedMyMind?: boolean; type?: "THOUGHT" | "SESSION" | "TASK_FINISHED" | "WEEKLY_REFLECTION"; cursor?: string; limit?: number };
+    const query = request.query as { from?: string; to?: string; taskId?: string; milestoneId?: string; changedMyMind?: boolean; type?: "THOUGHT" | "SESSION" | "TASK_FINISHED" | "WEEKLY_REFLECTION" | "DECISION_REVIEW"; cursor?: string; limit?: number };
     return options.store.read((state) => projectJourneyTimeline(state, userId, { ...query, limit: query.limit ?? 50 }));
   });
   app.post("/api/journey", { schema: { body: EntryCreateBody, response: { 201: JourneyEntrySchema } } }, async (request, reply) => {

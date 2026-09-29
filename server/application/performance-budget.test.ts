@@ -2,6 +2,7 @@
 import { performance } from "node:perf_hooks";
 import { describe, expect, it } from "vitest";
 import { createProductionSeed } from "../domain/production-seed.js";
+import { projectDecisionList } from "./decisions/decision-projection.js";
 import { projectDashboard } from "./dashboard/dashboard.js";
 import { projectJourneyTimeline } from "./journey/journey-timeline.js";
 
@@ -18,6 +19,8 @@ function personalScaleState() {
   state.records.taskLifecycleEvents = {};
   state.records.dailyReviews = {};
   state.records.journeyEntries = {};
+  state.records.decisionRecords = {};
+  state.records.decisionReviews = {};
 
   for (let quarterIndex = 0; quarterIndex < 8; quarterIndex += 1) {
     const year = 2020 + quarterIndex;
@@ -45,6 +48,23 @@ function personalScaleState() {
       task.position = taskIndex;
       task.status = "PAUSED";
       state.records.tasks[taskId] = task;
+      const decisionId = `performance-decision-${quarterIndex}-${taskIndex}`;
+      state.records.decisionRecords[decisionId] = {
+        id: decisionId, userId: "local-user", quarterId, relatedTaskId: taskId,
+        title: `Decision ${quarterIndex}-${taskIndex}`, decisionDate: "2026-11-03",
+        status: "ACCEPTED", context: "Personal-scale context.", constraints: [], options: [],
+        decision: "Keep the boundary explicit.", assumptions: [], initialReviewDate: "2026-11-03",
+        createdAt: "2026-11-03T16:00:00.000Z", updatedAt: "2026-11-03T16:01:00.000Z",
+      };
+      for (let reviewIndex = 0; reviewIndex < 2; reviewIndex += 1) {
+        const reviewId = `performance-review-${quarterIndex}-${taskIndex}-${reviewIndex}`;
+        state.records.decisionReviews[reviewId] = {
+          id: reviewId, decisionId, sequence: reviewIndex + 1,
+          reviewedAt: `2026-11-03T16:0${reviewIndex}:00.000Z`, timeZoneAtReview: "Europe/Amsterdam",
+          outcome: "HOLDS", nextReviewDate: "2026-12-01",
+          createdAt: `2026-11-03T16:0${reviewIndex}:00.000Z`,
+        };
+      }
       for (let sessionIndex = 0; sessionIndex < 2; sessionIndex += 1) {
         const minute = String(sessionIndex * 10).padStart(2, "0");
         const endMinute = String(sessionIndex * 10 + 5).padStart(2, "0");
@@ -75,8 +95,10 @@ describe("personal-scale read budgets", () => {
     const now = new Date("2026-11-03T17:00:00.000Z");
     projectDashboard(state, "local-user", now);
     projectJourneyTimeline(state, "local-user", { limit: 50 });
+    projectDecisionList(state, "local-user", { limit: 50, today: "2026-11-03" });
     const todaySamples: number[] = [];
     const journeySamples: number[] = [];
+    const decisionSamples: number[] = [];
     for (let index = 0; index < 20; index += 1) {
       let started = performance.now();
       projectDashboard(state, "local-user", now);
@@ -84,12 +106,18 @@ describe("personal-scale read budgets", () => {
       started = performance.now();
       projectJourneyTimeline(state, "local-user", { limit: 50 });
       journeySamples.push(performance.now() - started);
+      started = performance.now();
+      projectDecisionList(state, "local-user", { limit: 50, today: "2026-11-03" });
+      decisionSamples.push(performance.now() - started);
     }
     expect(Object.keys(state.records.quarters)).toHaveLength(8);
     expect(Object.keys(state.records.tasks)).toHaveLength(1_000);
     expect(Object.keys(state.records.sessions)).toHaveLength(2_000);
     expect(Object.keys(state.records.journeyEntries)).toHaveLength(2_000);
+    expect(Object.keys(state.records.decisionRecords)).toHaveLength(1_000);
+    expect(Object.keys(state.records.decisionReviews)).toHaveLength(2_000);
     expect(p95(todaySamples)).toBeLessThan(200);
     expect(p95(journeySamples)).toBeLessThan(200);
+    expect(p95(decisionSamples)).toBeLessThan(200);
   });
 });

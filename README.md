@@ -8,7 +8,7 @@ The product is intentionally **not** a project-management system or a data-entry
 
 ## Current stage
 
-The project has confirmed product, UX, visual, domain, API, and persistence behavior. The consolidated implementation review passed independent A/B verification and was explicitly approved on 2026-09-27. Slices 0–2 now provide the executable foundation, usable daily heart, and lived Journey. Work proceeds to Slice 3: Decisions.
+The project has confirmed product, UX, visual, domain, API, and persistence behavior. The consolidated implementation review passed independent A/B verification and was explicitly approved on 2026-09-27. Slices 0–3 now provide the executable foundation, usable daily heart, lived Journey, and durable Decisions. Work proceeds to Slice 4: plan lifecycle and Quarter.
 
 Start with:
 
@@ -44,7 +44,9 @@ Start with:
 30. [Slice 0 validation evidence](planning/slice-0-validation.md)
 31. [Slice 1 validation evidence](planning/slice-1-validation.md)
 32. [Slice 2 validation evidence](planning/slice-2-validation.md)
-33. [Working agreement](planning/working-agreement.md)
+33. [Slice 3 implementation map](planning/slice-3-implementation-map.md)
+34. [Slice 3 validation evidence](planning/slice-3-validation.md)
+35. [Working agreement](planning/working-agreement.md)
 
 ## Working rule
 

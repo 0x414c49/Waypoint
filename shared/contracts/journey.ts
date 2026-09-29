@@ -31,8 +31,15 @@ const FinishedTimelineItemSchema = Type.Object({
   outcome: Type.Union([Type.Literal("ACHIEVED"), Type.Literal("PARTIAL"), Type.Literal("NOT_ACHIEVED")]),
   keyLearning: Type.Union([Type.String(), Type.Null()]),
 }, { additionalProperties: false });
+const DecisionReviewTimelineItemSchema = Type.Object({
+  id: Type.String(), type: Type.Literal("DECISION_REVIEW"), occurredAt: Type.String(), localDate: Type.String(),
+  decision: RelationSchema,
+  outcome: Type.Union([Type.Literal("HOLDS"), Type.Literal("ADJUST"), Type.Literal("SUPERSEDE"), Type.Literal("DEFERRED")]),
+  notes: Type.Union([Type.String(), Type.Null()]), nextReviewDate: Type.Union([Type.String(), Type.Null()]),
+  substantive: Type.Boolean(),
+}, { additionalProperties: false });
 export const JourneyTimelineItemSchema = Type.Union([
-  JourneyEntrySchema, SessionTimelineItemSchema, FinishedTimelineItemSchema,
+  JourneyEntrySchema, SessionTimelineItemSchema, FinishedTimelineItemSchema, DecisionReviewTimelineItemSchema,
 ]);
 export const JourneyTimelineSchema = Type.Object({
   items: Type.Array(JourneyTimelineItemSchema),

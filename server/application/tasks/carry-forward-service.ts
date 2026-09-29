@@ -68,15 +68,20 @@ export class CarryForwardService {
         const reviewId = this.ids.generate();
         const carriedEventId = this.ids.generate();
         const position = Math.max(-1, ...Object.values(draft.records.tasks).filter((task) => task.milestoneId === destination.id).map((task) => task.position)) + 1;
+        const historical = source.planSnapshot;
+        const focusAreaId = historical ? historical.focusAreaId : source.focusAreaId;
+        const description = historical ? historical.description : source.description;
+        const plannedMinutes = historical ? historical.plannedMinutes : source.plannedMinutes;
+        const decisionPrompt = historical ? historical.decisionPrompt : source.decisionPrompt;
         draft.records.tasks[continuationId] = {
           id: continuationId, quarterId: source.quarterId,
-          ...((source.planSnapshot?.focusAreaId ?? source.focusAreaId) ? { focusAreaId: source.planSnapshot?.focusAreaId ?? source.focusAreaId } : {}), milestoneId: destination.id,
-          plannedDate: input.plannedDate, title: source.planSnapshot?.title ?? source.title,
-          ...((source.planSnapshot?.description ?? source.description) ? { description: source.planSnapshot?.description ?? source.description } : {}),
-          ...((source.planSnapshot?.plannedMinutes ?? source.plannedMinutes) ? { plannedMinutes: source.planSnapshot?.plannedMinutes ?? source.plannedMinutes } : {}),
-          tags: [...(source.planSnapshot?.tags ?? source.tags)], position,
-          recommendationMode: source.planSnapshot?.recommendationMode ?? source.recommendationMode,
-          ...((source.planSnapshot?.decisionPrompt ?? source.decisionPrompt) ? { decisionPrompt: structuredClone(source.planSnapshot?.decisionPrompt ?? source.decisionPrompt) } : {}),
+          ...(focusAreaId ? { focusAreaId } : {}), milestoneId: destination.id,
+          plannedDate: input.plannedDate, title: historical ? historical.title : source.title,
+          ...(description ? { description } : {}),
+          ...(plannedMinutes ? { plannedMinutes } : {}),
+          tags: [...(historical ? historical.tags : source.tags)], position,
+          recommendationMode: historical ? historical.recommendationMode : source.recommendationMode,
+          ...(decisionPrompt ? { decisionPrompt: structuredClone(decisionPrompt) } : {}),
           status: "NOT_STARTED", continuationOfTaskId: source.id, createdAt: occurredAt, updatedAt: occurredAt,
         };
         appendEvent(draft, source, finishEventId, "FINISHED", occurredAt, draft.records.users[userId]!.timeZone);

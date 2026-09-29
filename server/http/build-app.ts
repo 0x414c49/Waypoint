@@ -17,6 +17,7 @@ import { AppError } from "../application/app-error.js";
 import { problem } from "./problem.js";
 import { registerTodayRoutes } from "./today-routes.js";
 import { registerJourneyRoutes } from "./journey-routes.js";
+import { registerDecisionRoutes } from "./decision-routes.js";
 
 interface BuildAppOptions {
   readonly store: JourneyStore;
@@ -35,6 +36,7 @@ const mutatingMethods = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 export async function buildApp(options: BuildAppOptions) {
   const app = fastify({
     bodyLimit: 256 * 1024,
+    ajv: { customOptions: { removeAdditional: false } },
     loggerInstance: options.logger,
     genReqId: () => `trace-${options.idGenerator.generate()}`,
   }).withTypeProvider<TypeBoxTypeProvider>();
@@ -91,9 +93,6 @@ export async function buildApp(options: BuildAppOptions) {
       });
     },
   );
-
-  registerTodayRoutes(app, options);
-  registerJourneyRoutes(app, options);
 
   if (options.registerTestRoutes) {
     app.post(
@@ -234,6 +233,10 @@ export async function buildApp(options: BuildAppOptions) {
         ),
       );
   });
+
+  registerTodayRoutes(app, options);
+  registerJourneyRoutes(app, options);
+  registerDecisionRoutes(app, options);
 
   return app;
 }

@@ -1,6 +1,6 @@
 import type { JourneyState, MilestoneRecord, TaskRecord } from "../../domain/journey-state.js";
 
-function captureQuarter(state: JourneyState, quarterId: string, timeZone: string, occurredAt: string): void {
+export function captureQuarterContext(state: JourneyState, quarterId: string, timeZone: string, occurredAt: string): void {
   const quarter = state.records.quarters[quarterId]!;
   if (quarter.intentSnapshot) return;
   quarter.intentSnapshot = {
@@ -44,7 +44,7 @@ export function captureMilestoneContext(
       position: milestone.position,
     };
   }
-  captureQuarter(state, quarter.id, timeZone, occurredAt);
+  captureQuarterContext(state, quarter.id, timeZone, occurredAt);
 }
 
 export function captureTaskPlanContext(
@@ -73,5 +73,5 @@ export function captureTaskPlanContext(
     };
   }
   if (milestone) captureMilestoneContext(state, milestone, timeZone, occurredAt);
-  else captureQuarter(state, quarter.id, timeZone, occurredAt);
+  else captureQuarterContext(state, quarter.id, timeZone, occurredAt);
 }

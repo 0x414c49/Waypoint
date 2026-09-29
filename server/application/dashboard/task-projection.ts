@@ -46,6 +46,9 @@ export function projectTask(state: JourneyState, task: TaskRecord, generatedAt: 
         recommendationMode: historical.recommendationMode,
       }
     : current;
+  const prompt = snapshot ? snapshot.decisionPrompt : task.decisionPrompt;
+  const decision = prompt ? state.records.decisionRecords[prompt.decisionId] : undefined;
+  const linkedDecision = decision?.relatedTaskId === task.id ? decision : undefined;
   return {
     id: task.id,
     etag: taskEtag(state, task),
@@ -60,5 +63,12 @@ export function projectTask(state: JourneyState, task: TaskRecord, generatedAt: 
       runningSince: active?.startedAt ?? null,
     },
     availableActions: task.status === "NOT_STARTED" ? ["START", "DO_TEN_MINUTES"] : task.status === "IN_PROGRESS" ? ["PAUSE", "FINISH", "CARRY_FORWARD"] : task.status === "PAUSED" ? ["RESUME", "FINISH", "CARRY_FORWARD"] : ["REOPEN"],
+    ...(prompt ? { decisionContext: {
+      decisionId: prompt.decisionId,
+      suggestedTitle: prompt.suggestedTitle,
+      initialReviewDate: prompt.initialReviewDate ?? null,
+      action: linkedDecision ? "OPEN_DECISION" as const : "CREATE_DRAFT" as const,
+      decision: linkedDecision ? { id: linkedDecision.id, title: linkedDecision.title, status: linkedDecision.status } : null,
+    } } : {}),
   };
 }

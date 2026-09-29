@@ -31,6 +31,7 @@ This log records product and UX decisions before formal architecture ADRs begin.
 | 2026-09-27 | Use `data/store` with an explicit marker, abandoned-initialization detection, and the supplied plan as the no-history production seed. | Confirmed | The tracked data parent must not look initialized, and interrupted first writes must fail closed. | Persistence contract, release scope |
 | 2026-09-27 | Approve the independently verified consolidated implementation gate and begin with Slice 0. | Confirmed | The product, UX, plan, domain, API, persistence, architecture, scope, and validation contracts passed independent A/B review. | Consolidated implementation gate, final A/B gate audit, stages and gates |
 | 2026-09-27 | Keep UI components responsibility-focused: compose pages from meaningful feature components and extract independent behavior without fragmenting trivial markup. | Confirmed | The implementation must avoid both giga-components and meaningless wrapper proliferation. | System design, Slice 0 review |
+| 2026-09-29 | Order DecisionReviews with an immutable per-Decision sequence and make Supersede atomically establish a safe Draft replacement back-link when supplied. | Confirmed during Slice 3 gate | Equal timestamps cannot define append order, and replacement linkage must not mutate accepted reasoning, create cycles, or leave two contradictory relationship sources. | Domain model, API contract, Slice 3 implementation map |
 
 ## Entry format for future changes
 

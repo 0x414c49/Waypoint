@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "../../ui/Button.js";
+import { DecisionContextAction } from "../decisions/DecisionContextAction.js";
 import { getTaskDetail } from "./api.js";
 import { CarryForwardForm } from "./CarryForwardForm.js";
 import { SessionCorrectionDialog } from "./SessionCorrectionDialog.js";
@@ -48,6 +49,7 @@ export function TaskDetailPage() {
         <p>{plan.focusArea?.name ?? "Learning plan"} · planned {plan.plannedDate}</p>
         {task.displayPlanSource === "HISTORICAL" ? <p className={styles.historyNotice}>Showing the plan text captured when this work began.</p> : null}
         {plan.description ? <p className={styles.lead}>{plan.description}</p> : null}
+        <DecisionContextAction task={task} />
       </header>
 
       {latestReview ? (

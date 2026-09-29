@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "../../ui/Button.js";
+import { DueDecisionNotice } from "../decisions/DueDecisionNotice.js";
 import { actOnTask, ApiError, createIdempotencyKey, getDashboard } from "./api.js";
 import { ActiveSessionConflictDialog } from "./ActiveSessionConflictDialog.js";
 import { ActivityPreview } from "./ActivityPreview.js";
@@ -244,6 +245,7 @@ export function TodayPage() {
           onFinish={(task) => void openFinish(task)}
           onThought={() => window.dispatchEvent(new Event("journey:open-thought"))}
         />
+        <DueDecisionNotice due={dashboard.decisionReviewsDue} />
         <TodayContext
           upNext={dashboard.upNext}
           optionalToday={dashboard.optionalToday}

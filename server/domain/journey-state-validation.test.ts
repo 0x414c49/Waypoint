@@ -52,6 +52,24 @@ function addSnapshots(state: JourneyState, task: TaskRecord): void {
 }
 
 describe("JourneyState execution invariants", () => {
+  it("requires accepted titles and review provenance for every supersession back-link", () => {
+    const state = createProductionSeed(instant);
+    state.records.decisionRecords.original = {
+      id: "original", userId: "local-user", title: "Original", decisionDate: "2026-10-05",
+      status: "ACCEPTED", context: "Context", constraints: [], options: [], decision: "Choice",
+      assumptions: [], createdAt: instant, updatedAt: instant,
+    };
+    state.records.decisionRecords.replacement = {
+      id: "replacement", userId: "local-user", supersedesDecisionId: "original", title: "Replacement",
+      status: "DRAFT", constraints: [], options: [], assumptions: [], createdAt: instant, updatedAt: instant,
+    };
+    expect(validateJourneyState(state)).toContainEqual(expect.stringContaining("requires exactly one matching Supersede review"));
+
+    delete state.records.decisionRecords.replacement.supersedesDecisionId;
+    state.records.decisionRecords.original.title = " ";
+    expect(validateJourneyState(state)).toContainEqual(expect.stringContaining("Accepted reasoning requires title"));
+  });
+
   it("requires all three intent snapshots when task history begins", () => {
     const state = createProductionSeed(instant);
     const task = state.records.tasks["2026-10-05-go-foundations"]!;

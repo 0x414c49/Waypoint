@@ -9,6 +9,15 @@ const PlanProjectionSchema = Type.Object({
   plannedMinutes: Type.Optional(Type.Integer()), tags: Type.Array(Type.String()),
   recommendationMode: RecommendationModeSchema, removedFromPlanAt: Type.Optional(Type.String()),
 }, { additionalProperties: false });
+const DecisionContextSchema = Type.Object({
+  decisionId: Type.String(), suggestedTitle: Type.String(),
+  initialReviewDate: Type.Union([Type.String(), Type.Null()]),
+  action: Type.Union([Type.Literal("CREATE_DRAFT"), Type.Literal("OPEN_DECISION")]),
+  decision: Type.Union([Type.Object({
+    id: Type.String(), title: Type.String(),
+    status: Type.Union([Type.Literal("DRAFT"), Type.Literal("ACCEPTED"), Type.Literal("SUPERSEDED")]),
+  }, { additionalProperties: false }), Type.Null()]),
+}, { additionalProperties: false });
 const HistoricalPlanProjectionSchema = Type.Object({
   focusArea: Type.Optional(Type.Object({ id: Type.String(), name: Type.String() }, { additionalProperties: false })),
   milestone: Type.Optional(Type.Object({ id: Type.String(), title: Type.String() }, { additionalProperties: false })),
@@ -28,6 +37,7 @@ export const TaskProjectionSchema = Type.Object({
   currentPlan: PlanProjectionSchema, historicalPlan: Type.Optional(HistoricalPlanProjectionSchema),
   displayPlanSource: Type.Union([Type.Literal("CURRENT"), Type.Literal("HISTORICAL")]),
   displayPlan: PlanProjectionSchema, timing: TimingSchema, availableActions: Type.Array(Type.String()),
+  decisionContext: Type.Optional(DecisionContextSchema),
 }, { additionalProperties: false });
 export type TaskProjectionContract = Static<typeof TaskProjectionSchema>;
 
@@ -66,7 +76,10 @@ export const DashboardSchema = Type.Object({
     openItemCount: Type.Integer({ minimum: 0 }), thoughtCount: Type.Integer({ minimum: 0 }),
     changedMyMindCount: Type.Integer({ minimum: 0 }), href: Type.String(),
   }, { additionalProperties: false }), Type.Null()]),
-  decisionReviewsDue: Type.Object({ count: Type.Integer({ minimum: 0 }), items: Type.Array(Type.Unknown()) }, { additionalProperties: false }),
+  decisionReviewsDue: Type.Object({
+    count: Type.Integer({ minimum: 0 }),
+    items: Type.Array(Type.Object({ decisionId: Type.String(), title: Type.String(), dueDate: Type.String() }, { additionalProperties: false })),
+  }, { additionalProperties: false }),
 }, { additionalProperties: false });
 export type DashboardContract = Static<typeof DashboardSchema>;
 

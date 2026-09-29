@@ -14,6 +14,7 @@ const types: Array<{ value: JourneyItemType | ""; label: string }> = [
   { value: "WEEKLY_REFLECTION", label: "Weekly thoughts" },
   { value: "SESSION", label: "Sessions" },
   { value: "TASK_FINISHED", label: "Finished items" },
+  { value: "DECISION_REVIEW", label: "Decision reviews" },
 ];
 
 export function JourneyFilters({ filters, tasks, milestones, onChange }: JourneyFiltersProps) {

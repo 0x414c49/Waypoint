@@ -18,6 +18,7 @@ export function encodeOffsetCursor(offset: number): string {
 export interface TimelineCursor {
   occurredAt: string;
   id: string;
+  orderKey?: string;
 }
 
 export function decodeTimelineCursor(cursor: string | undefined): TimelineCursor | null {
@@ -28,7 +29,9 @@ export function decodeTimelineCursor(cursor: string | undefined): TimelineCursor
       typeof value !== "object" || value === null ||
       typeof (value as TimelineCursor).occurredAt !== "string" ||
       new Date((value as TimelineCursor).occurredAt).toISOString() !== (value as TimelineCursor).occurredAt ||
-      typeof (value as TimelineCursor).id !== "string" || !(value as TimelineCursor).id
+      typeof (value as TimelineCursor).id !== "string" || !(value as TimelineCursor).id ||
+      ((value as TimelineCursor).orderKey !== undefined &&
+        (typeof (value as TimelineCursor).orderKey !== "string" || !(value as TimelineCursor).orderKey))
     ) throw new Error("invalid");
     return value as TimelineCursor;
   } catch {

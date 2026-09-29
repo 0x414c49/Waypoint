@@ -1,5 +1,6 @@
 import { Button } from "../../ui/Button.js";
 import { Surface } from "../../ui/Surface.js";
+import { DecisionContextAction } from "../decisions/DecisionContextAction.js";
 import { ActiveTimer } from "./ActiveTimer.js";
 import type { Dashboard, TaskProjection } from "./types.js";
 import styles from "./Today.module.css";
@@ -96,6 +97,7 @@ export function TodayHero({
       {(state === "RUNNING" || state === "PAUSED" || state === "READY") ? (
         <div className={styles.secondaryActions}>
           <Button variant="ghost" onClick={onThought}>+ Thought</Button>
+          <DecisionContextAction task={task} compact />
           {(state === "RUNNING" || state === "PAUSED") ? (
             <Button variant="ghost" disabled={busy} onClick={() => onFinish(task)}>
               Finish item

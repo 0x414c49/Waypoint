@@ -4,8 +4,8 @@ This file prevents the project from drifting into premature implementation. Work
 
 ## Current position
 
-**Active:** Slice 3 — decisions
-**Blocked:** Slice 4 until the Slice 3 gate passes
+**Active:** Slice 4 — plan lifecycle and Quarter
+**Blocked:** Slice 5 until the Slice 4 gate passes
 
 ## Stage 0 — Workspace initialization
 
@@ -117,7 +117,7 @@ Production implementation is authorized and proceeds through the documented vert
 - [x] Slice 0 — executable foundation passed on 2026-09-27. Evidence: [Slice 0 validation](slice-0-validation.md).
 - [x] Slice 1 — daily heart passed on 2026-09-28. Evidence: [Slice 1 validation](slice-1-validation.md).
 - [x] Slice 2 — lived journey passed on 2026-09-28. Evidence: [Slice 2 validation](slice-2-validation.md).
-- [ ] Slice 3 — decisions
+- [x] Slice 3 — decisions passed on 2026-09-29. Evidence: [Slice 3 validation](slice-3-validation.md).
 - [ ] Slice 4 — plan lifecycle and Quarter
 - [ ] Slice 5 — search and bounded AI
 

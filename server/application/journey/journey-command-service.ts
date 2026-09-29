@@ -73,7 +73,7 @@ export class JourneyCommandService {
       if (task && milestone && task.quarterId !== milestone.quarterId) {
         throw new AppError(422, "VALIDATION_FAILED", "The relationships do not match", "Choose a task and milestone from the same quarter.");
       }
-      if (input.relatedDecisionId && !draft.records.decisionRecords[input.relatedDecisionId]) throw notFound();
+      if (input.relatedDecisionId && draft.records.decisionRecords[input.relatedDecisionId]?.userId !== userId) throw notFound();
       if (task) captureTaskPlanContext(draft, task, draft.records.users[userId]!.timeZone, occurredAt);
       if (milestone) captureMilestoneContext(draft, milestone, draft.records.users[userId]!.timeZone, occurredAt);
       const id = this.ids.generate();
@@ -119,7 +119,7 @@ export class JourneyCommandService {
       if (input.relatedTaskId && (!task || draft.records.quarters[task.quarterId]?.userId !== userId)) throw notFound();
       if (input.relatedMilestoneId && (!milestone || draft.records.quarters[milestone.quarterId]?.userId !== userId)) throw notFound();
       if (task && milestone && task.quarterId !== milestone.quarterId) throw new AppError(422, "VALIDATION_FAILED", "The relationships do not match", "Choose a task and milestone from the same quarter.");
-      if (input.relatedDecisionId && !draft.records.decisionRecords[input.relatedDecisionId]) throw notFound();
+      if (input.relatedDecisionId && draft.records.decisionRecords[input.relatedDecisionId]?.userId !== userId) throw notFound();
       if (task) captureTaskPlanContext(draft, task, draft.records.users[userId]!.timeZone, updatedAt);
       if (milestone) captureMilestoneContext(draft, milestone, draft.records.users[userId]!.timeZone, updatedAt);
       entry.text = input.text; entry.tags = [...input.tags]; entry.changedMyMind = input.changedMyMind;

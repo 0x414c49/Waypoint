@@ -1,0 +1,460 @@
+.page {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-32);
+}
+
+.pageHeading,
+.sectionHeading,
+.listHeading,
+.stickyActions,
+.stickyActions > div,
+.detailMeta,
+.rowMeta,
+.reviewMeta,
+.formActions,
+.error {
+  display: flex;
+  align-items: center;
+}
+
+.pageHeading,
+.sectionHeading,
+.listHeading,
+.stickyActions,
+.reviewMeta,
+.error {
+  justify-content: space-between;
+  gap: var(--space-16);
+}
+
+.pageHeading h1,
+.pageHeading p,
+.detailHeading h1,
+.detailHeading p,
+.sectionHeading h2,
+.sectionHeading p,
+.listHeading h2,
+.documentSection h2,
+.reviewComposer h2,
+.original h2,
+.reasoningBlock h3,
+.optionRecord h4,
+.decisionRow h3,
+.decisionRow p {
+  margin-top: 0;
+}
+
+.pageHeading h1,
+.detailHeading h1 {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-h1);
+  line-height: var(--line-h1);
+}
+
+.pageHeading > div > p:last-child,
+.detailHeading > p:last-child,
+.muted,
+.decisionRow p,
+.stickyActions p,
+.reviewMeta time {
+  color: var(--color-text-secondary);
+}
+
+.pageHeading > div > p:last-child,
+.detailHeading > p:last-child,
+.stickyActions p {
+  margin-bottom: 0;
+}
+
+.eyebrow {
+  margin-bottom: var(--space-4);
+  color: var(--color-text-secondary);
+  font-size: var(--text-metadata);
+  line-height: var(--line-metadata);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.newLink {
+  flex: none;
+  padding: var(--space-8) var(--space-12);
+  color: var(--color-on-accent);
+  border-radius: var(--radius-control);
+  background: var(--color-accent);
+  font-size: var(--text-compact);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.dueSection {
+  background: var(--color-accent-soft);
+}
+
+.sectionHeading h2,
+.listHeading h2,
+.documentSection h2,
+.reviewComposer h2,
+.original h2 {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-h2);
+  line-height: var(--line-h2);
+}
+
+.sectionHeading > span,
+.readOnly {
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+}
+
+.listHeading select,
+.field input,
+.field textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-8) var(--space-12);
+  color: var(--color-text);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+}
+
+.listHeading select {
+  width: auto;
+}
+
+.decisionList,
+.reviewHistory {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.decisionRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-16);
+  padding: var(--space-16) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.decisionRow h3 {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-body);
+  line-height: var(--line-body);
+}
+
+.decisionRow h3 a,
+.openLink,
+.detailHeading a {
+  color: var(--color-accent);
+}
+
+.decisionRow p {
+  margin-bottom: 0;
+  font-size: var(--text-small);
+}
+
+.rowMeta,
+.detailMeta {
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+}
+
+.rowMeta span:first-child,
+.detailMeta span:first-child {
+  color: var(--color-accent);
+  font-size: var(--text-metadata);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.openLink {
+  font-size: var(--text-small);
+  font-weight: 600;
+}
+
+.empty,
+.error,
+.historyNotice {
+  padding: var(--space-16);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-subtle);
+}
+
+.empty h3 {
+  margin-top: 0;
+}
+
+.error {
+  color: var(--color-error);
+  background: var(--color-error-soft);
+}
+
+.more,
+.formActions {
+  justify-content: flex-end;
+  margin-top: var(--space-16);
+}
+
+.detailHeading {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.editor,
+.documentSection,
+.original,
+.reviewComposer {
+  display: grid;
+  gap: var(--space-16);
+}
+
+.documentSection,
+.original,
+.reviewComposer {
+  padding-top: var(--space-24);
+  border-top: 1px solid var(--color-border);
+}
+
+.field {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-4);
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+  font-weight: 600;
+}
+
+.field small {
+  font-weight: 400;
+}
+
+.field textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.fieldPair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-12);
+}
+
+.optionEditor {
+  display: grid;
+  gap: var(--space-12);
+  margin: 0;
+  padding: var(--space-16);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-surface);
+}
+
+.optionEditor legend,
+.reviewOutcomes legend {
+  padding: 0 var(--space-4);
+  font-weight: 600;
+}
+
+.optionEditor > button {
+  justify-self: end;
+}
+
+.stickyActions {
+  position: sticky;
+  z-index: 2;
+  bottom: var(--space-16);
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-surface);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-raised);
+}
+
+.stickyActions p {
+  font-size: var(--text-small);
+}
+
+.stickyActions > div {
+  gap: var(--space-8);
+}
+
+.reasoningBlock {
+  max-width: 62ch;
+}
+
+.reasoningBlock h3 {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-small);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.reasoningBlock p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.optionRecord {
+  margin-top: var(--space-12);
+  padding-left: var(--space-16);
+  border-left: 2px solid var(--color-border-strong);
+}
+
+.optionRecord h4 {
+  margin-bottom: var(--space-4);
+}
+
+.reviewComposer {
+  padding: var(--space-24);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-surface);
+  background: var(--color-surface);
+}
+
+.reviewOutcomes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-8);
+  margin: 0 0 var(--space-16);
+  padding: 0;
+  border: 0;
+}
+
+.reviewOutcomes legend {
+  grid-column: 1 / -1;
+  margin-bottom: var(--space-4);
+}
+
+.reviewOutcomes label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: 48px;
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+
+.reviewOutcomes label[data-selected="true"] {
+  padding: 7px 11px;
+  border: 2px solid var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.reviewOutcomes input {
+  accent-color: var(--color-accent);
+}
+
+.reviewComposer form {
+  display: grid;
+  gap: var(--space-16);
+}
+
+.reviewHistory li {
+  padding: var(--space-16) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.reviewHistory li p {
+  margin-bottom: 0;
+}
+
+.contextAction {
+  display: grid;
+  justify-items: start;
+}
+
+.contextActionCompact {
+  display: contents;
+}
+
+.contextError {
+  margin: var(--space-4) 0 0;
+  color: var(--color-error);
+  font-size: var(--text-small);
+}
+
+.dueNotice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-16);
+  padding: var(--space-16) 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dueNotice h2,
+.dueNotice p {
+  margin-top: 0;
+}
+
+.dueNotice h2 {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-h2);
+  line-height: var(--line-h2);
+}
+
+.dueNotice p:last-child {
+  margin-bottom: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+}
+
+.dueNotice > a {
+  flex: none;
+  color: var(--color-accent);
+  font-size: var(--text-small);
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .pageHeading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .newLink {
+    width: 100%;
+    min-height: 44px;
+    text-align: center;
+  }
+
+  .fieldPair,
+  .reviewOutcomes {
+    grid-template-columns: 1fr;
+  }
+
+  .stickyActions {
+    bottom: calc(64px + env(safe-area-inset-bottom));
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .stickyActions > div,
+  .stickyActions button {
+    width: 100%;
+  }
+
+  .reviewComposer {
+    padding: var(--space-24) var(--space-16);
+  }
+
+  .dueNotice {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stickyActions {
+    scroll-behavior: auto;
+  }
+}

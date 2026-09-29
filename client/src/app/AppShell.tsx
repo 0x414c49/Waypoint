@@ -55,6 +55,7 @@ export function AppShell() {
           <nav className={styles.desktopNav} aria-label="Main navigation">
             <NavLink to="/" end>Today</NavLink>
             <NavLink to="/journey">Journey</NavLink>
+            <NavLink to="/decisions">Decisions</NavLink>
           </nav>
           <div className={styles.utilities}>
             <Button variant="ghost" onClick={() => setThoughtOpen(true)}>+ Thought</Button>
@@ -74,6 +75,7 @@ export function AppShell() {
       <nav className={styles.mobileNav} aria-label="Main navigation" data-dialog-background>
         <NavLink to="/" end>Today</NavLink>
         <NavLink to="/journey">Journey</NavLink>
+        <NavLink to="/decisions">Decisions</NavLink>
       </nav>
       {thoughtOpen ? (
         <QuickThoughtDialog

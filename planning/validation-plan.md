@@ -19,7 +19,7 @@ The documents confirm intended behavior, not human performance. Claims such as �
 | Holiday/optional work remains genuinely optional | Walk through Week 12 and buffer-reflection dates | Today stays Light, labels the item “Only if useful,” and creates no action/debt when ignored | Slice 1 |
 | Quick Thought is capture-first | Mobile and desktop task | Composer focused in one activation; save requires text only; inferred link is visible/removable | Slice 2 |
 | Weekly review feels generated, not assigned | Review walkthrough | User can explain the week without checking a “review complete” box or reading a score | Slice 2 |
-| Decision review stays secondary | Due-review scenario while work is Ready | User still identifies Start as primary; can postpone in one action | Slice 3 |
+| Decision review stays secondary | Due-review scenario while work is Ready | User still identifies Start as primary; can postpone in one review submission after choosing a later date | Slice 3 |
 | Plan updates feel safe | Change/remove active and historical Tasks | User predicts what will change and explicitly understands what history is preserved before Apply | Slice 4 |
 | Core mobile actions work one-handed | Run Today, Start, Pause, Resume, Thought, and Finish on a physical phone in both hands separately | Primary controls remain reachable and usable without switching to a desktop layout; text entry may naturally use both hands | Slice 1 |
 

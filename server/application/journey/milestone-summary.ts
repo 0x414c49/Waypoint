@@ -62,6 +62,11 @@ export function projectMilestoneSummary(state: JourneyState, userId: string, mil
   const thoughts = Object.values(state.records.journeyEntries)
     .filter((entry) => entry.userId === userId && localDate(entry.occurredAt, entry.timeZoneAtOccurrence) >= startDate && localDate(entry.occurredAt, entry.timeZoneAtOccurrence) <= endDate)
     .sort((a, b) => a.occurredAt.localeCompare(b.occurredAt));
+  const substantiveDecisionReviews = Object.values(state.records.decisionReviews).filter((review) => {
+    const decision = state.records.decisionRecords[review.decisionId];
+    const reviewDate = localDate(review.reviewedAt, review.timeZoneAtReview);
+    return decision?.userId === userId && review.outcome !== "DEFERRED" && reviewDate >= startDate && reviewDate <= endDate;
+  });
   const reflectionEntry = Object.values(state.records.journeyEntries)
     .filter((entry) => entry.userId === userId && entry.relatedMilestoneId === milestone.id && !entry.relatedTaskId)
     .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt))[0];
@@ -81,7 +86,7 @@ export function projectMilestoneSummary(state: JourneyState, userId: string, mil
       skipped: periodEvents.filter((event) => event.type === "SKIPPED").length,
       reopened: periodEvents.filter((event) => event.type === "REOPENED").length,
       carriedForward: periodEvents.filter((event) => event.type === "CARRIED_FORWARD").length,
-      decisionsReviewed: 0,
+      decisionsReviewed: substantiveDecisionReviews.length,
       thoughtsCaptured: thoughts.length,
     },
     outcomes: {

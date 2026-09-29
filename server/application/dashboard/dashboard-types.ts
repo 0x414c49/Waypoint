@@ -24,6 +24,13 @@ export interface TaskProjection {
   displayPlan: PlanProjection;
   timing: { actualSecondsAtGeneratedAt: number; firstStartedAt: string | null; runningSince: string | null };
   availableActions: string[];
+  decisionContext?: {
+    decisionId: string;
+    suggestedTitle: string;
+    initialReviewDate: string | null;
+    action: "CREATE_DRAFT" | "OPEN_DECISION";
+    decision: { id: string; title: string; status: "DRAFT" | "ACCEPTED" | "SUPERSEDED" } | null;
+  };
 }
 
 export interface Dashboard {
@@ -39,5 +46,5 @@ export interface Dashboard {
   optionalToday: null | { label: "Only if useful"; task: TaskProjection };
   activityPreview: { startDate: string; endDate: string; days: Array<{ date: string; sessionSeconds: number; level: number }> };
   milestoneSummary: null | { id: string; title: string; startDate: string; endDate: string; mode: MilestoneRecord["mode"]; sessionSeconds: number; sessionCount: number; plannedItemCount: number; touchedItemCount: number; finishedItemCount: number; skippedItemCount: number; openItemCount: number; thoughtCount: number; changedMyMindCount: number; href: string };
-  decisionReviewsDue: { count: 0; items: [] };
+  decisionReviewsDue: { count: number; items: Array<{ decisionId: string; title: string; dueDate: string }> };
 }

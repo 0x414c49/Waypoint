@@ -28,6 +28,16 @@ function isIanaTimeZone(value: string): boolean {
   }
 }
 
+function localCalendarDate(instantValue: string, timeZone: string): string | undefined {
+  if (!isUtcInstant(instantValue) || !isIanaTimeZone(timeZone)) return undefined;
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone, year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(new Date(instantValue));
+  const value = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value;
+  const year = value("year"); const month = value("month"); const day = value("day");
+  return year && month && day ? `${year}-${month}-${day}` : undefined;
+}
+
 function instant(errors: string[], path: string, value: string): void {
   if (!isUtcInstant(value)) errors.push(`${path}: expected a normalized UTC instant`);
 }
@@ -383,6 +393,9 @@ function validateJourneyEntries(state: JourneyState, errors: string[]): void {
     if (entry.relatedDecisionId && !state.records.decisionRecords[entry.relatedDecisionId]) {
       errors.push(`${path}/relatedDecisionId: decision does not exist`);
     }
+    const decision = entry.relatedDecisionId
+      ? state.records.decisionRecords[entry.relatedDecisionId]
+      : undefined;
     const taskQuarter = task ? state.records.quarters[task.quarterId] : undefined;
     const milestoneQuarter = milestone ? state.records.quarters[milestone.quarterId] : undefined;
     if (taskQuarter && taskQuarter.userId !== entry.userId) {
@@ -390,6 +403,9 @@ function validateJourneyEntries(state: JourneyState, errors: string[]): void {
     }
     if (milestoneQuarter && milestoneQuarter.userId !== entry.userId) {
       errors.push(`${path}/relatedMilestoneId: milestone must belong to the entry user`);
+    }
+    if (decision && decision.userId !== entry.userId) {
+      errors.push(`${path}/relatedDecisionId: decision must belong to the entry user`);
     }
     if (task && milestone && task.quarterId !== milestone.quarterId) {
       errors.push(`${path}: related task and milestone must belong to the same quarter`);
@@ -429,6 +445,122 @@ function validateJourneyEntries(state: JourneyState, errors: string[]): void {
   }
 }
 
+function validateDecisions(state: JourneyState, errors: string[]): void {
+  const reviewsByDecision = new Map<string, JourneyState["records"]["decisionReviews"][string][]>();
+  for (const review of Object.values(state.records.decisionReviews)) {
+    const path = `/records/decisionReviews/${review.id}`;
+    const decision = state.records.decisionRecords[review.decisionId];
+    if (!decision) errors.push(`${path}/decisionId: decision does not exist`);
+    instant(errors, `${path}/reviewedAt`, review.reviewedAt);
+    instant(errors, `${path}/createdAt`, review.createdAt);
+    if (!isIanaTimeZone(review.timeZoneAtReview)) {
+      errors.push(`${path}/timeZoneAtReview: expected an IANA time zone`);
+    }
+    if (review.nextReviewDate) date(errors, `${path}/nextReviewDate`, review.nextReviewDate);
+    const reviewDate = localCalendarDate(review.reviewedAt, review.timeZoneAtReview);
+    if (review.nextReviewDate && reviewDate && review.nextReviewDate <= reviewDate) {
+      errors.push(`${path}/nextReviewDate: must be later than the review local date`);
+    }
+    if (review.outcome === "DEFERRED" && !review.nextReviewDate) {
+      errors.push(`${path}/nextReviewDate: required for a Deferred review`);
+    }
+    if (review.outcome !== "SUPERSEDE" && review.replacementDecisionId) {
+      errors.push(`${path}/replacementDecisionId: allowed only for a Supersede review`);
+    }
+    if (review.replacementDecisionId) {
+      const replacement = state.records.decisionRecords[review.replacementDecisionId];
+      if (!replacement) errors.push(`${path}/replacementDecisionId: replacement does not exist`);
+      else if (replacement.userId !== decision?.userId) errors.push(`${path}/replacementDecisionId: replacement must belong to the same user`);
+      else if (replacement.id === review.decisionId) errors.push(`${path}/replacementDecisionId: decision cannot replace itself`);
+      else if (replacement.supersedesDecisionId !== review.decisionId) {
+        errors.push(`${path}/replacementDecisionId: replacement must link back to the superseded decision`);
+      }
+    }
+    const list = reviewsByDecision.get(review.decisionId) ?? [];
+    list.push(review);
+    reviewsByDecision.set(review.decisionId, list);
+  }
+
+  for (const decision of Object.values(state.records.decisionRecords)) {
+    const path = `/records/decisionRecords/${decision.id}`;
+    const user = state.records.users[decision.userId];
+    const quarter = decision.quarterId ? state.records.quarters[decision.quarterId] : undefined;
+    const task = decision.relatedTaskId ? state.records.tasks[decision.relatedTaskId] : undefined;
+    const taskQuarter = task ? state.records.quarters[task.quarterId] : undefined;
+    if (!user) errors.push(`${path}/userId: user does not exist`);
+    if (decision.quarterId && !quarter) errors.push(`${path}/quarterId: quarter does not exist`);
+    if (decision.relatedTaskId && !task) errors.push(`${path}/relatedTaskId: task does not exist`);
+    if (quarter && quarter.userId !== decision.userId) errors.push(`${path}/quarterId: quarter must belong to the decision user`);
+    if (taskQuarter && taskQuarter.userId !== decision.userId) errors.push(`${path}/relatedTaskId: task must belong to the decision user`);
+    if (task && decision.quarterId && task.quarterId !== decision.quarterId) {
+      errors.push(`${path}: related task and quarter must match`);
+    }
+    if (decision.decisionDate) date(errors, `${path}/decisionDate`, decision.decisionDate);
+    if (decision.initialReviewDate) date(errors, `${path}/initialReviewDate`, decision.initialReviewDate);
+    if (decision.decisionDate && decision.initialReviewDate && decision.initialReviewDate < decision.decisionDate) {
+      errors.push(`${path}/initialReviewDate: must be on or after decisionDate`);
+    }
+    instant(errors, `${path}/createdAt`, decision.createdAt);
+    instant(errors, `${path}/updatedAt`, decision.updatedAt);
+    if (decision.updatedAt < decision.createdAt) errors.push(`${path}/updatedAt: must not precede createdAt`);
+    const optionIds = new Set<string>();
+    for (const option of decision.options) {
+      if (optionIds.has(option.id)) errors.push(`${path}/options: duplicate option id ${option.id}`);
+      optionIds.add(option.id);
+    }
+    if (decision.status !== "DRAFT" && (!decision.title.trim() || !decision.context?.trim() || !decision.decision?.trim() || !decision.decisionDate)) {
+      errors.push(`${path}: Accepted reasoning requires title, context, decision, and decisionDate`);
+    }
+    if (decision.supersedesDecisionId) {
+      if (decision.supersedesDecisionId === decision.id) errors.push(`${path}/supersedesDecisionId: decision cannot supersede itself`);
+      const original = state.records.decisionRecords[decision.supersedesDecisionId];
+      if (!original) errors.push(`${path}/supersedesDecisionId: original decision does not exist`);
+      else if (original.userId !== decision.userId) errors.push(`${path}/supersedesDecisionId: original must belong to the same user`);
+      const provenance = Object.values(state.records.decisionReviews).filter(
+        (review) => review.decisionId === decision.supersedesDecisionId &&
+          review.outcome === "SUPERSEDE" && review.replacementDecisionId === decision.id,
+      );
+      if (provenance.length !== 1) {
+        errors.push(`${path}/supersedesDecisionId: requires exactly one matching Supersede review`);
+      }
+      const seen = new Set([decision.id]);
+      let ancestor = original;
+      while (ancestor) {
+        if (seen.has(ancestor.id)) {
+          errors.push(`${path}/supersedesDecisionId: supersession chain must not contain a cycle`);
+          break;
+        }
+        seen.add(ancestor.id);
+        ancestor = ancestor.supersedesDecisionId
+          ? state.records.decisionRecords[ancestor.supersedesDecisionId]
+          : undefined;
+      }
+    }
+    const ordered = [...(reviewsByDecision.get(decision.id) ?? [])].sort((left, right) => left.sequence - right.sequence);
+    if (ordered.some((review, index) => review.sequence !== index + 1)) {
+      errors.push(`/records/decisionReviews: decision ${decision.id} sequences must be contiguous from 1`);
+    }
+    for (let index = 1; index < ordered.length; index += 1) {
+      if (ordered[index]!.reviewedAt < ordered[index - 1]!.reviewedAt) {
+        errors.push(`/records/decisionReviews: decision ${decision.id} reviewedAt must not move backwards with sequence`);
+      }
+    }
+    const supersedeReviews = ordered.filter((review) => review.outcome === "SUPERSEDE");
+    if (decision.status === "DRAFT" && ordered.length > 0) errors.push(`${path}/status: Draft decisions cannot have reviews`);
+    if (decision.status === "SUPERSEDED" && supersedeReviews.length !== 1) errors.push(`${path}/status: Superseded decisions require exactly one Supersede review`);
+    if (decision.status !== "SUPERSEDED" && supersedeReviews.length > 0) errors.push(`${path}/status: Supersede review requires Superseded status`);
+    if (task) {
+      if (!task.planSnapshot) errors.push(`/records/tasks/${task.id}/planSnapshot: required once linked from Decision`);
+      const milestoneId = task.planSnapshot?.milestoneId ?? task.milestoneId;
+      const milestone = milestoneId ? state.records.milestones[milestoneId] : undefined;
+      if (milestone && !milestone.intentSnapshot) errors.push(`/records/milestones/${milestone.id}/intentSnapshot: required once linked from Decision`);
+      if (taskQuarter && !taskQuarter.intentSnapshot) errors.push(`/records/quarters/${taskQuarter.id}/intentSnapshot: required once linked from Decision`);
+    } else if (quarter && !quarter.intentSnapshot) {
+      errors.push(`/records/quarters/${quarter.id}/intentSnapshot: required once linked from Decision`);
+    }
+  }
+}
+
 export function validateJourneyState(value: unknown): string[] {
   const errors = [...Value.Errors(JourneyStateSchema, value)].map(
     (error) => `${error.path || "/"}: ${error.message}`,
@@ -442,7 +574,7 @@ export function validateJourneyState(value: unknown): string[] {
       if (key !== record.id) errors.push(`/records/${collectionName}/${key}: map key must equal id`);
     }
   }
-  for (const collectionName of ["decisionRecords", "decisionReviews", "aiReviews"] as const) {
+  for (const collectionName of ["aiReviews"] as const) {
     for (const key of Object.keys(state.records[collectionName])) {
       errors.push(`/records/${collectionName}/${key}: ${collectionName} records are not enabled in the current release slice`);
     }
@@ -455,6 +587,7 @@ export function validateJourneyState(value: unknown): string[] {
   validateQuarterAndPlanRecords(state, errors);
   validateTasks(state, errors);
   validateExecutionRecords(state, errors);
+  validateDecisions(state, errors);
   validateJourneyEntries(state, errors);
 
   for (const [key, receipt] of Object.entries(state.commandReceipts)) {

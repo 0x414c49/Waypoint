@@ -17,7 +17,14 @@ function label(type: JourneyItem["type"]): string {
     case "WEEKLY_REFLECTION": return "Weekly thought";
     case "SESSION": return "Session";
     case "TASK_FINISHED": return "Finished";
+    case "DECISION_REVIEW": return "Decision review";
   }
+}
+
+function heading(item: JourneyItem): string {
+  if (item.type === "SESSION" || item.type === "TASK_FINISHED") return item.task.title;
+  if (item.type === "DECISION_REVIEW") return item.decision.title;
+  return item.relatedTask?.title ?? item.relatedMilestone?.title ?? "A thought worth keeping";
 }
 
 export function JourneyTimeline({ items, onEdit }: { items: JourneyItem[]; onEdit: (entry: Extract<JourneyItem, { type: "THOUGHT" | "WEEKLY_REFLECTION" }>) => void }) {
@@ -32,18 +39,20 @@ export function JourneyTimeline({ items, onEdit }: { items: JourneyItem[]; onEdi
             <span>{label(item.type)}</span>
             {(item.type === "THOUGHT" || item.type === "WEEKLY_REFLECTION") && item.changedMyMind ? <strong>Changed my mind</strong> : null}
           </div>
-          <h2>{item.type === "SESSION" || item.type === "TASK_FINISHED"
-            ? item.task.title
-            : item.relatedTask?.title ?? item.relatedMilestone?.title ?? "A thought worth keeping"}</h2>
+          <h2>{heading(item)}</h2>
           {item.type === "THOUGHT" || item.type === "WEEKLY_REFLECTION"
             ? <p className={styles.entryText}>{item.text}</p>
-            : item.type === "TASK_FINISHED" && item.keyLearning
+              : item.type === "DECISION_REVIEW"
+                ? <p className={styles.entryText}>{item.notes ?? (item.outcome === "DEFERRED" ? `Review postponed${item.nextReviewDate ? ` until ${item.nextReviewDate}` : ""}.` : "Review recorded.")}</p>
+              : item.type === "TASK_FINISHED" && item.keyLearning
               ? <p className={styles.entryText}>{item.keyLearning}</p>
               : null}
           <div className={styles.entryLinks}>
             {item.type === "SESSION" ? <span>{duration(item.seconds)} recorded</span> : null}
             {item.type === "SESSION" || item.type === "TASK_FINISHED"
               ? <Link to={`/tasks/${encodeURIComponent(item.task.id)}`}>View task</Link>
+              : item.type === "DECISION_REVIEW"
+                ? <Link to={`/decisions/${encodeURIComponent(item.decision.id)}`}>View decision</Link>
               : item.relatedTask
                 ? <Link to={`/tasks/${encodeURIComponent(item.relatedTask.id)}`}>View task</Link>
                 : null}

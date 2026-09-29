@@ -406,7 +406,8 @@ List filters: `quarterId`, status, `review=due`, cursor, and limit.
 - Accept is an explicit command requiring Decision `If-Match` and `Idempotency-Key`; its optional `{ decisionDate }` body supplies the local date when the Draft does not already have one. Accept validates the minimal complete reasoning defined by the domain and never uses generic status mutation.
 - Review requires Decision `If-Match` and `Idempotency-Key` and appends one DecisionReview.
 - A Decision ETag covers the Decision plus its review chain and current due-date projection. Two concurrent reviews with the same prior ETag cannot both append; the loser receives `412 STALE_WRITE`.
-- `SUPERSEDE` atomically appends its review and changes the Decision status to Superseded.
+- `SUPERSEDE` atomically appends its review and changes the Decision status to Superseded. When `replacementDecisionId` is supplied, it must name a same-user Draft that is not the original and does not create an ancestry cycle; the transaction also sets or verifies that replacement's `supersedesDecisionId` back-link. Conflicting ancestry is rejected. Omitting a replacement is allowed and remains unlinked in v1.
+- Reviews receive an immutable per-Decision sequence starting at 1. The serialized transaction assigns the next sequence, which is the authoritative append order when two reviews share a timestamp.
 
 Substantive review:
 

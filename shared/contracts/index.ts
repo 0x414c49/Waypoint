@@ -1,6 +1,20 @@
 export { CurrentUserSchema, type CurrentUser } from "./current-user.js";
 export { ProblemDetailsSchema, type ProblemDetails } from "./problem.js";
 export {
+  DecisionDetailSchema,
+  DecisionListSchema,
+  DecisionOptionSchema,
+  DecisionReviewOutcomeSchema,
+  DecisionReviewSchema,
+  DecisionStatusSchema,
+  DecisionSummarySchema,
+  type DecisionDetailContract,
+  type DecisionListContract,
+  type DecisionOptionContract,
+  type DecisionReviewContract,
+  type DecisionSummaryContract,
+} from "./decisions.js";
+export {
   DashboardSchema,
   TaskActionResponseSchema,
   TaskProjectionSchema,

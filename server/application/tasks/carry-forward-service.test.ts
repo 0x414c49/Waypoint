@@ -33,16 +33,22 @@ describe("CarryForwardService", () => {
     const commands = new TaskCommandService(store, user, clock, new SequenceIdGenerator(["source-session"]));
     const initialEtag = await store.read((state) => taskEtag(state, state.records.tasks[taskId]!));
     await commands.execute({ action: "start", taskId, body: {}, ifMatch: initialEtag, idempotencyKey: "carry-start-00001", method: "POST", route: `/api/tasks/${taskId}/start` });
+    await store.transact({ kind: "PLAN_APPLY" }, (draft) => {
+      draft.records.tasks[taskId]!.decisionPrompt = { decisionId: "later-plan-prompt", suggestedTitle: "Added after history began" };
+      return { kind: "changed" as const, value: undefined };
+    });
     clock.set("2026-11-03T17:30:00.000Z");
     const openEtag = await store.read((state) => taskEtag(state, state.records.tasks[taskId]!));
     const carry = new CarryForwardService(store, user, clock, new SequenceIdGenerator(["continuation-1", "finish-1", "review-1", "carried-1"]));
     const request = { plannedDate: "2026-11-04", keyLearning: "The read path is done." };
     const first = await carry.execute(taskId, request, openEtag, "carry-command-0001", `/api/tasks/${taskId}/carry-forward`);
     expect(first.response).toMatchObject({ source: { status: "FINISHED" }, continuation: { id: "continuation-1", status: "NOT_STARTED" }, completion: { outcome: "PARTIAL", finishEventId: "finish-1" } });
-    await expect(store.read((state) => ({ sessions: Object.values(state.records.sessions), receipt: state.commandReceipts["local-user:carry-command-0001"]?.result, carryEvent: state.records.taskLifecycleEvents["carried-1"] }))).resolves.toMatchObject({
+    expect(first.response.continuation.decisionContext).toBeUndefined();
+    await expect(store.read((state) => ({ sessions: Object.values(state.records.sessions), receipt: state.commandReceipts["local-user:carry-command-0001"]?.result, carryEvent: state.records.taskLifecycleEvents["carried-1"], continuationPrompt: state.records.tasks["continuation-1"]?.decisionPrompt }))).resolves.toMatchObject({
       sessions: [{ id: "source-session", endedAt: "2026-11-03T17:30:00.000Z" }],
       receipt: { createdRecordIds: ["continuation-1", "finish-1", "review-1", "carried-1"] },
       carryEvent: { relatedTaskId: "continuation-1" },
+      continuationPrompt: undefined,
     });
 
     const restarted = new JsonJourneyStore({ directory, clock, idGenerator: new SequenceIdGenerator(["restart-commit"]), seed: createProductionSeed });
