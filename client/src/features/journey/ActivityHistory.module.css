@@ -1,0 +1,148 @@
+.activity {
+  min-width: 0;
+  padding: var(--space-24);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-surface);
+  background: var(--color-surface);
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-16);
+}
+
+.sectionHeading h2,
+.sectionHeading p {
+  margin-top: 0;
+  margin-bottom: var(--space-4);
+}
+
+.sectionHeading h2 {
+  font-size: var(--text-h2);
+  line-height: var(--line-h2);
+}
+
+.sectionHeading p {
+  color: var(--color-text-secondary);
+}
+
+.sectionHeading span {
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+}
+
+.activityScroller {
+  max-width: 100%;
+  margin-top: var(--space-24);
+  padding: var(--space-4) 0 var(--space-12);
+  overflow-x: auto;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+
+.activityScroller:focus-visible {
+  border-radius: var(--radius-control);
+}
+
+.activitySummary {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-8);
+  margin-top: var(--space-16);
+}
+
+.activitySummary strong {
+  font-size: var(--text-hero);
+  line-height: var(--line-hero);
+}
+
+.activitySummary span,
+.activityLegend,
+.activityMonth,
+.activityDay {
+  color: var(--color-text-secondary);
+  font-size: var(--text-metadata);
+}
+
+.activityCalendar {
+  display: grid;
+  grid-template-columns: 28px repeat(var(--activity-weeks), 11px);
+  grid-template-rows: 16px repeat(7, 11px);
+  gap: var(--space-4);
+  width: max-content;
+  min-width: max-content;
+}
+
+.activityMonth {
+  align-self: end;
+  white-space: nowrap;
+}
+
+.activityDay {
+  grid-column: 1;
+  align-self: center;
+  line-height: 11px;
+}
+
+.activityCell {
+  width: 11px;
+  height: 11px;
+  border: 1px solid rgb(31 37 33 / 6%);
+  border-radius: var(--radius-small);
+  background: var(--color-contribution-0);
+}
+
+.activityCell[data-level="1"] { background: var(--color-contribution-1); }
+.activityCell[data-level="2"] { background: var(--color-contribution-2); }
+.activityCell[data-level="3"] { background: var(--color-contribution-3); }
+.activityCell[data-level="4"] { background: var(--color-contribution-4); }
+
+.activityLegend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-4);
+  margin-top: var(--space-12);
+}
+
+.activityScrollHint {
+  display: none;
+  margin: var(--space-8) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-metadata);
+}
+
+.activityLegend > :first-child {
+  margin-right: var(--space-4);
+  font-weight: 600;
+}
+
+.legendEdge {
+  margin: 0 var(--space-4);
+}
+
+@media (max-width: 720px) {
+  .activity {
+    padding: var(--space-16);
+  }
+
+  .sectionHeading,
+  .activitySummary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .activitySummary {
+    gap: 0;
+  }
+
+  .activityLegend {
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+
+  .activityScrollHint {
+    display: block;
+  }
+}

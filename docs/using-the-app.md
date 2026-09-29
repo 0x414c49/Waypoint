@@ -1,0 +1,65 @@
+# Using Engineering Journey Tracker
+
+The tracker is ready to use through Slice 3. It supports the daily learning loop, factual activity history, reflections, and durable engineering Decisions. Plan editing and import arrive in Slice 4; Search and bounded AI arrive in Slice 5.
+
+## Start it locally
+
+You need Node.js 24 and npm.
+
+```sh
+npm install
+npm run dev
+```
+
+Open `http://127.0.0.1:5173` in a browser. Keep the terminal running while you use the app.
+
+For a production-style local run:
+
+```sh
+npm run build
+npm start
+```
+
+Then open `http://127.0.0.1:4173`.
+
+Your data stays on this machine in `data/store`. Preserve that directory when backing up or moving the app; do not hand-edit its files while the server is running.
+
+## The friendly daily loop
+
+1. Open **Today**. The app offers one current learning item rather than a backlog to manage.
+2. Choose **Start session**, or **Do 10 minutes** on a low-energy day. The smaller option is a normal session intention, not a reduced target or streak saver.
+3. Use **Pause** when you stop. Use **Resume** when you return.
+4. Choose **Finish item**, select the honest outcome, and optionally leave one useful takeaway.
+5. Leave. Session time, activity, and Journey history are produced automatically from those actions.
+
+The supplied Q4 2026 plan is currently the fixed local plan. Today follows the real calendar, so before that plan begins it truthfully says the quarter has not started. You can still capture Thoughts and Decisions. Slice 4 will add safe plan import and Quarter management.
+
+## Journey and activity
+
+Open **Journey** to see sessions, outcomes, thoughts, changed thinking, and Decision reviews in one historical stream.
+
+- **+ Thought** captures something worth remembering without requiring a Task.
+- Filters narrow the history by date, Task, Milestone, or entry type.
+- **Learning activity** shows the last year as a weekly calendar. Darker cells mean more closed-session time for that local date. Hover a cell for the exact duration.
+- The calendar is context, not a score: there is no streak, target, ranking, or penalty for an empty day.
+
+## Decisions
+
+Use **Decisions** for reasoning you may want to revisit later.
+
+1. Create a Draft directly, or start one from a planned ADR Task.
+2. Save while the reasoning is still changing.
+3. Accept only when the original context and choice are worth preserving.
+4. Later add a review: it still holds, you would adjust it, postpone the review, or supersede it.
+
+Accepted reasoning stays read-only. Reviews append hindsight instead of rewriting what you originally knew.
+
+## Useful commands
+
+- `npm run check` runs type checks, lint, automated tests, and the production build.
+- `npm run test:browser` runs the browser and accessibility scenarios.
+- Stop the local app with `Control-C` in its terminal.
+
+## Current boundary
+
+This is a private, single-user local app. It has no cloud sync, accounts, collaboration, notifications, or remote backup. Back up `data/store` yourself. Plan replacement should wait for Slice 4 rather than editing stored JSON manually.

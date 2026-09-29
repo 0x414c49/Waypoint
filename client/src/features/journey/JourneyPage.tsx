@@ -30,7 +30,7 @@ export function JourneyPage() {
     const activityRequest = cursor
       ? Promise.resolve(null)
       : getDashboard(signal).then((dashboard) => {
-          const from = filters.from ?? dateDaysBefore(dashboard.today, 90);
+          const from = filters.from ?? dateDaysBefore(dashboard.today, 364);
           const to = filters.to ?? dashboard.today;
           return getActivity(from, to, signal);
         });

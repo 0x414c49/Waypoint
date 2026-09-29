@@ -186,6 +186,12 @@ test("Quick Thought returns to Journey and both themes remain accessible", async
   }
   await page.goto("/journey");
   await expect(page.getByRole("heading", { name: "Journey", exact: true })).toBeVisible();
+  const activityCalendar = page.getByRole("list", { name: "365 days of recorded session activity" });
+  await expect(activityCalendar.getByRole("listitem")).toHaveCount(365);
+  if (testInfo.project.name === "mobile-360") {
+    const activityScroller = page.getByRole("region", { name: "Scrollable learning activity calendar" });
+    await expect.poll(() => activityScroller.evaluate((element) => element.scrollLeft > 0)).toBe(true);
+  }
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
   const thought = `Retry ownership belongs at one boundary · ${testInfo.project.name}`;

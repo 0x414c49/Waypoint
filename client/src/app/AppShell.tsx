@@ -69,7 +69,7 @@ export function AppShell() {
           window.dispatchEvent(new CustomEvent("journey:dashboard-changed", { detail: next }));
         }} />
       ) : null}
-      <main className={styles.main} id="main-content" data-dialog-background>
+      <main className={`${styles.main} ${location.pathname === "/journey" ? styles.mainWide : ""}`} id="main-content" data-dialog-background>
         <Outlet />
       </main>
       <nav className={styles.mobileNav} aria-label="Main navigation" data-dialog-background>

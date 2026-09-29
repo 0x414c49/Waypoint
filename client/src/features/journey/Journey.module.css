@@ -8,7 +8,6 @@
 .dialogHeading,
 .dialogActions,
 .inlineActions,
-.sectionHeading,
 .entryMeta,
 .entryLinks {
   display: flex;
@@ -16,8 +15,7 @@
 }
 
 .pageHeading,
-.dialogHeading,
-.sectionHeading {
+.dialogHeading {
   justify-content: space-between;
   gap: var(--space-16);
 }
@@ -27,8 +25,6 @@
 .detailHeader h1,
 .detailHeader p,
 .dialog h2,
-.sectionHeading h2,
-.sectionHeading p,
 .detailSection h2,
 .reflection h2,
 .carryForward h2 {
@@ -44,7 +40,6 @@
 
 .pageHeading p,
 .detailHeader > p,
-.sectionHeading p,
 .muted,
 .contextRemoved {
   margin-bottom: 0;
@@ -103,7 +98,6 @@
   accent-color: var(--color-accent);
 }
 
-.activity,
 .detailSection,
 .reflection,
 .carryForward {
@@ -112,45 +106,11 @@
   border-top: 1px solid var(--color-border);
 }
 
-.sectionHeading h2,
-.sectionHeading p,
 .detailSection h2,
 .reflection h2,
 .carryForward h2 {
   margin-bottom: var(--space-4);
 }
-
-.sectionHeading span {
-  color: var(--color-text-secondary);
-  font-size: var(--text-small);
-}
-
-.activityScroller {
-  max-width: 100%;
-  margin-top: var(--space-16);
-  overflow-x: auto;
-}
-
-.activityGrid {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 11px;
-  gap: var(--space-4);
-  width: max-content;
-  min-width: 100%;
-}
-
-.activityCell {
-  width: 11px;
-  height: 11px;
-  border-radius: var(--radius-small);
-  background: var(--color-contribution-0);
-}
-
-.activityCell[data-level="1"] { background: var(--color-contribution-1); }
-.activityCell[data-level="2"] { background: var(--color-contribution-2); }
-.activityCell[data-level="3"] { background: var(--color-contribution-3); }
-.activityCell[data-level="4"] { background: var(--color-contribution-4); }
 
 .timeline,
 .sessionList,
@@ -394,11 +354,6 @@
 
   .filters {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .sectionHeading {
-    align-items: flex-start;
-    flex-direction: column;
   }
 
   .backdrop {

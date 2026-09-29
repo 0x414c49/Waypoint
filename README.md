@@ -6,6 +6,12 @@ The product is intentionally **not** a project-management system or a data-entry
 
 > Open → see what matters now → start → learn → pause or finish → leave one small reflection → done.
 
+## Run and use it
+
+With Node.js 24 installed, run `npm install` and `npm run dev`, then open `http://127.0.0.1:5173`.
+
+The complete daily workflow, local-data location, Journey activity calendar, Decisions flow, and current Slice 3 limitations are explained in [Using the app](docs/using-the-app.md).
+
 ## Current stage
 
 The project has confirmed product, UX, visual, domain, API, and persistence behavior. The consolidated implementation review passed independent A/B verification and was explicitly approved on 2026-09-27. Slices 0–3 now provide the executable foundation, usable daily heart, lived Journey, and durable Decisions. Work proceeds to Slice 4: plan lifecycle and Quarter.
@@ -47,6 +53,7 @@ Start with:
 33. [Slice 3 implementation map](planning/slice-3-implementation-map.md)
 34. [Slice 3 validation evidence](planning/slice-3-validation.md)
 35. [Working agreement](planning/working-agreement.md)
+36. [Using the app](docs/using-the-app.md)
 
 ## Working rule
 
