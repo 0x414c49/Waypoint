@@ -6,7 +6,6 @@
 
 .pageHeading,
 .sectionHeading,
-.listHeading,
 .stickyActions,
 .stickyActions > div,
 .detailMeta,
@@ -20,7 +19,6 @@
 
 .pageHeading,
 .sectionHeading,
-.listHeading,
 .stickyActions,
 .reviewMeta,
 .error {
@@ -34,7 +32,6 @@
 .detailHeading p,
 .sectionHeading h2,
 .sectionHeading p,
-.listHeading h2,
 .documentSection h2,
 .reviewComposer h2,
 .original h2,
@@ -78,7 +75,12 @@
 }
 
 .newLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
   flex: none;
+  min-height: 44px;
   padding: var(--space-8) var(--space-12);
   color: var(--color-on-accent);
   border-radius: var(--radius-control);
@@ -88,8 +90,12 @@
   text-decoration: none;
 }
 
+.newLink svg {
+  width: 18px;
+  height: 18px;
+}
+
 .sectionHeading h2,
-.listHeading h2,
 .documentSection h2,
 .reviewComposer h2,
 .original h2 {
@@ -98,13 +104,11 @@
   line-height: var(--line-h2);
 }
 
-.sectionHeading > span,
 .readOnly {
   color: var(--color-text-secondary);
   font-size: var(--text-small);
 }
 
-.listHeading select,
 .field input,
 .field textarea {
   width: 100%;
@@ -114,10 +118,6 @@
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-control);
   background: var(--color-surface);
-}
-
-.listHeading select {
-  width: auto;
 }
 
 .decisionList,
@@ -143,9 +143,28 @@
 }
 
 .decisionRow h3 a,
-.openLink,
 .detailHeading a {
   color: var(--color-accent);
+}
+
+.decisionRow h3 a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  text-decoration: none;
+}
+
+.decisionRow h3 a:hover,
+.detailHeading a:hover {
+  text-decoration: underline;
+}
+
+.decisionRow h3 svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--color-text-secondary);
 }
 
 .decisionRow p {
@@ -163,16 +182,27 @@
 
 .rowMeta span:first-child,
 .detailMeta span:first-child {
-  color: var(--color-accent);
+  color: var(--color-text-secondary);
   font-size: var(--text-metadata);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
-.openLink {
-  font-size: var(--text-small);
-  font-weight: 600;
+.groupTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin: 0 0 var(--space-8);
+  font-size: var(--text-h2);
+  line-height: var(--line-h2);
+}
+
+.groupTitle svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--color-text-secondary);
 }
 
 .empty,
@@ -232,14 +262,67 @@
 }
 
 .field textarea {
-  min-height: 112px;
+  min-height: 88px;
   resize: vertical;
 }
 
-.fieldPair {
+.moreDetail {
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--color-border);
+}
+
+.moreDetail summary {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  width: fit-content;
+  min-height: 44px;
+  align-content: center;
+  color: var(--color-accent);
+  font-weight: var(--weight-control);
+  cursor: pointer;
+}
+
+.moreDetail summary span {
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+  font-weight: 400;
+}
+
+.moreDetailContent {
+  display: grid;
+  gap: var(--space-16);
+  max-width: 680px;
+  padding-top: var(--space-16);
+}
+
+.optionalGroup {
+  display: grid;
   gap: var(--space-12);
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--color-border);
+}
+
+.optionalGroup h3 {
+  margin: 0;
+  font-size: var(--text-body);
+  line-height: var(--line-body);
+}
+
+.optionalGroup .sectionHeading {
+  align-items: center;
+}
+
+.acceptAction {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-4);
+}
+
+.acceptAction > span {
+  max-width: 30ch;
+  color: var(--color-text-secondary);
+  font-size: var(--text-small);
+  line-height: var(--line-small);
 }
 
 .optionEditor {
@@ -417,13 +500,6 @@
     flex-direction: column;
   }
 
-  .newLink {
-    width: 100%;
-    min-height: 44px;
-    text-align: center;
-  }
-
-  .fieldPair,
   .reviewOutcomes {
     grid-template-columns: 1fr;
   }
@@ -443,9 +519,35 @@
     padding: var(--space-24) var(--space-16);
   }
 
-  .dueNotice {
+  .field textarea {
+    min-height: 112px;
+  }
+
+  .pageHeading {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .newLink {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  .moreDetail summary {
+    width: 100%;
+  }
+
+  .stickyActions > div {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .acceptAction {
+    width: 100%;
+  }
+
+  .acceptAction button {
+    width: 100%;
   }
 }
 

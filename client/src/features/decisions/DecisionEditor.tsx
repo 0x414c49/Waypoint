@@ -26,6 +26,10 @@ export function DecisionEditor({ initial, busy, canAccept, initialSaved = true, 
   const [draft, setDraft] = useState(initial);
   const [hasSaved, setHasSaved] = useState(initialSaved);
   const [savedValue, setSavedValue] = useState(() => JSON.stringify(initial));
+  const [moreDetailOpen, setMoreDetailOpen] = useState(() => Boolean(
+    initial.consequences || initial.falsifier || initial.initialReviewDate ||
+    initial.constraints.length || initial.options.length || initial.assumptions.length,
+  ));
   const dirty = JSON.stringify(draft) !== savedValue;
 
   const setText = (key: "title" | "decisionDate" | "context" | "decision" | "consequences" | "falsifier", value: string) => {
@@ -73,42 +77,40 @@ export function DecisionEditor({ initial, busy, canAccept, initialSaved = true, 
   return (
     <form className={styles.editor} onSubmit={(event) => void submit(event)}>
       <section className={styles.documentSection} aria-labelledby="decision-basics">
-        <h2 id="decision-basics">Decision</h2>
-        <div className={styles.fieldPair}>
-          <label className={styles.field}><span>Title</span><input required value={draft.title} onChange={(event) => setText("title", event.target.value)} /></label>
-          <label className={styles.field}><span>Decision date</span><input type="date" value={draft.decisionDate ?? ""} onChange={(event) => setText("decisionDate", event.target.value)} /></label>
+        <h2 id="decision-basics">The gist</h2>
+        <label className={styles.field}><span>Title</span><input required value={draft.title} onChange={(event) => setText("title", event.target.value)} /></label>
+        <label className={styles.field}><span>What is going on?</span><textarea value={draft.context ?? ""} onChange={(event) => setText("context", event.target.value)} /></label>
+        <label className={styles.field}><span>What did you decide?</span><textarea value={draft.decision ?? ""} onChange={(event) => setText("decision", event.target.value)} /></label>
+        <label className={styles.field}><span>Decision date <small>Needed to accept</small></span><input type="date" value={draft.decisionDate ?? ""} onChange={(event) => setText("decisionDate", event.target.value)} /></label>
+      </section>
+
+      <details className={styles.moreDetail} open={moreDetailOpen} onToggle={(event) => setMoreDetailOpen(event.currentTarget.open)}>
+        <summary>Add more detail <span>Optional: alternatives, constraints, consequences, and what might change your mind</span></summary>
+        <div className={styles.moreDetailContent}>
+          <label className={styles.field}><span>Constraints <small>one per line</small></span><textarea value={draft.constraints.join("\n")} onChange={(event) => setDraft((current) => ({ ...current, constraints: lines(event.target.value) }))} /></label>
+          <section className={styles.optionalGroup} aria-labelledby="decision-options">
+            <div className={styles.sectionHeading}><h3 id="decision-options">Options considered</h3><Button type="button" variant="ghost" onClick={addOption}>Add option</Button></div>
+            {draft.options.map((option, index) => (
+              <DecisionOptionEditor
+                key={option.id}
+                option={option}
+                index={index}
+                onChange={(next) => setDraft((current) => ({ ...current, options: current.options.map((item) => item.id === next.id ? next : item) }))}
+                onRemove={() => setDraft((current) => ({ ...current, options: current.options.filter((item) => item.id !== option.id) }))}
+              />
+            ))}
+          </section>
+          <label className={styles.field}><span>Consequences</span><textarea value={draft.consequences ?? ""} onChange={(event) => setText("consequences", event.target.value)} /></label>
+          <label className={styles.field}><span>Assumptions <small>one per line</small></span><textarea value={draft.assumptions.join("\n")} onChange={(event) => setDraft((current) => ({ ...current, assumptions: lines(event.target.value) }))} /></label>
+          <label className={styles.field}><span>What might change your mind?</span><textarea value={draft.falsifier ?? ""} onChange={(event) => setText("falsifier", event.target.value)} /></label>
+          <label className={styles.field}><span>First review date <small>Optional reminder</small></span><input type="date" value={draft.initialReviewDate ?? ""} onChange={(event) => setDraft((current) => ({ ...current, initialReviewDate: event.target.value }))} /></label>
         </div>
-        <label className={styles.field}><span>Context</span><textarea value={draft.context ?? ""} onChange={(event) => setText("context", event.target.value)} /></label>
-        <label className={styles.field}><span>Constraints <small>one per line</small></span><textarea value={draft.constraints.join("\n")} onChange={(event) => setDraft((current) => ({ ...current, constraints: lines(event.target.value) }))} /></label>
-      </section>
-
-      <section className={styles.documentSection} aria-labelledby="decision-options">
-        <div className={styles.sectionHeading}><h2 id="decision-options">Options considered</h2><Button type="button" variant="ghost" onClick={addOption}>Add option</Button></div>
-        {draft.options.length === 0 ? <p className={styles.muted}>Options are useful context, but optional.</p> : null}
-        {draft.options.map((option, index) => (
-          <DecisionOptionEditor
-            key={option.id}
-            option={option}
-            index={index}
-            onChange={(next) => setDraft((current) => ({ ...current, options: current.options.map((item) => item.id === next.id ? next : item) }))}
-            onRemove={() => setDraft((current) => ({ ...current, options: current.options.filter((item) => item.id !== option.id) }))}
-          />
-        ))}
-      </section>
-
-      <section className={styles.documentSection} aria-labelledby="decision-reasoning">
-        <h2 id="decision-reasoning">Reasoning</h2>
-        <label className={styles.field}><span>What we decided</span><textarea value={draft.decision ?? ""} onChange={(event) => setText("decision", event.target.value)} /></label>
-        <label className={styles.field}><span>Consequences</span><textarea value={draft.consequences ?? ""} onChange={(event) => setText("consequences", event.target.value)} /></label>
-        <label className={styles.field}><span>Assumptions <small>one per line</small></span><textarea value={draft.assumptions.join("\n")} onChange={(event) => setDraft((current) => ({ ...current, assumptions: lines(event.target.value) }))} /></label>
-        <label className={styles.field}><span>What would change this decision?</span><textarea value={draft.falsifier ?? ""} onChange={(event) => setText("falsifier", event.target.value)} /></label>
-        <label className={styles.field}><span>First review date</span><input type="date" value={draft.initialReviewDate ?? ""} onChange={(event) => setDraft((current) => ({ ...current, initialReviewDate: event.target.value }))} /></label>
-      </section>
+      </details>
 
       <div className={styles.stickyActions}>
         <p role="status">{busy ? "Saving draft…" : dirty ? "Unsaved changes" : hasSaved ? "Draft saved" : "Not saved yet"}</p>
         <div>
-          {onAccept ? <Button type="button" variant={!dirty && canAccept ? "primary" : "secondary"} disabled={busy || dirty || !canAccept} onClick={() => void onAccept()}>Accept decision</Button> : null}
+          {onAccept ? <div className={styles.acceptAction}><Button type="button" variant={!dirty && canAccept ? "primary" : "secondary"} disabled={busy || dirty || !canAccept} onClick={() => void onAccept()}>Accept decision</Button>{!canAccept ? <span>To accept, add a title, context, decision, and date.</span> : dirty ? <span>Save your changes before accepting.</span> : null}</div> : null}
           <Button type="submit" variant={dirty ? "primary" : "secondary"} disabled={busy || !dirty}>Save draft</Button>
         </div>
       </div>

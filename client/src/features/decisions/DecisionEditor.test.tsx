@@ -18,7 +18,7 @@ it("keeps Accept separate from unsaved Draft edits", async () => {
   );
 
   expect((screen.getByRole("button", { name: "Accept decision" }) as HTMLButtonElement).disabled).toBe(false);
-  await user.type(screen.getByLabelText("Context"), " More detail.");
+  await user.type(screen.getByLabelText("What is going on?"), " More detail.");
   expect((screen.getByRole("button", { name: "Accept decision" }) as HTMLButtonElement).disabled).toBe(true);
   await user.click(screen.getByRole("button", { name: "Save draft" }));
   expect(save).toHaveBeenCalledWith(expect.objectContaining({ context: "A retry crosses services. More detail." }));
@@ -47,6 +47,34 @@ it("does not call a pristine new decision saved and only clears edits after a co
   expect(screen.getByRole("status").textContent).toBe("Draft saved");
 });
 
+it("keeps a title-only Draft easy to save and hides deeper prompts until requested", async () => {
+  const save = vi.fn(async () => true);
+  const user = userEvent.setup();
+  render(
+    <DecisionEditor
+      initial={{ title: "", constraints: [], options: [], assumptions: [] }}
+      initialSaved={false}
+      busy={false}
+      canAccept={false}
+      onSave={save}
+    />,
+  );
+
+  expect(screen.getByLabelText(/^Decision date/)).toBeTruthy();
+  const optionalDetails = screen.getByText(/Add more detail/).closest("details");
+  expect(optionalDetails?.open).toBe(false);
+  await user.type(screen.getByLabelText("Title"), "Keep retries at the edge");
+  await user.click(screen.getByRole("button", { name: "Save draft" }));
+  expect(save).toHaveBeenCalledWith(expect.objectContaining({ title: "Keep retries at the edge" }));
+
+  await user.click(screen.getByText(/Add more detail/));
+  expect(optionalDetails?.open).toBe(true);
+  expect(screen.getByLabelText(/^Decision date/)).toBeTruthy();
+  expect(screen.getByLabelText(/Constraints/)).toBeTruthy();
+  expect(screen.getByLabelText("What might change your mind?")).toBeTruthy();
+  expect(screen.getByLabelText(/First review date/)).toBeTruthy();
+});
+
 it("requires a chosen later date when postponing a review", async () => {
   const { ReviewComposer } = await import("./ReviewComposer.js");
   const submit = vi.fn(async () => true);
@@ -57,6 +85,7 @@ it("requires a chosen later date when postponing a review", async () => {
   expect(screen.queryByRole("radio", { checked: true })).toBeNull();
   await user.click(screen.getByRole("radio", { name: "Postpone review" }));
   expect((screen.getByLabelText("Review later") as HTMLInputElement).required).toBe(true);
+  expect(screen.queryByLabelText("What changed or still holds?")).toBeNull();
   await user.type(screen.getByLabelText("Review later"), "2026-12-01");
   await user.click(screen.getByRole("button", { name: "Postpone review" }));
   expect(submit).toHaveBeenCalledWith({ outcome: "DEFERRED", nextReviewDate: "2026-12-01" });
