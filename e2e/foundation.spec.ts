@@ -137,9 +137,10 @@ test("a decision keeps its original reasoning and appends hindsight", async ({ p
   await expect(page.getByRole("heading", { name: "Decisions", exact: true })).toBeVisible();
   await page.getByRole("link", { name: "New decision" }).click();
   await page.getByLabel("Title").fill("Retry ownership at the service boundary");
+  await page.getByLabel("What is going on?").fill("Retries can amplify a partial failure across services.");
+  await page.getByLabel("What did you decide?").fill("The caller owns retry policy and idempotency.");
   await page.getByLabel("Decision date").fill("2026-11-01");
-  await page.getByLabel("Context").fill("Retries can amplify a partial failure across services.");
-  await page.getByLabel("What we decided").fill("The caller owns retry policy and idempotency.");
+  await page.getByText(/Add more detail/).click();
   await page.getByLabel("First review date").fill("2026-11-03");
   await page.getByRole("button", { name: "Save draft" }).click();
 
@@ -163,11 +164,11 @@ test("a decision keeps its original reasoning and appends hindsight", async ({ p
     },
   });
   expect(concurrent.ok()).toBe(true);
-  await page.getByLabel("Context").fill("Retries can amplify a partial failure across services. Keep this local evidence.");
+  await page.getByLabel("What is going on?").fill("Retries can amplify a partial failure across services. Keep this local evidence.");
   await page.getByRole("button", { name: "Save draft" }).click();
   await expect(page.getByRole("alert")).toContainText("Refresh it before saving");
   await page.getByRole("button", { name: "Refresh version, keep my text" }).click();
-  await expect(page.getByLabel("Context")).toHaveValue("Retries can amplify a partial failure across services. Keep this local evidence.");
+  await expect(page.getByLabel("What is going on?")).toHaveValue("Retries can amplify a partial failure across services. Keep this local evidence.");
   await page.getByRole("button", { name: "Save draft" }).click();
   await page.getByRole("button", { name: "Accept decision" }).click();
   await expect(page.getByText("Read-only history")).toBeVisible();
@@ -211,7 +212,7 @@ test("Decisions navigation and editor reflow without accessibility violations", 
   await expect(page.getByRole("heading", { name: "Decisions", exact: true })).toBeVisible();
   await page.getByRole("link", { name: "New decision" }).click();
   await expect(page.getByRole("heading", { name: "Capture a decision" })).toBeVisible();
-  const contextField = page.getByLabel("Context");
+  const contextField = page.getByLabel("What is going on?");
   await expect(contextField).toBeVisible();
   expect(await page.getByRole("heading", { name: "Capture a decision" }).evaluate((element) => getComputedStyle(element).fontWeight)).toBe("600");
   if (testInfo.project.name === "mobile-360") {
@@ -426,7 +427,7 @@ test("plan preview, explicit removal acknowledgement, YAML export and unchanged 
   expect(await roundTrip.json()).toMatchObject({ summary: { added: 0, changed: 0, removed: 0, historicalPreserved: 0, conflicts: 0 }, changes: [] });
 });
 
-test("global Search opens exact Journey and plan context and generated advice survives a rerun", async ({ page }, testInfo) => {
+test("global Search opens exact Journey and plan context", async ({ page }, testInfo) => {
   await page.goto("/journey");
   await page.getByRole("button", { name: "+ Thought" }).first().click();
   const thought = `Search returns to this thought · ${testInfo.project.name}`;
@@ -453,16 +454,6 @@ test("global Search opens exact Journey and plan context and generated advice su
   await expect(page).toHaveURL(/\/tasks\/2026-10-20-idempotency$/);
   await expect(page.getByRole("heading", { name: "Idempotency", exact: true })).toBeVisible();
 
-  const generate = page.getByRole("button", { name: /Generate (reflection|another)/ });
-  await expect(generate).toBeEnabled();
-  await generate.click();
-  await expect(page.getByText("Generated advice · stub").first()).toBeVisible();
-  await page.reload();
-  await expect(page.getByText("Generated advice · stub").first()).toBeVisible();
-  const history = page.getByRole("list", { name: "Generated advice history" });
-  const reviewsBeforeRerun = await history.locator(":scope > li").count();
-  await page.getByRole("button", { name: "Generate another" }).click();
-  await expect(history.locator(":scope > li")).toHaveCount(reviewsBeforeRerun + 1);
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });

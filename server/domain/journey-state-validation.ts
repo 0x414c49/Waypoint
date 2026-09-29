@@ -561,7 +561,7 @@ function validateDecisions(state: JourneyState, errors: string[]): void {
   }
 }
 
-function validateAIReviews(state: JourneyState, errors: string[]): void {
+function validateLegacyAIReviews(state: JourneyState, errors: string[]): void {
   for (const review of Object.values(state.records.aiReviews)) {
     const path = `/records/aiReviews/${review.id}`;
     const user = state.records.users[review.userId];
@@ -630,7 +630,7 @@ export function validateJourneyState(value: unknown): string[] {
   validateExecutionRecords(state, errors);
   validateDecisions(state, errors);
   validateJourneyEntries(state, errors);
-  validateAIReviews(state, errors);
+  validateLegacyAIReviews(state, errors);
 
   for (const [key, receipt] of Object.entries(state.commandReceipts)) {
     if (!state.records.users[receipt.userId]) errors.push(`/commandReceipts/${key}/userId: referenced user does not exist`);

@@ -523,45 +523,23 @@ Preview tokens are ephemeral. Restart may require a fresh preview; no PlanPrevie
 
 ### Export
 
-Returns `application/yaml`, an attachment filename, and ETag derived from `planRevision`. It contains current plan intent only—never Sessions, status, outcomes, Decisions, AI advice, or reflection. Normalized reimport of an unchanged export has an empty semantic diff.
-
-## AI review stubs
-
-```text
-GET /api/ai/reviews?targetType=TASK&targetId=task-123
-POST /api/ai/review/task/:id
-POST /api/ai/review/week
-POST /api/ai/review/quarter/:id
-POST /api/ai/review/decision/:id
-```
-
-Week body:
-
-```json
-{ "milestoneId": "week-5" }
-```
-
-The GET endpoint returns the current user’s append-only review history for that owned target. Every POST requires `Idempotency-Key`, creates one completed historical AIReview, and returns `201 Created`. Task, Quarter, and Decision bodies are `{}`; the Week body is shown above. A Task review captures Task/Milestone/Quarter snapshots; a Week review captures Milestone/Quarter snapshots; a Quarter review captures QuarterIntentSnapshot. Decision links retain their existing plan snapshots.
-
-The injected `AIReviewer` receives at most 40 evidence items, each at most 500 characters. V1’s `StubAIReviewer` is deterministic and local; it reports its provider/model and makes no network request. Provider failure returns `503 AI_REVIEW_FAILED` and creates no record. If the target context changes while review generation is underway, the write returns `409 AI_TARGET_CHANGED` and saves no result. Same-key transport retries replay one result; an intentional rerun uses a new key and appends another AIReview.
-
-No score is returned. AI cannot mutate its target.
+Returns `application/yaml`, an attachment filename, and ETag derived from `planRevision`. It contains current plan intent only—never Sessions, status, outcomes, Decisions, legacy generated-advice rows, or reflection. Normalized reimport of an unchanged export has an empty semantic diff.
 
 ## HTTP status summary
 
 | Status | Use |
 |---:|---|
 | 200 | Successful read/update/action |
-| 201 | Resource/continuation/review/quarter created |
+| 201 | Resource/continuation/quarter created |
 | 204 | Explicit JourneyEntry delete |
 | 400 | Malformed JSON/query syntax |
 | 403 | Untrusted Host/Origin for the local runtime |
 | 413 | Request body exceeds the route limit |
 | 404 | Missing or not owned resource |
-| 409 | Domain/concurrency workflow conflict (including `AI_TARGET_CHANGED`) |
+| 409 | Domain/concurrency workflow conflict |
 | 410 | Expired plan preview |
 | 412 | Stale `If-Match` |
 | 422 | Well-formed but invalid domain/plan content |
 | 428 | Required precondition absent |
 | 500 | Unexpected internal failure |
-| 503 | Store busy/corrupt/unavailable or `AI_REVIEW_FAILED` |
+| 503 | Store busy, corrupt, unsupported, or safely unavailable |

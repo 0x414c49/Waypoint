@@ -261,14 +261,15 @@ export const DecisionReviewRecordSchema = Type.Object({
 }, { additionalProperties: false });
 export type DecisionReviewRecord = Static<typeof DecisionReviewRecordSchema>;
 
-export const AIReviewTargetTypeSchema = Type.Union([
+// Read-only compatibility for AIReview entries written by an earlier build.
+// The application no longer exposes a creation, listing, or generation path.
+export const LegacyAIReviewTargetTypeSchema = Type.Union([
   Type.Literal("TASK"), Type.Literal("WEEK"), Type.Literal("QUARTER"), Type.Literal("DECISION"),
 ]);
-export type AIReviewTargetType = Static<typeof AIReviewTargetTypeSchema>;
-export const AIReviewRecordSchema = Type.Object({
+export const LegacyAIReviewRecordSchema = Type.Object({
   id: RecordIdSchema,
   userId: RecordIdSchema,
-  targetType: AIReviewTargetTypeSchema,
+  targetType: LegacyAIReviewTargetTypeSchema,
   targetId: RecordIdSchema,
   provider: Type.String({ minLength: 1, maxLength: 80 }),
   model: Type.Optional(Type.String({ minLength: 1, maxLength: 120 })),
@@ -280,7 +281,6 @@ export const AIReviewRecordSchema = Type.Object({
   generatedAt: UtcInstantSchema,
   timeZoneAtGeneration: Type.String({ minLength: 1, maxLength: 100 }),
 }, { additionalProperties: false });
-export type AIReviewRecord = Static<typeof AIReviewRecordSchema>;
 
 export const CommandReceiptSchema = Type.Object({
   userId: RecordIdSchema,

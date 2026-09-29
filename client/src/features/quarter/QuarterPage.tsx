@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button } from "../../ui/Button.js";
-import { AIReviewPanel } from "../utilities/AIReviewPanel.js";
 import { QuarterApiError, downloadExport, exportQuarter, getQuarter, getQuarters } from "./api.js";
 import type { QuarterDetail, QuarterSummary } from "./api.js";
 import styles from "./Quarter.module.css";
@@ -146,7 +145,6 @@ export function QuarterPage() {
         ))}</ul> : <p className={styles.muted}>{focusArea || milestone ? "No current planned items in this section." : "This Quarter has no planned items yet."}</p>}
         {milestone ? <Link className={styles.summaryLink} to={`/quarters/${encodeURIComponent(quarter.id)}/milestones/${encodeURIComponent(milestone.id)}/summary`}>View what happened during this milestone</Link> : null}
       </section>
-      {!focusAreaId && !milestoneId ? <AIReviewPanel targetType="QUARTER" targetId={quarter.id} targetTitle={quarter.title} /> : null}
     </div>
   );
 }

@@ -12,11 +12,10 @@ Browser
         └── same-origin HTTP /api
               └── Fastify transport
                     └── application use cases + queries
-                          ├── pure domain policies/projections
-                          └── ports
-                                ├── JourneyStore → JsonJourneyStore
-                                ├── CurrentUserProvider → LocalCurrentUserProvider
-                                └── AIReviewer → StubAIReviewer
+                           ├── pure domain policies/projections
+                           └── ports
+                                 ├── JourneyStore → JsonJourneyStore
+                                 └── CurrentUserProvider → LocalCurrentUserProvider
 
 Cross-cutting injected utilities: Clock, IdGenerator, Logger
 ```
@@ -63,10 +62,9 @@ server/
     decisions/
     plans/
     search/
-    ai/
   domain/              entities, invariants, policies, projections
-  ports/               JourneyStore, CurrentUserProvider, AIReviewer
-  adapters/            JSON store, local user, stub AI, system clock/IDs
+  ports/               JourneyStore, CurrentUserProvider
+  adapters/            JSON store, local user, system clock/IDs
 
 shared/
   contracts/           transport schemas and inferred request/response types only
@@ -100,7 +98,6 @@ Rules:
 | Domain policies | Lifecycle, recommendation, due date, temporal attribution | I/O and framework types |
 | JourneyStore | Validated snapshot and atomic whole-state transaction | IDs, clock, recommendations, HTTP |
 | CurrentUserProvider | Resolve the seeded local user | Authentication claims |
-| AIReviewer | Generate review text from an explicit input | Mutating its target or scoring learning |
 
 ## Port contracts
 
@@ -115,14 +112,6 @@ getCurrentUserId() → local-user
 ```
 
 Every application use case asks this port for ownership context. V1's adapter returns the seeded user; a later authenticated adapter can resolve a session/claim without changing use-case signatures or adding speculative auth fields now.
-
-### AIReviewer
-
-```text
-review(request, context) → { provider, model, content, generatedAt }
-```
-
-V1 uses a deterministic stub. The application writes an AIReview only after the adapter succeeds and never lets output mutate Task, Decision, or plan state. Provider errors produce no AIReview.
 
 ### Clock and IdGenerator
 
@@ -161,17 +150,12 @@ One transaction creates the new JourneyEntry or Draft Decision, validates the li
 
 Preview strictly parses the normative YAML format, validates it, diffs plan-owned fields, and returns an ephemeral token tied to normalized content plus base plan revision. Apply checks an existing command receipt before token validity, then performs all acknowledged plan-owned changes in one transaction. No execution-owned field is accepted or changed.
 
-### AI review
-
-The application checks receipt replay, reads a bounded target/context snapshot, calls the AIReviewer outside a store transaction, then opens one transaction that checks receipt replay again, revalidates target/link context, captures required history snapshots, and appends the generated AIReview. If a concurrent identical command already won, the unused generated result is discarded and the committed result is replayed. Provider failure and a changed target create no review. The stub is synchronous; no queue or worker exists. The frontend labels output as generated advice and keeps its history separate from user-authored reasoning.
-
 Global Search is a read-only query over the current user’s plan, Journey, and Decisions records. It returns grouped result descriptions and canonical IDs, never frontend paths; the client resolves each result to the owning route. A Journey thought can be fetched by ID so a search result opens that exact timeline entry.
 
 ## Failure boundaries
 
 - Transport validation fails before a use case; no write occurs.
 - Domain/precondition conflict aborts the transaction and returns structured Problem Details.
-- AI provider failure creates no history and leaves the target unchanged.
 - Store validation/write failure publishes no candidate before atomic replace.
 - Uncertain post-replace outcome is recovered by retrying the identical idempotency key.
 - Invalid, unsupported, or ambiguously missing store data fails closed; no normal UI writes continue.
@@ -183,9 +167,10 @@ Global Search is a read-only query over the current user’s plan, Journey, and 
 - Loopback-only binding, same-origin frontend/API, Host allowlist, and no permissive CORS.
 - Private filesystem permissions where supported.
 - CSP and standard secure response headers despite local deployment.
-- Strict bounded JSON/YAML bodies and escaped text rendering; user-authored/AI text is never treated as HTML.
-- No secrets are required for the StubAIReviewer.
+- Strict bounded JSON/YAML bodies and escaped text rendering; user-authored text is never treated as HTML.
 - No telemetry, cloud synchronization, accounts, or third-party calls in v1.
+
+Older stores may contain `records.aiReviews` written during the former Slice 5 implementation. The current app keeps those rows schema-valid for backward-compatible startup but exposes no AI review UI/API and never creates, displays, or sends them anywhere.
 
 This baseline is appropriate only for the documented local runtime. Exposing the process beyond loopback reopens authentication, authorization, transport security, CSRF, data protection, backup, and operational architecture.
 
@@ -206,4 +191,4 @@ This baseline is appropriate only for the documented local runtime. Exposing the
 - Current plan and historical display context cannot be accidentally interchanged by the client.
 - Local no-auth operation cannot silently become network-accessible.
 - The initial slice can be built without implementing every planned endpoint.
-- Replacing JSON, local-user, or stub-AI adapters does not require rewriting domain policies.
+- Replacing JSON or local-user adapters does not require rewriting domain policies.

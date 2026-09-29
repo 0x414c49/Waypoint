@@ -14,7 +14,7 @@ The daily workflow, Quarter plan preview/export, local-data location, Journey ac
 
 ## Current stage
 
-The project has confirmed product, UX, visual, domain, API, and persistence behavior. The consolidated implementation review passed independent A/B verification and was explicitly approved on 2026-09-27. Slices 0–5 are complete: executable foundation, daily learning loop, lived Journey, durable Decisions, history-safe plan lifecycle with Quarter navigation, global Search, and a bounded local AI-review seam. The v1 completion boundary is reached.
+The project has confirmed product, UX, visual, domain, API, and persistence behavior. The consolidated implementation review passed independent A/B verification and was explicitly approved on 2026-09-27. Slices 0–5 are complete: executable foundation, daily learning loop, lived Journey, simplified durable Decisions, history-safe plan lifecycle with Quarter navigation, and global Search. Generated AI review and provider connections were removed from the product.
 
 Start with:
 

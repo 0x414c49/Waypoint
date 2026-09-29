@@ -28,14 +28,13 @@ User
 ├── JourneyEntry
 ├── DecisionRecord
 │   └── DecisionReview
-└── AIReview
 ```
 
 - `Quarter.userId` establishes quarter ownership.
 - Task ownership derives through Quarter.
 - Session, DailyReview, and TaskLifecycleEvent ownership derive through Task.
 - FocusArea and Milestone ownership derive through Quarter.
-- JourneyEntry, DecisionRecord, and AIReview keep `userId` because they may exist independently of a quarter/task and need a clear future authorization boundary.
+- JourneyEntry and DecisionRecord keep `userId` because they may exist independently of a quarter/task and need a clear future authorization boundary.
 - DecisionReview ownership derives through DecisionRecord.
 
 Do not add `userId` to every child merely to make queries convenient.
@@ -265,7 +264,7 @@ History-bearing actions include:
 
 - starting a session
 - skipping an untouched item
-- linking a JourneyEntry, DecisionRecord, or AIReview to the task
+- linking a JourneyEntry or DecisionRecord to the task
 
 The same transaction captures the containing MilestoneIntentSnapshot (when the Task has a Milestone) and QuarterIntentSnapshot if absent. The current plan projection may later change through an accepted import; task history displays the immutable snapshot. This is intentional, bounded duplication that prevents a later rename, date change, focus-area change, or period-boundary change from rewriting what the learner actually encountered.
 
@@ -430,12 +429,12 @@ Rules:
 
 Do not duplicate `reviewedAt` or latest outcome onto DecisionRecord.
 
-## AIReview
+## Legacy AIReview storage compatibility
 
-AIReview is separate historical advice. Rerunning a review creates another record rather than replacing prior advice.
+AI review generation, providers, APIs, and UI were removed by the 2026-09-29 product decision. An older local store may still contain AIReview rows, so the storage schema continues to validate those rows without exposing or creating them. They remain inert legacy data until an explicit data migration is designed; normal application actions never modify them.
 
 ```text
-AIReview
+Legacy AIReview
   id
   userId
   targetType              // TASK | WEEK | QUARTER | DECISION
@@ -451,14 +450,7 @@ AIReview
   timeZoneAtGeneration
 ```
 
-Rules:
-
-- `WEEK` targets a Milestone representing a week.
-- Provider is `stub` in v1; it remains historical provenance when real providers arrive.
-- V1 writes only completed reviews. Provider failure creates no AIReview; pending/failed job state does not exist without asynchronous processing.
-- No AI score exists because the product rejects aggregate learning-quality scoring.
-- AI advice cannot mutate plans, task state, human reflection, decisions, or history.
-- The target union is validated by the application. A future SQL adapter may enforce it with separate nullable foreign keys or a target table without changing application behavior.
+The retained schema exists only so stores written by the removed feature still open safely and preserve historical plan references. No current API, UI, or action creates, displays, or updates these records. Plan/persistence guards inspect the archive only to preserve referenced history during plan changes.
 
 ## Derived concepts—not records
 
@@ -488,7 +480,6 @@ They are query results derived from plan intent and execution facts.
 9. A continuation belongs to the same User as its source and receives a new stable ID.
 10. Imported plan IDs are unique and references are valid before any write occurs.
 11. DecisionReview cannot mutate accepted DecisionRecord reasoning.
-12. AIReview is advisory and cannot write its target.
 
 ## SQL migration readiness
 

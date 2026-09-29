@@ -44,14 +44,12 @@ Every nontrivial addition has a confirmed use:
 - TaskLifecycleEvent: truthful Finish/Skip/Reopen/Undo history
 - `planRevision`: stale preview prevention
 - DecisionReview: append-only hindsight without rewriting the ADR
-- AIReview: an explicitly required future-facing seam
 
 Potentially sparse fields remain optional:
 
 - FocusArea `targetMinutes`
 - Task tags
 - deeper DailyReview `reflection`
-- AI provider outputs
 
 They are present in the master plan/domain requirements but remain outside the normal daily form. If not used by the first plan/import slice, they may stay absent in stored records rather than receive placeholders.
 
@@ -61,7 +59,7 @@ Yes.
 
 - Quarter owns plan structure and Tasks through `userId`.
 - Task owns Sessions, DailyReviews, and lifecycle events.
-- JourneyEntry, DecisionRecord, and AIReview have direct User ownership because they can stand alone.
+- JourneyEntry and DecisionRecord have direct User ownership because they can stand alone. Legacy AIReview rows retain their prior owner field only for persisted-store compatibility.
 - DecisionReview derives ownership through DecisionRecord.
 - Relationships are checked to resolve to the same User.
 

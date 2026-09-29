@@ -34,7 +34,7 @@ Keep three things separate:
 - Continuation links
 - Journey entries
 - Decision records/reviews
-- AI reviews
+- Legacy AIReview rows from earlier builds (retained read-only for store compatibility)
 
 An import document may never supply or overwrite execution-owned fields.
 
@@ -55,7 +55,6 @@ A Task becomes history-bearing when its immutable TaskPlanSnapshot is captured. 
 - Skip
 - linking a JourneyEntry
 - linking a DecisionRecord
-- linking an AIReview
 
 Once history-bearing, the Task record cannot be hard-deleted by plan import. History views render plan context from the snapshot.
 
@@ -64,12 +63,10 @@ The same transaction captures MilestoneIntentSnapshot for the Task's Milestone a
 A Milestone also becomes history-bearing without a Task when:
 
 - a JourneyEntry links directly to it, including a weekly reflection
-- an AIReview targets it as `WEEK`
 
 A Quarter becomes history-bearing without a Task when:
 
 - a DecisionRecord links directly through `quarterId`
-- an AIReview targets it as `QUARTER`
 - one of its Milestones becomes history-bearing
 
 These direct-link actions capture the relevant Milestone/Quarter snapshots in their transaction. Later imports may update current intent, while summaries and retrospectives retain the original period boundary, mantra, success criteria, and focus framing.
@@ -213,7 +210,7 @@ Those features solve audit/restore scenarios that have not been requested.
 3. Apply is atomic.
 4. Plan import never changes execution status.
 5. Plan import never creates or ends Sessions.
-6. Plan import never writes DailyReview, JourneyEntry, DecisionReview, or AIReview.
+6. Plan import never writes DailyReview, JourneyEntry, DecisionReview, or legacy AIReview rows.
 7. History-bearing records are never hard-deleted.
 8. Removed-from-plan is independent from Skipped.
 9. Active conflicts offer no destructive-history resolution.

@@ -25,10 +25,9 @@ The accepted system architecture is documented in:
 
 Implementation was authorized by `planning/implementation-gate.md`; delivered slices and their validation notes are tracked in `planning/`.
 
-The design tracks three intentionally small seams:
+The design tracks two intentionally small seams:
 
 - `JourneyStore`
 - `CurrentUserProvider`
-- `AIReviewer`
 
 All three seams and their v1 adapters are specified in the system design. They keep the current local-first implementation modular without introducing speculative infrastructure.

@@ -222,7 +222,7 @@ Export produces normalized version-1 YAML containing current plan intent only.
 - Preserve array order.
 - Omit absent optional fields and defaults where doing so remains unambiguous.
 - Do not promise byte-for-byte round-trip, comment preservation, anchor preservation, or original wrapping style.
-- Never export execution state, Sessions, snapshots, outcomes, Journey entries, Decisions, AI reviews, or command receipts.
+- Never export execution state, Sessions, snapshots, outcomes, Journey entries, Decisions, legacy generated-advice rows, or command receipts.
 
 Importing an unchanged normalized export must produce an empty semantic diff.
 

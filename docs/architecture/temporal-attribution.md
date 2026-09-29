@@ -45,7 +45,7 @@ No unlabeled single “week total” mixes those meanings.
 - Finished, Skipped, Reopened, and Carried-forward events belong to the local date of `occurredAt` using `timeZoneAtOccurrence`.
 - JourneyEntries belong to the local date of `occurredAt` using `timeZoneAtOccurrence`.
 - DecisionReviews use `reviewedAt` and `timeZoneAtReview`.
-- AIReviews use `generatedAt` and `timeZoneAtGeneration` for timeline display.
+- Earlier builds stored generated-advice timestamps in legacy AIReview rows; the current app does not project or display them.
 
 Capturing the occurrence timezone prevents a later User timezone change from moving non-Session history between dates. DailyReview inherits the date of its linked Finished event.
 

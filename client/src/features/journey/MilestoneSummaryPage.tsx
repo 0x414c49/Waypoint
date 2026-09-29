@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "../../ui/Button.js";
-import { AIReviewPanel } from "../utilities/AIReviewPanel.js";
 import { JourneyEntryEditor } from "./JourneyEntryEditor.js";
 import { createJourneyEntry, getMilestoneSummary } from "./api.js";
 import type { MilestoneSummary } from "./types.js";
@@ -100,8 +99,6 @@ export function MilestoneSummaryPage() {
           ))}
         </ul>
       </section>
-
-      <AIReviewPanel targetType="WEEK" targetId={summary.milestone.id} targetTitle={summary.milestone.title} />
 
       {summary.openWork.length ? (
         <section className={styles.detailSection} aria-labelledby="open-work-title">

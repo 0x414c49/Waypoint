@@ -35,7 +35,7 @@ Exact dependency versions are selected and committed at scaffolding time after c
 - No ORM/database driver: JsonJourneyStore is the confirmed v1 adapter.
 - No service container framework: explicit constructor/factory wiring is clearer at this size.
 - No native file-lock package: the runtime is explicitly single-process.
-- No production AI SDK in v1: AIReview ships behind a deterministic stub port.
+- No AI provider, model SDK, generated-advice UI, or provider credentials in the tracker.
 
 ## Dependency rule
 

@@ -106,7 +106,6 @@ These are not persistent destinations:
 - quick capture
 - decision review editor
 - plan import/update
-- future AI review
 
 ### Task detail
 

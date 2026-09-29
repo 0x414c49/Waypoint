@@ -160,6 +160,7 @@ Old-to-new comparison protects facts that a candidate alone cannot prove:
 - TaskPlanSnapshot, MilestoneIntentSnapshot, and QuarterIntentSnapshot immutability
 - Session `taskId` permanence
 - append-only lifecycle events and DecisionReviews
+- immutable legacy AIReview rows from stores written by an earlier build
 - accepted Decision reasoning immutability
 - no deletion of history-bearing Tasks
 - plan-owned changes to existing records occur only under `PLAN_APPLY`

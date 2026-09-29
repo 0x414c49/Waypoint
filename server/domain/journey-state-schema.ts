@@ -1,7 +1,7 @@
 import { Type, type Static, type TSchema } from "@sinclair/typebox";
 import {
   CommandReceiptSchema,
-  AIReviewRecordSchema,
+  LegacyAIReviewRecordSchema,
   DailyReviewRecordSchema,
   DecisionRecordSchema,
   DecisionReviewRecordSchema,
@@ -35,7 +35,8 @@ export const JourneyStateSchema = Type.Object({
     journeyEntries: recordMap(JourneyEntryRecordSchema),
     decisionRecords: recordMap(DecisionRecordSchema),
     decisionReviews: recordMap(DecisionReviewRecordSchema),
-    aiReviews: recordMap(AIReviewRecordSchema),
+    // Retain historical records as inert persistence compatibility only.
+    aiReviews: recordMap(LegacyAIReviewRecordSchema),
   }, { additionalProperties: false }),
   commandReceipts: Type.Record(Type.String({ minLength: 1 }), CommandReceiptSchema),
 }, { additionalProperties: false, $id: "JourneyState" });

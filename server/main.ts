@@ -2,7 +2,6 @@ import { resolve } from "node:path";
 import { JsonJourneyStore, StoreError } from "./adapters/json-store/index.js";
 import { LocalCurrentUserProvider } from "./adapters/local-current-user-provider.js";
 import { createProductionSeed } from "./domain/production-seed.js";
-import { StubAIReviewer } from "./adapters/stub-ai-reviewer.js";
 import { buildApp } from "./http/build-app.js";
 import { createStructuredLogger } from "./infrastructure/structured-logger.js";
 import { SystemClock, type Clock } from "./ports/clock.js";
@@ -51,7 +50,6 @@ async function start(): Promise<void> {
       currentUserProvider: new LocalCurrentUserProvider(store),
       idGenerator,
       clock,
-      aiReviewer: new StubAIReviewer(),
       logger,
       allowedHosts: development
         ? new Set([...hostPort("5173"), ...hostPort("4174")])

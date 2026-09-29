@@ -25,7 +25,7 @@ The proposed modular monolith is proportionate to the product: one private learn
 | Full API made initial delivery too broad | Scope is split into small vertical slices with the daily heart first. |
 | Holiday/light tasks would become required-looking work | Added `OPTIONAL`; such items remain quiet context and never create a Ready hero or debt. |
 | Milestone edits could rewrite historical period boundaries | Added immutable MilestoneIntentSnapshot and direct-link capture triggers. |
-| Plan removal ignored non-Task references | Tombstone rules now cover JourneyEntry, WEEK AIReview, snapshots, and all Task references. |
+| Plan removal ignored non-Task references | Tombstone rules cover JourneyEntry, legacy WEEK AIReview rows, snapshots, and all Task references. |
 | Store could not infer exceptional write authority | Added a closed transaction-intent capability for plan apply, exact Journey deletion, and migration. |
 | Tracked `data/` conflicted with first-run detection | Defaulted storage to absent `data/store`, defined abandoned-init recovery, and documented the canonical seed. |
 | Final gate summary was not a navigable consolidated review | Expanded it with choices/rejections, final ASCII states, exact visual tokens, domain/API/architecture/scope evidence, and direct links. |

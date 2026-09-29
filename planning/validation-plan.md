@@ -46,7 +46,7 @@ Automated checks are a floor, not proof.
 - Same-key replay before stale/expired precondition checks; different-body reuse conflict.
 - Cross-midnight and daylight-saving Session attribution using captured timezone.
 - Historical milestone membership and `statusAtPeriodEnd` after later carry/reopen/correction.
-- Snapshot capture on Start, Skip, Journey link, Decision link, and AI link.
+- Snapshot capture on Start, Skip, Journey link, and Decision link.
 - Dashboard Onboarding, future, between-quarter, overlap rejection, and active old-Quarter Task.
 - Dashboard 14-day and full Activity projections split cross-midnight Sessions identically and update after Pause/Finish without persisted counters.
 - Normative Q4 fixture validation and normalized export/reimport empty diff.

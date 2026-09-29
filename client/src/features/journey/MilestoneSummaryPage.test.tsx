@@ -30,9 +30,7 @@ describe("milestone summary", () => {
       }],
       thoughts: [], changedMyMindCount: 0, openWork: [], reflection: { prompt: null, entry: null },
     };
-    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => String(input).startsWith("/api/ai/reviews?")
-      ? new Response(JSON.stringify({ items: [] }))
-      : new Response(JSON.stringify(summary))));
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(summary))));
 
     render(
       <MemoryRouter initialEntries={["/quarters/quarter-1/milestones/week-1/summary"]}>
@@ -84,7 +82,6 @@ describe("milestone summary", () => {
     };
     let summaryReads = 0;
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-      if (String(input).startsWith("/api/ai/reviews?")) return new Response(JSON.stringify({ items: [] }));
       if (init?.method === "DELETE") return new Response(null, { status: 204 });
       const value = summaryReads++ === 0 ? before : after;
       return new Response(JSON.stringify(value));

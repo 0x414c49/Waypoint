@@ -55,7 +55,7 @@ The learner returns because starting is easier than remembering and organizing t
 6. **History remains truthful.** Plan changes may affect future work but never rewrite completed learning.
 7. **Recovery is normal.** Unfinished work, low-energy days, and changed plans are expected states, not failures.
 8. **Reflection is tiny by default.** The app invites one useful thought and allows deeper writing without requiring it.
-9. **Advanced work stays contextual.** ADRs, AI reviews, plan import, and detailed history do not crowd the daily path.
+9. **Advanced work stays contextual.** ADRs, plan import, and detailed history do not crowd the daily path.
 10. **No guilt mechanics.** No streak anxiety, shame language, meaningless scores, or celebratory friction.
 
 ## Product metaphor

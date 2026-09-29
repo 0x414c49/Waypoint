@@ -77,17 +77,15 @@ Deliver:
 
 Gate: changing a plan cannot silently alter execution history, and an unchanged exported/reimported plan has an empty semantic diff.
 
-## Slice 5 — Search and bounded AI seam
+## Slice 5 — Global Search
 
 Status: **Delivered** on 2026-09-29; evidence is recorded in [Slice 5 validation](slice-5-validation.md).
 
 Deliver:
 
 - global Search overlay across plan, Journey, and Decisions, opening the canonical result context
-- deterministic local StubAIReviewer flows for Task, Week, Quarter, and Decision targets
-- append-only AIReview history clearly labeled as generated advice
 
-Gate: Search opens canonical context, and AI results can be repeated or fail without changing execution/decision intent or scoring their targets. Only the required history snapshots and a separate AIReview record may be appended.
+Gate: Search opens canonical context across plan, Journey, and Decisions.
 
 ## V1 completion boundary
 
@@ -98,7 +96,7 @@ V1 is complete when Slices 0–5 pass their gates and the validation plan, not w
 - accounts, authentication, teams, sharing, permissions
 - LAN/public hosting, cloud sync, offline/PWA sync
 - notifications, reminders, calendar/email integrations
-- real external AI provider or autonomous agent actions
+- AI-generated advice, AI providers/connections, and autonomous agent actions; generated AI review was explicitly removed from the product on 2026-09-29
 - multiple simultaneous active Sessions
 - arbitrary custom statuses, workflows, fields, dashboards, or goals
 - streaks, badges, leaderboards, aggregate learning scores

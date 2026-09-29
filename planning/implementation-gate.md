@@ -5,6 +5,8 @@ Date: 2026-09-27
 
 This is the single implementation-review manifest required by the master prompt. It summarizes the decisions and links each authoritative specification so approval never depends on reconstructing the project from scattered files.
 
+This manifest records the originally approved plan. The 2026-09-29 decision-log entry removing AI review supersedes its AIReviewer/AIReview scope; current shipped scope is maintained in `planning/release-scope.md`.
+
 ## 1. Product
 
 ### Promise and boundary
