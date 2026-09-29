@@ -1,6 +1,12 @@
 // @vitest-environment node
 import { performance } from "node:perf_hooks";
 import { describe, expect, it } from "vitest";
+import { stringify } from "yaml";
+import { RandomIdGenerator } from "../ports/id-generator.js";
+import { FixedClock } from "../ports/clock.js";
+import type { JourneyStore } from "../ports/journey-store.js";
+import type { CurrentUserProvider } from "../adapters/local-current-user-provider.js";
+import { PlanCommandService } from "./plans/plan-command-service.js";
 import { createProductionSeed } from "../domain/production-seed.js";
 import { projectDecisionList } from "./decisions/decision-projection.js";
 import { projectDashboard } from "./dashboard/dashboard.js";
@@ -119,5 +125,43 @@ describe("personal-scale read budgets", () => {
     expect(p95(todaySamples)).toBeLessThan(200);
     expect(p95(journeySamples)).toBeLessThan(200);
     expect(p95(decisionSamples)).toBeLessThan(200);
+  });
+
+  it("keeps unchanged Quarter plan preview bounded with 8 Quarters and 1,000 Tasks", async () => {
+    const state = personalScaleState();
+    const quarter = state.records.quarters["performance-quarter-0"]!;
+    const milestone = Object.values(state.records.milestones).find((item) => item.quarterId === quarter.id)!;
+    const planYaml = stringify({
+      version: 1,
+      quarter: { id: quarter.id, title: quarter.title, start: quarter.startDate, end: quarter.endDate },
+      focusAreas: [],
+      milestones: [{ id: milestone.id, title: milestone.title, ...(milestone.description ? { description: milestone.description } : {}), start: milestone.startDate, end: milestone.endDate, mode: milestone.mode }],
+      tasks: Object.values(state.records.tasks).filter((task) => task.quarterId === quarter.id).sort((a, b) => a.position - b.position).map((task) => ({
+        id: task.id, milestoneId: task.milestoneId!, date: task.plannedDate, title: task.title,
+        ...(task.description ? { description: task.description } : {}),
+        ...(task.plannedMinutes ? { plannedMinutes: task.plannedMinutes } : {}),
+        tags: task.tags, recommendationMode: task.recommendationMode,
+        ...(task.decisionPrompt ? { decisionPrompt: task.decisionPrompt } : {}),
+      })),
+    });
+    const store = {
+      read: async <T>(project: (snapshot: typeof state) => T) => project(state),
+      transact: async () => { throw new Error("This read-budget scenario does not apply a plan."); },
+    } as unknown as JourneyStore;
+    const currentUser = { getCurrentUserId: async () => "local-user" } as CurrentUserProvider;
+    const service = new PlanCommandService(store, currentUser, new FixedClock(new Date("2026-11-03T17:00:00.000Z")), new RandomIdGenerator());
+    await service.preview(planYaml);
+    const samples: number[] = [];
+    for (let index = 0; index < 20; index += 1) {
+      const started = performance.now();
+      const preview = await service.preview(planYaml);
+      samples.push(performance.now() - started);
+      expect(preview.changes.filter((change) => change.entityType === "TASK")).toEqual([]);
+    }
+    expect(Object.keys(state.records.quarters)).toHaveLength(8);
+    expect(Object.keys(state.records.tasks)).toHaveLength(1_000);
+    expect(Object.keys(state.records.sessions)).toHaveLength(2_000);
+    expect(Object.keys(state.records.journeyEntries)).toHaveLength(2_000);
+    expect(p95(samples)).toBeLessThan(200);
   });
 });

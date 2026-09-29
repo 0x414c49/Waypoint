@@ -1,5 +1,16 @@
 import { AxeBuilder } from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { parse, stringify } from "yaml";
+
+const q4Fixture = readFileSync(resolve(process.cwd(), "planning/fixtures/q4-2026-engineering-growth.yaml"), "utf8");
+
+function q4PlanWithout(taskId: string): string {
+  const plan = parse(q4Fixture) as { tasks: Array<{ id: string }> };
+  plan.tasks = plan.tasks.filter((task) => task.id !== taskId);
+  return stringify(plan, { lineWidth: 0 });
+}
 
 async function createAcceptedDecision(page: Page, title: string, keySuffix: string): Promise<string> {
   const origin = "http://127.0.0.1:4173";
@@ -41,7 +52,7 @@ test("Today is responsive and has no detectable accessibility violations", async
   await expect(page.getByRole("link", { name: "Today", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Journey", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Decisions", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Quarter", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Quarter", exact: true })).toBeVisible();
   const currentUser = await page.request.get("/api/me");
   expect(currentUser.ok()).toBe(true);
   expect(await currentUser.json()).toMatchObject({ id: "local-user", name: "Ali" });
@@ -235,4 +246,78 @@ test("task history supports correction, carry forward, and milestone review", as
   await expect(page.getByRole("heading", { name: "During this period" })).toBeVisible();
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations).toEqual([]);
+});
+
+test("Quarter overview navigates to Focus Areas and Milestones accessibly at desktop and 360px", async ({ page }) => {
+  await page.goto("/quarter");
+  await expect(page.getByRole("heading", { name: /Engineering Growth/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What would make this Quarter worthwhile" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Systems Reliability", exact: true })).toBeVisible();
+  await page.getByRole("link", { name: "Systems Reliability", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Systems Reliability", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Partial failure" }).first()).toBeVisible();
+  await page.getByRole("link", { name: /Back to Quarter/ }).click();
+  await page.getByRole("link", { name: "Week 5", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Week 5", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "View what happened during this milestone" })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+
+  await page.getByRole("button", { name: "Use dark appearance" }).click();
+  const darkResults = await new AxeBuilder({ page }).analyze();
+  expect(darkResults.violations).toEqual([]);
+  await page.getByRole("button", { name: "Use light appearance" }).click();
+  const lightResults = await new AxeBuilder({ page }).analyze();
+  expect(lightResults.violations).toEqual([]);
+});
+
+test("plan preview, explicit removal acknowledgement, YAML export and unchanged reimport work", async ({ page }, testInfo) => {
+  await page.goto("/quarter");
+  await expect(page.getByRole("heading", { name: /Engineering Growth/ })).toBeVisible();
+  await page.getByRole("button", { name: "Update plan" }).click();
+  const removedTaskId = testInfo.project.name === "desktop" ? "2026-10-05-go-foundations" : "2026-10-06-timeouts";
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "q4-plan-update.yaml", mimeType: "application/yaml", buffer: Buffer.from(q4PlanWithout(removedTaskId)),
+  });
+  await page.getByRole("button", { name: "Validate and preview" }).click();
+  await expect(page.getByRole("heading", { name: "Review before applying" })).toBeVisible();
+  await expect(page.getByText("History preserved", { exact: true })).toBeVisible();
+  const requestedRemovalLabel = testInfo.project.name === "desktop" ? "Confirm removing Go foundations" : "Confirm removing Timeouts";
+  await expect(page.getByRole("checkbox", { name: new RegExp(requestedRemovalLabel) })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  expect(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(true);
+  const checkboxes = await page.getByRole("checkbox").all();
+  const firstCheckbox = page.getByRole("checkbox").first();
+  await firstCheckbox.focus();
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Shift+Tab");
+  await expect(firstCheckbox).toBeFocused();
+  expect(await firstCheckbox.evaluate((element) => getComputedStyle(element).outlineStyle)).not.toBe("none");
+  await page.keyboard.press("Space");
+  await expect(firstCheckbox).toBeChecked();
+  for (const checkbox of checkboxes.slice(1)) await checkbox.check();
+
+  const lightResults = await new AxeBuilder({ page }).analyze();
+  expect(lightResults.violations).toEqual([]);
+  await page.getByRole("button", { name: "Use dark appearance" }).click();
+  const darkResults = await new AxeBuilder({ page }).analyze();
+  expect(darkResults.violations).toEqual([]);
+
+  if (testInfo.project.name !== "desktop") return;
+  await page.getByRole("button", { name: "Apply plan" }).click();
+  await expect(page.getByRole("heading", { name: /Engineering Growth/ })).toBeVisible();
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export YAML" }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe("q4-2026-plan.yaml");
+
+  const exported = await page.request.get("/api/plans/export/q4-2026");
+  expect(exported.ok()).toBe(true);
+  const roundTrip = await page.request.post("/api/plans/preview", {
+    headers: { Origin: "http://127.0.0.1:4173", "Content-Type": "application/json" },
+    data: { sourceFormat: "yaml", content: await exported.text() },
+  });
+  expect(roundTrip.ok()).toBe(true);
+  expect(await roundTrip.json()).toMatchObject({ summary: { added: 0, changed: 0, removed: 0, historicalPreserved: 0, conflicts: 0 }, changes: [] });
 });

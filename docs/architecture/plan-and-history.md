@@ -105,6 +105,7 @@ The stable ID exists and one or more plan-owned values differ. Preview shows hum
 ### Removed
 
 An existing current-plan ID is absent from the incoming plan. “Removed” means absent from future plan intent, not deleted history or skipped work.
+Every removed Quarter-plan item receives its own required acknowledgement before Apply. The preview explains whether a pristine, unreferenced record may be removed or whether it remains as a tombstone for preserved context. Replacing an item with a new stable ID is shown as a removal plus an addition, so the learner confirms the old identity leaving the plan.
 
 ### Historical item preserved
 
@@ -119,7 +120,7 @@ A changed/removed Task is currently Running or Paused. The user must explicitly 
 Apply is all-or-nothing.
 
 1. Verify the preview base `planRevision` still equals the Quarter’s current revision.
-2. Verify required active-item acknowledgements.
+2. Verify required removal and active-item acknowledgements.
 3. Apply all plan-owned additions/changes/removals under one serialized write.
 4. Preserve every execution-owned value.
 5. Increment `planRevision` exactly once.
@@ -127,6 +128,7 @@ Apply is all-or-nothing.
 7. Persist safely; failure leaves the prior document intact.
 
 If the base revision changed after preview, reject apply and require a fresh preview.
+Update applies also carry `If-Match` with the Quarter ETag returned by Preview. Create applies carry `If-None-Match: *`. A mismatched HTTP precondition returns `412 STALE_WRITE`; a preview whose base plan revision is no longer current returns `409 PLAN_REVISION_CHANGED`.
 
 ## Add, change, and remove behavior
 

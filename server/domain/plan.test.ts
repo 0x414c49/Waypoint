@@ -68,6 +68,26 @@ describe("plan YAML", () => {
     expect(() => parseAndNormalizePlanYaml(minimalPlan().replace("title: Test task", "title: &task-title Test task\n    description: *task-title")))
       .toThrow(PlanValidationError);
   });
+
+  it("accepts an explicitly empty Quarter without inventing a Milestone", () => {
+    const empty = `version: 1
+quarter:
+  id: empty-quarter
+  title: A quiet quarter
+  start: 2026-10-01
+  end: 2026-12-31
+focusAreas: []
+milestones: []
+tasks: []
+`;
+    expect(parseAndNormalizePlanYaml(empty)).toMatchObject({ quarter: { id: "empty-quarter" }, milestones: [], tasks: [] });
+    expect(() => parseAndNormalizePlanYaml(empty.replace("tasks: []", "tasks:\n  - id: needs-period\n    milestoneId: missing\n    date: 2026-10-01\n    title: Missing milestone"))).toThrow(/requires at least one Milestone/);
+  });
+
+  it("enforces the UTF-8 YAML source byte limit", () => {
+    expect(() => parseAndNormalizePlanYaml("x".repeat(1024 * 1024 + 1)))
+      .toThrow(/YAML source exceeds 1048576 bytes/);
+  });
 });
 
 describe("production seed", () => {

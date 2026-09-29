@@ -1,6 +1,6 @@
 # Using Engineering Journey Tracker
 
-The tracker is ready to use through Slice 3. It supports the daily learning loop, factual activity history, reflections, and durable engineering Decisions. Plan editing and import arrive in Slice 4; Search and bounded AI arrive in Slice 5.
+The tracker is ready to use through Slice 4. It supports the daily learning loop, factual activity history, reflections, durable engineering Decisions, safe plan updates, and Quarter navigation. Search and bounded AI remain in Slice 5.
 
 ## Start it locally
 
@@ -32,7 +32,17 @@ Your data stays on this machine in `data/store`. Preserve that directory when ba
 4. Choose **Finish item**, select the honest outcome, and optionally leave one useful takeaway.
 5. Leave. Session time, activity, and Journey history are produced automatically from those actions.
 
-The supplied Q4 2026 plan is currently the fixed local plan. Today follows the real calendar, so before that plan begins it truthfully says the quarter has not started. You can still capture Thoughts and Decisions. Slice 4 will add safe plan import and Quarter management.
+The supplied Q4 2026 plan is loaded on a fresh installation. Today follows the real calendar, so before that plan begins it truthfully says the quarter has not started. You can still capture Thoughts and Decisions.
+
+## Quarter and plan updates
+
+Open **Quarter** to see current plan intent, success criteria, Focus Areas, Milestones, and planned work. Focus Area and Milestone links keep you in plan context; a Milestone can also open its generated Journey summary. Between quarters is shown as a normal pause in the plan, not a backlog or a missed target.
+
+Choose **Update plan** to select a version 1 `.yaml`/`.yml` file or paste its contents. The tracker validates the whole document and previews semantic changes before applying anything. Review removed and changed items, read the explanation of preserved history, and confirm each removal or active-work change that needs acknowledgement. If the plan changed after Preview, refresh it and review again.
+
+**Export YAML** downloads the current Quarter plan. It contains current intent only—not Sessions, completion, Decisions, reflections, or other history. Exporting and previewing the same plan again shows no semantic changes.
+
+On a store with no Quarter, Today and Quarter offer a working plan-import path. An explicitly empty Quarter is valid when it has no planned Tasks.
 
 ## Journey and activity
 
@@ -62,4 +72,4 @@ Accepted reasoning stays read-only. Reviews append hindsight instead of rewritin
 
 ## Current boundary
 
-This is a private, single-user local app. It has no cloud sync, accounts, collaboration, notifications, or remote backup. Back up `data/store` yourself. Plan replacement should wait for Slice 4 rather than editing stored JSON manually.
+This is a private, single-user local app. It has no cloud sync, accounts, collaboration, notifications, or remote backup. Back up `data/store` yourself. Plan changes go through Quarter’s preview/apply flow rather than editing stored JSON manually.

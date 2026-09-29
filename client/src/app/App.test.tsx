@@ -35,7 +35,7 @@ describe("application shell", () => {
     expect(await screen.findByRole("heading", { name: "Today" })).toBeTruthy();
     expect(screen.getAllByRole("link", { name: "Today" }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole("link", { name: "Journey" }).length).toBeGreaterThan(0);
-    expect(screen.queryByRole("link", { name: "Quarter" })).toBeNull();
+    expect(screen.getAllByRole("link", { name: "Quarter" }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole("link", { name: "Decisions" }).length).toBeGreaterThan(0);
     expect(screen.getByText("Stored on this device")).toBeTruthy();
   });

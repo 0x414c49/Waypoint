@@ -138,7 +138,7 @@ GET /api/quarters/:id/milestones/:milestoneId/summary
 
 ### Quarter collection
 
-Returns title, dates, date-derived phase, mantra, and plan revision. It contains no aggregate learning score.
+Returns title, dates, date-derived phase, plan revision, and a Quarter ETag. It contains no aggregate learning score.
 
 ### Quarter detail
 
@@ -149,6 +149,7 @@ Returns current plan intent:
 - success criteria
 - current-plan Task summaries or links
 - `planRevision`
+- a Quarter ETag for plan-update preconditions
 
 Historical execution remains in Task/Journey reads.
 
@@ -469,6 +470,7 @@ Response:
   "mode": "UPDATE_QUARTER",
   "quarterId": "q4-2026",
   "basePlanRevision": 3,
+  "baseEtag": "opaque-quarter-etag",
   "summary": {
     "added": 2,
     "changed": 3,
@@ -498,7 +500,13 @@ Requires `Idempotency-Key`:
 }
 ```
 
-Inside one serialized transaction it revalidates the token/content, base `planRevision`, required acknowledgements, references, overlap rules, and history preservation; then increments plan revision once.
+Inside one serialized transaction it revalidates the token/content, HTTP precondition, base `planRevision`, required acknowledgements, references, overlap rules, and history preservation; then increments plan revision once.
+
+- `UPDATE_QUARTER` requires `If-Match` equal to the Preview `baseEtag`.
+- `CREATE_QUARTER` requires `If-None-Match: *` so a Quarter created after Preview cannot be overwritten.
+- Every removed Quarter-plan item has a required acknowledgement. Running/Paused Task changes or removals additionally require `PRESERVE_ACTIVE_WORK`.
+- A mismatched HTTP precondition returns `412 STALE_WRITE`; a valid preview whose base revision has since changed returns `409 PLAN_REVISION_CHANGED`.
+- If the Quarter ID in a create preview has been created before Apply, the failed `If-None-Match: *` precondition returns `412 STALE_WRITE`.
 
 Receipt replay lookup occurs before preview-token expiry or revision validation. A retry of an already committed apply therefore succeeds even if its ephemeral preview token has since expired.
 
@@ -512,7 +520,7 @@ Preview tokens are ephemeral. Restart may require a fresh preview; no PlanPrevie
 
 ### Export
 
-Returns `application/yaml`, an attachment filename, and ETag derived from `planRevision`. It contains current plan intent only—never Sessions, status, outcomes, Decisions, AI advice, or reflection.
+Returns `application/yaml`, an attachment filename, and ETag derived from `planRevision`. It contains current plan intent only—never Sessions, status, outcomes, Decisions, AI advice, or reflection. Normalized reimport of an unchanged export has an empty semantic diff.
 
 ## AI review stubs
 

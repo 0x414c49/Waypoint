@@ -70,6 +70,7 @@ Physical-phone reach testing uses a no-private-data prototype or USB reverse por
 These are budgets to test, not marketing claims:
 
 - Warm Today read: p95 under 200 ms at the expected personal dataset size on the development machine.
+- Unchanged plan preview: p95 under 200 ms at 8 Quarters / 1,000 Tasks / 2,000 Sessions / 2,000 Journey entries.
 - Normal action response: p95 under 300 ms excluding deliberate fault injection.
 - Client interaction feedback starts within 100 ms.
 - Initial compressed JavaScript budget: 200 KiB target; any overage requires a recorded reason.

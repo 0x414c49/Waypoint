@@ -1,4 +1,5 @@
 import { Button } from "../../ui/Button.js";
+import { Link } from "react-router-dom";
 import { Surface } from "../../ui/Surface.js";
 import { DecisionContextAction } from "../decisions/DecisionContextAction.js";
 import { ActiveTimer } from "./ActiveTimer.js";
@@ -48,6 +49,7 @@ export function TodayHero({
               ? "Once a plan is loaded, Today will keep one useful next step in view."
               : "Take the space, or choose the optional item below if it would genuinely help."}
         </p>
+        {state === "ONBOARDING" ? <Link className={styles.planLink} to="/quarter/import">Import a learning plan</Link> : null}
       </Surface>
     );
   }

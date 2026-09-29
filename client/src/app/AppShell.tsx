@@ -39,6 +39,11 @@ export function AppShell() {
     return () => window.removeEventListener("journey:open-thought", open);
   }, []);
 
+  useEffect(() => {
+    window.addEventListener("journey:plan-applied", refreshDashboard);
+    return () => window.removeEventListener("journey:plan-applied", refreshDashboard);
+  }, [refreshDashboard]);
+
   const thoughtContext = useMemo<ThoughtContext | null>(() => {
     const task = dashboard?.activeSession?.task;
     return task ? { taskId: task.id, taskTitle: task.title } : null;
@@ -54,6 +59,7 @@ export function AppShell() {
           <NavLink to="/" className={`${styles.wordmark}`}>Engineering Journey</NavLink>
           <nav className={styles.desktopNav} aria-label="Main navigation">
             <NavLink to="/" end>Today</NavLink>
+            <NavLink to="/quarter">Quarter</NavLink>
             <NavLink to="/journey">Journey</NavLink>
             <NavLink to="/decisions">Decisions</NavLink>
           </nav>
@@ -69,11 +75,12 @@ export function AppShell() {
           window.dispatchEvent(new CustomEvent("journey:dashboard-changed", { detail: next }));
         }} />
       ) : null}
-      <main className={`${styles.main} ${location.pathname === "/journey" ? styles.mainWide : ""}`} id="main-content" data-dialog-background>
+      <main className={`${styles.main} ${location.pathname === "/journey" || location.pathname.startsWith("/quarter") ? styles.mainWide : ""}`} id="main-content" data-dialog-background>
         <Outlet />
       </main>
       <nav className={styles.mobileNav} aria-label="Main navigation" data-dialog-background>
         <NavLink to="/" end>Today</NavLink>
+        <NavLink to="/quarter">Quarter</NavLink>
         <NavLink to="/journey">Journey</NavLink>
         <NavLink to="/decisions">Decisions</NavLink>
       </nav>

@@ -59,7 +59,7 @@ const PlanInputSchema = Type.Object({
   version: Type.Literal(1),
   quarter: QuarterSchema,
   focusAreas: Type.Array(FocusAreaSchema, { maxItems: 50 }),
-  milestones: Type.Array(MilestoneSchema, { minItems: 1, maxItems: 200 }),
+  milestones: Type.Array(MilestoneSchema, { maxItems: 200 }),
   tasks: Type.Array(TaskSchema, { maxItems: 5_000 }),
 }, { additionalProperties: false });
 
@@ -97,6 +97,9 @@ function isCalendarDate(value: string): boolean {
 
 function validatePlan(plan: NormalizedPlan): string[] {
   const errors: string[] = [];
+  if (plan.tasks.length > 0 && plan.milestones.length === 0) {
+    errors.push("/milestones: a non-empty Quarter requires at least one Milestone");
+  }
   const dates: Array<[string, string]> = [["/quarter/start", plan.quarter.start], ["/quarter/end", plan.quarter.end]];
   for (const [index, milestone] of plan.milestones.entries()) {
     dates.push([`/milestones/${index}/start`, milestone.start], [`/milestones/${index}/end`, milestone.end]);

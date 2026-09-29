@@ -69,6 +69,7 @@ Deliver:
 
 - strict YAML import with validation
 - create/update preview with history-preservation explanations, acknowledgements, and atomic apply
+- explicit acknowledgement for each removed plan identity and any changed/removed Running or Paused Task
 - normalized current-plan export
 - Quarter overview, FocusArea/Milestone navigation, success criteria, and between-quarter state
 - Onboarding/empty-plan flow for an explicitly empty store or a future installation without a bundled plan

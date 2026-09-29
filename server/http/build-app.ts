@@ -18,6 +18,8 @@ import { problem } from "./problem.js";
 import { registerTodayRoutes } from "./today-routes.js";
 import { registerJourneyRoutes } from "./journey-routes.js";
 import { registerDecisionRoutes } from "./decision-routes.js";
+import { registerQuarterRoutes } from "./quarter-routes.js";
+import { registerPlanRoutes } from "./plan-routes.js";
 
 interface BuildAppOptions {
   readonly store: JourneyStore;
@@ -191,7 +193,9 @@ export async function buildApp(options: BuildAppOptions) {
             "PAYLOAD_TOO_LARGE",
             "The request is too large",
             413,
-            "This request exceeds the 256 KiB JSON limit.",
+            request.url.startsWith("/api/plans/preview")
+              ? "This plan preview request exceeds the 2 MiB JSON-wrapper limit."
+              : "This request exceeds the 256 KiB JSON limit.",
           ),
         );
     }
@@ -237,6 +241,8 @@ export async function buildApp(options: BuildAppOptions) {
   registerTodayRoutes(app, options);
   registerJourneyRoutes(app, options);
   registerDecisionRoutes(app, options);
+  registerQuarterRoutes(app, options);
+  registerPlanRoutes(app, options);
 
   return app;
 }

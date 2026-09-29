@@ -33,44 +33,47 @@ const taskPlanFields = [
 const taskExecutionFields = ["status", "planSnapshot", "continuationOfTaskId"] as const;
 
 function canDeletePlanRecord(
-  state: JourneyState,
+  before: JourneyState,
+  after: JourneyState,
   collectionName: "quarters" | "focusAreas" | "milestones" | "tasks",
   id: string,
 ): boolean {
   if (collectionName === "tasks") {
-    const task = state.records.tasks[id];
-    if (!task || task.status !== "NOT_STARTED" || task.planSnapshot) return false;
+    const task = before.records.tasks[id];
+    if (!task || task.status !== "NOT_STARTED" || task.planSnapshot || task.continuationOfTaskId) return false;
     return (
-      !Object.values(state.records.sessions).some((record) => record.taskId === id) &&
-      !Object.values(state.records.taskLifecycleEvents).some((record) => record.taskId === id) &&
-      !Object.values(state.records.dailyReviews).some((record) => record.taskId === id) &&
-      !Object.values(state.records.journeyEntries).some((record) => record.relatedTaskId === id) &&
-      !Object.values(state.records.decisionRecords).some((record) => record.relatedTaskId === id) &&
-      !Object.values(state.records.tasks).some((record) => record.continuationOfTaskId === id)
+      !Object.values(before.records.sessions).some((record) => record.taskId === id) &&
+      !Object.values(before.records.taskLifecycleEvents).some((record) => record.taskId === id) &&
+      !Object.values(before.records.dailyReviews).some((record) => record.taskId === id) &&
+      !Object.values(before.records.journeyEntries).some((record) => record.relatedTaskId === id) &&
+      !Object.values(before.records.decisionRecords).some((record) => record.relatedTaskId === id) &&
+      !Object.values(before.records.aiReviews).some((record) => { const review = record as { targetType?: unknown; targetId?: unknown }; return review.targetType === "TASK" && review.targetId === id; }) &&
+      !Object.values(before.records.tasks).some((record) => record.continuationOfTaskId === id)
     );
   }
   if (collectionName === "focusAreas") {
-    return !Object.values(state.records.tasks).some(
+    return !Object.values(after.records.tasks).some(
       (task) => task.focusAreaId === id || task.planSnapshot?.focusAreaId === id,
     );
   }
   if (collectionName === "milestones") {
-    const milestone = state.records.milestones[id];
+    const milestone = before.records.milestones[id];
     return (
       !milestone?.intentSnapshot &&
-      !Object.values(state.records.tasks).some(
+      !Object.values(after.records.tasks).some(
         (task) => task.milestoneId === id || task.planSnapshot?.milestoneId === id,
       ) &&
-      !Object.values(state.records.journeyEntries).some((entry) => entry.relatedMilestoneId === id)
+      !Object.values(after.records.journeyEntries).some((entry) => entry.relatedMilestoneId === id) &&
+      !Object.values(after.records.aiReviews).some((record) => { const review = record as { targetType?: unknown; targetId?: unknown }; return review.targetType === "WEEK" && review.targetId === id; })
     );
   }
-  const quarter = state.records.quarters[id];
+  const quarter = before.records.quarters[id];
   return (
     !quarter?.intentSnapshot &&
-    !Object.values(state.records.focusAreas).some((record) => record.quarterId === id) &&
-    !Object.values(state.records.milestones).some((record) => record.quarterId === id) &&
-    !Object.values(state.records.tasks).some((record) => record.quarterId === id)
-    && !Object.values(state.records.decisionRecords).some((record) => record.quarterId === id)
+    !Object.values(after.records.focusAreas).some((record) => record.quarterId === id) &&
+    !Object.values(after.records.milestones).some((record) => record.quarterId === id) &&
+    !Object.values(after.records.tasks).some((record) => record.quarterId === id) &&
+    !Object.values(after.records.decisionRecords).some((record) => record.quarterId === id)
   );
 }
 
@@ -144,12 +147,33 @@ export function assertJourneyStateTransition(
         planCollection &&
         canDeletePlanRecord(
           before,
+          after,
           collectionName as "quarters" | "focusAreas" | "milestones" | "tasks",
           id,
         );
       const migrationDeletion = intent.kind === "SCHEMA_MIGRATION";
       if (!exactJourneyDeletion && !planDeletion && !migrationDeletion) {
         throw new StoreError("STORE_WRITE_FAILED", "History cannot be deleted by this transaction.");
+      }
+    }
+  }
+
+  if (intent.kind === "PLAN_APPLY") {
+    for (const [id, quarter] of Object.entries(after.records.quarters)) {
+      if (!(id in before.records.quarters) && quarter.intentSnapshot) {
+        throw new StoreError("STORE_WRITE_FAILED", "Plan application cannot create Quarter history snapshots.");
+      }
+    }
+    for (const [id, milestone] of Object.entries(after.records.milestones)) {
+      if (!(id in before.records.milestones) && milestone.intentSnapshot) {
+        throw new StoreError("STORE_WRITE_FAILED", "Plan application cannot create Milestone history snapshots.");
+      }
+    }
+    for (const [id, task] of Object.entries(after.records.tasks)) {
+      if (!(id in before.records.tasks) && (
+        task.status !== "NOT_STARTED" || task.planSnapshot || task.continuationOfTaskId
+      )) {
+        throw new StoreError("STORE_WRITE_FAILED", "Plan application can create only pristine Not started Tasks.");
       }
     }
   }

@@ -141,6 +141,7 @@ Rules:
 - Dates lie inside the Quarter.
 - Milestone date ranges do not overlap in v1.
 - Milestones may leave gaps for intentional rest/holidays.
+- An explicitly empty Quarter may have no Milestones when it has no Tasks. A Quarter containing Tasks requires at least one Milestone.
 - V1’s representative plan uses Milestones as weeks, but the record remains a named plan period.
 
 ## Tasks

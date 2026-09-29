@@ -368,4 +368,43 @@ describe("transition authority", () => {
       assertJourneyStateTransition(pristine, deletePristine, { kind: "PLAN_APPLY" }),
     ).not.toThrow();
   });
+
+  it("rejects plan-authored snapshots and execution state on newly added plan records", () => {
+    const before = createProductionSeed(instant.toISOString());
+    const taskSnapshot = {
+      capturedAt: instant.toISOString(), planRevision: 1, milestoneId: "q4-2026-w05", milestoneTitle: "Week 5",
+      focusAreaId: "q4-2026-systems", focusAreaName: "Systems Reliability", plannedDate: "2026-11-03",
+      title: "New planned work", tags: [], recommendationMode: "DEFAULT" as const,
+    };
+
+    const taskWithFalseHistory = structuredClone(before);
+    taskWithFalseHistory.records.tasks["new-planned-task"] = {
+      id: "new-planned-task", quarterId: "q4-2026", milestoneId: "q4-2026-w05", focusAreaId: "q4-2026-systems",
+      plannedDate: "2026-11-03", title: "New planned work", tags: [], position: 999, recommendationMode: "DEFAULT",
+      status: "NOT_STARTED", planSnapshot: taskSnapshot, createdAt: instant.toISOString(), updatedAt: instant.toISOString(),
+    };
+    expect(() => assertJourneyStateTransition(before, taskWithFalseHistory, { kind: "PLAN_APPLY" })).toThrow(StoreError);
+
+    const taskWithExecutionStatus = structuredClone(before);
+    taskWithExecutionStatus.records.tasks["new-planned-task"] = {
+      ...taskWithFalseHistory.records.tasks["new-planned-task"]!, status: "PAUSED", planSnapshot: undefined,
+    } as unknown as typeof taskWithFalseHistory.records.tasks[string];
+    expect(() => assertJourneyStateTransition(before, taskWithExecutionStatus, { kind: "PLAN_APPLY" })).toThrow(StoreError);
+
+    const milestoneWithFalseHistory = structuredClone(before);
+    milestoneWithFalseHistory.records.milestones["new-planned-period"] = {
+      id: "new-planned-period", quarterId: "q4-2026", title: "New period", startDate: "2026-11-02", endDate: "2026-11-06",
+      mode: "STANDARD", position: 99, createdAt: instant.toISOString(), updatedAt: instant.toISOString(),
+      intentSnapshot: { capturedAt: instant.toISOString(), planRevision: 1, timeZoneAtCapture: "Europe/Amsterdam", title: "New period", startDate: "2026-11-02", endDate: "2026-11-06", mode: "STANDARD", position: 99 },
+    };
+    expect(() => assertJourneyStateTransition(before, milestoneWithFalseHistory, { kind: "PLAN_APPLY" })).toThrow(StoreError);
+
+    const quarterWithFalseHistory = structuredClone(before);
+    quarterWithFalseHistory.records.quarters["new-quarter"] = {
+      id: "new-quarter", userId: "local-user", title: "New Quarter", startDate: "2027-01-01", endDate: "2027-03-31",
+      successCriteria: [], planRevision: 1, createdAt: instant.toISOString(), updatedAt: instant.toISOString(),
+      intentSnapshot: { capturedAt: instant.toISOString(), planRevision: 1, timeZoneAtCapture: "Europe/Amsterdam", title: "New Quarter", startDate: "2027-01-01", endDate: "2027-03-31", successCriteria: [], focusAreas: [] },
+    };
+    expect(() => assertJourneyStateTransition(before, quarterWithFalseHistory, { kind: "PLAN_APPLY" })).toThrow(StoreError);
+  });
 });

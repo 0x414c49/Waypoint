@@ -77,6 +77,24 @@
   line-height: var(--line-body-large);
 }
 
+.planLink {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 44px;
+  align-items: center;
+  padding: var(--space-8) var(--space-12);
+  color: var(--color-on-accent);
+  border-radius: var(--radius-control);
+  background: var(--color-accent);
+  font-size: var(--text-compact);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.planLink:hover {
+  background: var(--color-accent-hover);
+}
+
 .guidance,
 .timerGuidance {
   color: var(--color-text-secondary);
