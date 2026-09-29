@@ -91,11 +91,35 @@ describe("Today", () => {
     render(<TodayPage />);
     await user.click(await screen.findByRole("button", { name: "Start session" }));
 
-    await screen.findByRole("button", { name: "Pause" });
+    const dock = await screen.findByRole("complementary", { name: "Session action dock" });
+    expect(within(dock).getByRole("button", { name: "Pause" })).toBeTruthy();
     const [url, options] = fetchMock.mock.calls[1] as [string, RequestInit];
     expect(url).toBe("/api/tasks/partial-failure/start");
     expect(new Headers(options.headers).get("If-Match")).toBe("etag-NOT_STARTED");
     expect(new Headers(options.headers).get("Idempotency-Key")?.length).toBeGreaterThanOrEqual(16);
+  });
+
+  it("keeps the current session action in the dock through pause and resume", async () => {
+    const runningTask = task("IN_PROGRESS", "etag-running");
+    const pausedTask = task("PAUSED", "etag-paused");
+    const running = dashboard("RUNNING", runningTask);
+    const paused = { ...dashboard("PAUSED", pausedTask), dataRevision: 2 };
+    const resumed = { ...dashboard("RUNNING", runningTask), dataRevision: 3 };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(json(running))
+      .mockResolvedValueOnce(json({ task: pausedTask, activeSession: null, affectedTasks: [], dashboard: paused }))
+      .mockResolvedValueOnce(json({ task: runningTask, activeSession: resumed.activeSession, affectedTasks: [], dashboard: resumed }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const user = userEvent.setup();
+    render(<TodayPage />);
+    const runningDock = await screen.findByRole("complementary", { name: "Session action dock" });
+    await user.click(within(runningDock).getByRole("button", { name: "Pause" }));
+    const pausedDock = await screen.findByRole("complementary", { name: "Session action dock" });
+    await user.click(within(pausedDock).getByRole("button", { name: "Resume" }));
+
+    expect(fetchMock.mock.calls[1]?.[0]).toBe("/api/tasks/partial-failure/pause");
+    expect(fetchMock.mock.calls[2]?.[0]).toBe("/api/tasks/partial-failure/resume");
   });
 
   it("pauses before opening Finish and stays paused when the dialog is cancelled", async () => {
@@ -115,7 +139,7 @@ describe("Today", () => {
     const dialog = await screen.findByRole("dialog", { name: "How did it land?" });
     expect(fetchMock.mock.calls[1]?.[0]).toBe("/api/tasks/partial-failure/pause");
     await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
-    expect(screen.getByRole("button", { name: "Resume" })).toBeTruthy();
+    expect(within(screen.getByRole("complementary", { name: "Session action dock" })).getByRole("button", { name: "Resume" })).toBeTruthy();
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
@@ -190,7 +214,7 @@ describe("Today", () => {
     expect(await screen.findByRole("dialog", { name: "Switch to Understand partial failure?" })).toBeTruthy();
     await user.click(screen.getByRole("button", { name: "Pause current and switch" }));
 
-    await screen.findByRole("button", { name: "Pause" });
+    expect(within(await screen.findByRole("complementary", { name: "Session action dock" })).getByRole("button", { name: "Pause" })).toBeTruthy();
     expect(JSON.parse(fetchMock.mock.calls[2]?.[1]?.body as string)).toEqual({
       activeSessionResolution: {
         kind: "PAUSE_AND_SWITCH",

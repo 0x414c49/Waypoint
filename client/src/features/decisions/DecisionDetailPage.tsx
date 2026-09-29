@@ -92,7 +92,7 @@ export function DecisionDetailPage() {
           initial={toDraft(detail)}
           busy={busy}
           canAccept={canAccept}
-          onSave={async (input) => { await run(() => saveDecision(detail.id, detail.etag, input)); }}
+          onSave={async (input) => run(() => saveDecision(detail.id, detail.etag, input))}
           onAccept={async () => { await run(() => acceptDecision(detail.id, detail.etag)); }}
         />
       ) : (

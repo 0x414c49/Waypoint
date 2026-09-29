@@ -1,7 +1,9 @@
 :root {
   color-scheme: light;
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --weight-heading: 600;
+  --weight-control: 600;
   --space-4: 4px;
   --space-8: 8px;
   --space-12: 12px;
@@ -34,6 +36,7 @@
   --line-metadata: 16px;
   --text-timer: 40px;
   --line-timer: 48px;
+  --text-control-mobile: 16px;
   --color-canvas: #f7f8f6;
   --color-surface: #ffffff;
   --color-surface-subtle: #f0f3ef;

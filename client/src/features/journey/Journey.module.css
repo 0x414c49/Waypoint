@@ -76,6 +76,14 @@
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-control);
   background: var(--color-surface);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  font-weight: 400;
+  line-height: var(--line-body);
+}
+
+.filters select {
+  cursor: pointer;
 }
 
 .fieldLabel textarea,
@@ -200,6 +208,50 @@
 
 .dialogHeading h2 {
   margin-bottom: 0;
+}
+
+.dialogPrimaryActions {
+  display: flex;
+  gap: var(--space-8);
+}
+
+.deleteConfirmation {
+  display: grid;
+  gap: var(--space-12);
+  margin-top: var(--space-16);
+}
+
+.deleteConfirmation h3,
+.deleteConfirmation p {
+  margin: 0;
+}
+
+.deleteConfirmation h3 {
+  font-size: var(--text-body);
+  line-height: var(--line-body);
+}
+
+.deleteConfirmation p {
+  color: var(--color-text-secondary);
+}
+
+.deleteButton {
+  margin-right: auto;
+  color: var(--color-error);
+}
+
+.deleteButton:hover {
+  color: var(--color-error);
+  background: var(--color-error-soft);
+}
+
+.deleteConfirmButton {
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+.deleteConfirmButton:hover {
+  background: var(--color-error-soft);
 }
 
 .dialog .fieldLabel,
@@ -376,6 +428,21 @@
   .dialog select {
     font-size: 16px;
     line-height: 24px;
+  }
+
+  .dialogPrimaryActions {
+    width: 100%;
+  }
+
+  .dialogPrimaryActions > button {
+    flex: 1;
+    min-height: 48px;
+  }
+
+  .dialogActions > .deleteButton {
+    flex: 1 0 100%;
+    justify-content: flex-start;
+    margin-right: 0;
   }
 
   .facts {

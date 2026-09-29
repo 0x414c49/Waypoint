@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Button } from "../../ui/Button.js";
 import { DecisionOptionEditor } from "./DecisionOptionEditor.js";
 import type { DecisionDraftInput, DecisionOption } from "./types.js";
@@ -8,7 +8,8 @@ interface Props {
   initial: DecisionDraftInput;
   busy: boolean;
   canAccept: boolean;
-  onSave: (input: DecisionDraftInput) => Promise<void>;
+  initialSaved?: boolean;
+  onSave: (input: DecisionDraftInput) => Promise<boolean>;
   onAccept?: () => Promise<void>;
 }
 
@@ -21,10 +22,11 @@ function optional(value: string): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
-export function DecisionEditor({ initial, busy, canAccept, onSave, onAccept }: Props) {
+export function DecisionEditor({ initial, busy, canAccept, initialSaved = true, onSave, onAccept }: Props) {
   const [draft, setDraft] = useState(initial);
-  const initialValue = useMemo(() => JSON.stringify(initial), [initial]);
-  const dirty = JSON.stringify(draft) !== initialValue;
+  const [hasSaved, setHasSaved] = useState(initialSaved);
+  const [savedValue, setSavedValue] = useState(() => JSON.stringify(initial));
+  const dirty = JSON.stringify(draft) !== savedValue;
 
   const setText = (key: "title" | "decisionDate" | "context" | "decision" | "consequences" | "falsifier", value: string) => {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -50,7 +52,11 @@ export function DecisionEditor({ initial, busy, canAccept, onSave, onAccept }: P
     if (consequences) input.consequences = consequences;
     if (falsifier) input.falsifier = falsifier;
     if (initialReviewDate) input.initialReviewDate = initialReviewDate;
-    await onSave(input);
+    if (await onSave(input)) {
+      setDraft(input);
+      setSavedValue(JSON.stringify(input));
+      setHasSaved(true);
+    }
   };
 
   const addOption = () => {
@@ -100,7 +106,7 @@ export function DecisionEditor({ initial, busy, canAccept, onSave, onAccept }: P
       </section>
 
       <div className={styles.stickyActions}>
-        <p>{dirty ? "Unsaved changes" : "Draft saved"}</p>
+        <p role="status">{busy ? "Saving draft…" : dirty ? "Unsaved changes" : hasSaved ? "Draft saved" : "Not saved yet"}</p>
         <div>
           {onAccept ? <Button type="button" variant={!dirty && canAccept ? "primary" : "secondary"} disabled={busy || dirty || !canAccept} onClick={() => void onAccept()}>Accept decision</Button> : null}
           <Button type="submit" variant={dirty ? "primary" : "secondary"} disabled={busy || !dirty}>Save draft</Button>

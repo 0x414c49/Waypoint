@@ -63,6 +63,10 @@
   gap: var(--space-16);
 }
 
+.sessionDock {
+  display: none;
+}
+
 .hero h2 {
   margin-bottom: 0;
   font-size: var(--text-hero);
@@ -323,6 +327,54 @@
 }
 
 @media (max-width: 720px) {
+  .hero[data-session-state] .primaryActions {
+    display: none;
+  }
+
+  .sessionDock {
+    position: fixed;
+    z-index: 6;
+    right: 0;
+    bottom: calc(68px + env(safe-area-inset-bottom));
+    left: 0;
+    display: flex;
+    min-height: 72px;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-16);
+    padding: var(--space-12) var(--space-16);
+    border-top: 1px solid var(--color-border-strong);
+    background: var(--color-surface);
+  }
+
+  .sessionDockIdentity {
+    display: grid;
+    min-width: 0;
+    gap: var(--space-4);
+  }
+
+  .sessionDockIdentity span {
+    color: var(--color-text-secondary);
+    font-size: var(--text-metadata);
+    font-weight: var(--weight-control);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .sessionDockIdentity strong {
+    overflow: hidden;
+    font-size: var(--text-compact);
+    line-height: var(--line-compact);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sessionDock > button {
+    flex: none;
+    min-width: 104px;
+    min-height: 48px;
+  }
+
   .pageHeader {
     align-items: flex-start;
   }

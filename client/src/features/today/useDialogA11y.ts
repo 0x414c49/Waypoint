@@ -7,10 +7,14 @@ export function useDialogA11y(
   dialogRef: RefObject<HTMLElement | null>,
   onClose: () => void,
   backgroundSelector = "#today-content",
+  fallbackFocusSelector?: string,
 ): void {
   useEffect(() => {
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const background = [...document.querySelectorAll<HTMLElement>(backgroundSelector)];
+    const fallbackFocus = fallbackFocusSelector
+      ? document.querySelector<HTMLElement>(fallbackFocusSelector)
+      : null;
     for (const element of background) element.inert = true;
     const first = dialogRef.current?.querySelector<HTMLElement>(focusable);
     first?.focus();
@@ -38,7 +42,8 @@ export function useDialogA11y(
     return () => {
       document.removeEventListener("keydown", onKeyDown);
       for (const element of background) element.inert = false;
-      previousFocus?.focus();
+      if (previousFocus?.isConnected) previousFocus.focus();
+      else fallbackFocus?.focus();
     };
-  }, [backgroundSelector, dialogRef, onClose]);
+  }, [backgroundSelector, dialogRef, fallbackFocusSelector, onClose]);
 }

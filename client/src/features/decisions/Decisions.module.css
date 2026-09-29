@@ -88,10 +88,6 @@
   text-decoration: none;
 }
 
-.dueSection {
-  background: var(--color-accent-soft);
-}
-
 .sectionHeading h2,
 .listHeading h2,
 .documentSection h2,
@@ -228,7 +224,7 @@
   gap: var(--space-4);
   color: var(--color-text-secondary);
   font-size: var(--text-small);
-  font-weight: 600;
+  font-weight: var(--weight-control);
 }
 
 .field small {
@@ -258,7 +254,7 @@
 .optionEditor legend,
 .reviewOutcomes legend {
   padding: 0 var(--space-4);
-  font-weight: 600;
+  font-weight: var(--weight-control);
 }
 
 .optionEditor > button {

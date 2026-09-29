@@ -48,6 +48,13 @@ async function createAcceptedDecision(page: Page, title: string, keySuffix: stri
 
 test("Today is responsive and has no detectable accessibility violations", async ({ page }) => {
   await page.goto("/");
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: "Skip to main content" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("main")).toBeFocused();
+  await page.getByRole("link", { name: "Quarter", exact: true }).click();
+  await expect(page.getByRole("main")).toBeFocused();
+  await page.goto("/");
   await expect(page.getByRole("heading", { name: "Today", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Today", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Journey", exact: true })).toBeVisible();
@@ -64,6 +71,64 @@ test("Today is responsive and has no detectable accessibility violations", async
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   const darkResults = await new AxeBuilder({ page }).analyze();
   expect(darkResults.violations).toEqual([]);
+});
+
+test("mobile route changes reset scroll before focusing the new main content", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile-360", "This regression covers the mobile viewport scroll position.");
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Today", exact: true })).toBeVisible();
+  await page.setViewportSize({ width: 360, height: 400 });
+  await page.evaluate(() => window.scrollTo(0, 180));
+  const startingScrollY = await page.evaluate(() => window.scrollY);
+  expect(startingScrollY).toBeGreaterThan(0);
+
+  await page.getByRole("navigation", { name: "Main navigation" }).last().getByRole("link", { name: "Quarter" }).click();
+  await expect(page.getByRole("heading", { name: /Engineering Growth/ })).toBeVisible();
+  await expect(page.getByRole("main")).toBeFocused();
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+});
+
+test("the mobile session dock stays above navigation and supports pause/resume", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile-360", "The dock is specific to the mobile Today layout.");
+  const dashboardResponse = await page.request.get("/api/dashboard");
+  expect(dashboardResponse.ok()).toBe(true);
+  const dashboard = await dashboardResponse.json();
+  if (dashboard.state !== "RUNNING" && dashboard.state !== "PAUSED") {
+    const taskId = "2026-11-04-adr-3-consistency";
+    const taskResponse = await page.request.get(`/api/tasks/${encodeURIComponent(taskId)}`);
+    expect(taskResponse.ok()).toBe(true);
+    const { task } = await taskResponse.json();
+    const started = await page.request.post(`/api/tasks/${encodeURIComponent(taskId)}/start`, {
+      headers: {
+        Origin: "http://127.0.0.1:4173",
+        "If-Match": task.etag,
+        "Idempotency-Key": "e2e-mobile-session-dock-start",
+      },
+      data: {},
+    });
+    expect(started.ok()).toBe(true);
+  }
+  await page.goto("/");
+
+  const dock = page.getByRole("complementary", { name: "Session action dock" });
+  await expect(dock).toBeVisible();
+
+  const dockAction = dock.getByRole("button");
+  if ((await dockAction.innerText()) === "Resume") {
+    await dockAction.click();
+    await expect(dock.getByRole("button", { name: "Pause" })).toBeVisible();
+  }
+
+  const dockBox = await dock.boundingBox();
+  const mobileNavigation = page.getByRole("navigation", { name: "Main navigation" }).last();
+  const navBox = await mobileNavigation.boundingBox();
+  expect(dockBox).not.toBeNull();
+  expect(navBox).not.toBeNull();
+  expect(dockBox!.y + dockBox!.height).toBeLessThanOrEqual(navBox!.y + 1);
+  expect(await page.locator("#app-shell").evaluate((element) => Number.parseFloat(getComputedStyle(element).paddingBottom))).toBeGreaterThanOrEqual(148);
+
+  await dock.getByRole("button", { name: "Pause" }).click();
+  await expect(dock.getByRole("button", { name: "Resume" })).toBeVisible();
 });
 
 test("a decision keeps its original reasoning and appends hindsight", async ({ page }, testInfo) => {
@@ -146,7 +211,17 @@ test("Decisions navigation and editor reflow without accessibility violations", 
   await expect(page.getByRole("heading", { name: "Decisions", exact: true })).toBeVisible();
   await page.getByRole("link", { name: "New decision" }).click();
   await expect(page.getByRole("heading", { name: "Capture a decision" })).toBeVisible();
-  await expect(page.getByLabel("Context")).toBeVisible();
+  const contextField = page.getByLabel("Context");
+  await expect(contextField).toBeVisible();
+  expect(await page.getByRole("heading", { name: "Capture a decision" }).evaluate((element) => getComputedStyle(element).fontWeight)).toBe("600");
+  if (testInfo.project.name === "mobile-360") {
+    expect(await contextField.evaluate((element) => getComputedStyle(element).fontSize)).toBe("16px");
+    expect(await contextField.evaluate((element) => element.getBoundingClientRect().height)).toBeGreaterThanOrEqual(112);
+    await page.getByLabel("Title").fill("Mobile primary action sizing");
+    const saveDraft = page.getByRole("button", { name: "Save draft" });
+    await expect(saveDraft).toBeEnabled();
+    expect(await saveDraft.evaluate((element) => element.getBoundingClientRect().height)).toBeGreaterThanOrEqual(48);
+  }
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.goto("/decisions");
@@ -197,6 +272,24 @@ test("Quick Thought returns to Journey and both themes remain accessible", async
   }
   await page.goto("/journey");
   await expect(page.getByRole("heading", { name: "Journey", exact: true })).toBeVisible();
+  const taskFilter = page.getByRole("combobox", { name: "Task", exact: true });
+  expect(await taskFilter.evaluate((element) => element.tagName)).toBe("SELECT");
+  expect(await taskFilter.evaluate((element) => getComputedStyle(element).fontWeight)).toBe("400");
+  expect(await taskFilter.evaluate((element) => getComputedStyle(element).fontSize)).toBe(testInfo.project.name === "mobile-360" ? "16px" : "15px");
+  await page.keyboard.press("Tab");
+  await taskFilter.focus();
+  const taskFilterFocus = await taskFilter.evaluate((element) => ({
+    visible: element.matches(":focus-visible"),
+    borderColor: getComputedStyle(element).borderTopColor,
+    outlineOffset: getComputedStyle(element).outlineOffset,
+    outlineWidth: getComputedStyle(element).outlineWidth,
+  }));
+  expect(taskFilterFocus).toEqual({
+    visible: true,
+    borderColor: "rgba(0, 0, 0, 0)",
+    outlineOffset: "2px",
+    outlineWidth: "2px",
+  });
   const activityCalendar = page.getByRole("list", { name: "365 days of recorded session activity" });
   await expect(activityCalendar.getByRole("listitem")).toHaveCount(365);
   if (testInfo.project.name === "mobile-360") {
@@ -213,6 +306,17 @@ test("Quick Thought returns to Journey and both themes remain accessible", async
   await dialog.getByRole("button", { name: "Save thought" }).click();
   await expect(dialog).toBeHidden();
   await expect(page.getByText(thought)).toBeVisible();
+  const entry = page.getByRole("list", { name: "Journey entries" }).getByRole("listitem").filter({ hasText: thought });
+  await entry.getByRole("button", { name: "Edit" }).click();
+  const editor = page.getByRole("dialog", { name: "Edit thought" });
+  await editor.getByRole("button", { name: "Delete thought" }).click();
+  const deleteConfirmation = page.getByRole("dialog", { name: "Delete thought" });
+  await expect(deleteConfirmation.getByText(/Sessions, finished items, and decision history stay unchanged/)).toBeVisible();
+  await deleteConfirmation.getByRole("button", { name: "Delete thought" }).click();
+  await expect(deleteConfirmation).toBeHidden();
+  await expect(page.getByText(thought)).toBeHidden();
+  await expect(page.getByRole("heading", { name: "Journey", exact: true })).toBeFocused();
+  await expect(page.getByRole("status").filter({ hasText: "Thought removed from Journey." })).toBeVisible();
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
   const lightResults = await new AxeBuilder({ page }).analyze();

@@ -23,7 +23,7 @@ describe("Journey entry editor", () => {
     vi.stubGlobal("fetch", fetchMock);
     const onSaved = vi.fn();
     const user = userEvent.setup();
-    render(<><div id="app-shell" /><JourneyEntryEditor entry={entry} onClose={() => undefined} onSaved={onSaved} /></>);
+    render(<><div id="app-shell" /><JourneyEntryEditor entry={entry} onClose={() => undefined} onSaved={onSaved} onDeleted={() => undefined} /></>);
 
     const textbox = screen.getByRole("textbox", { name: "What is worth keeping?" });
     await user.clear(textbox);
@@ -38,5 +38,45 @@ describe("Journey entry editor", () => {
       relatedTaskId: null, relatedMilestoneId: "week-5", relatedDecisionId: null,
     });
     expect(onSaved).toHaveBeenCalledWith(updated);
+  });
+
+  it("requires confirmation before deleting and identifies unsaved edits", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const onDeleted = vi.fn();
+    const user = userEvent.setup();
+    render(<><div id="app-shell" /><JourneyEntryEditor entry={entry} onClose={() => undefined} onSaved={() => undefined} onDeleted={onDeleted} /></>);
+
+    await user.type(screen.getByRole("textbox", { name: "What is worth keeping?" }), " New detail.");
+    await user.click(screen.getByRole("button", { name: "Delete thought" }));
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.getByText("Your unsaved edits in this window will also be lost.")).toBeTruthy();
+    const keepThought = screen.getByRole("button", { name: "Keep thought" });
+    expect(document.activeElement).toBe(keepThought);
+
+    await user.click(keepThought);
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Delete thought" }));
+    await user.click(screen.getByRole("button", { name: "Delete thought" }));
+    await user.click(screen.getByRole("button", { name: "Delete thought" }));
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/journey/thought-1", {
+      method: "DELETE",
+      headers: { Accept: "application/json", "If-Match": entry.etag },
+    });
+    expect(onDeleted).toHaveBeenCalledWith(entry.id);
+  });
+
+  it("keeps the confirmation open when deletion fails", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ detail: "Refresh it before deleting it." }), { status: 412 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<><div id="app-shell" /><JourneyEntryEditor entry={entry} onClose={() => undefined} onSaved={() => undefined} onDeleted={() => undefined} /></>);
+
+    await user.click(screen.getByRole("button", { name: "Delete thought" }));
+    await user.click(screen.getByRole("button", { name: "Delete thought" }));
+
+    expect((await screen.findByRole("alert")).textContent).toContain("Refresh it before deleting it.");
+    expect(screen.getByRole("button", { name: "Keep thought" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Delete thought" })).toBeTruthy();
   });
 });

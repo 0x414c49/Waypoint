@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { QuickThoughtDialog } from "../features/journey/QuickThoughtDialog.js";
 import { createJourneyEntry } from "../features/journey/api.js";
@@ -12,6 +12,8 @@ import styles from "./AppShell.module.css";
 
 export function AppShell() {
   const location = useLocation();
+  const mainRef = useRef<HTMLElement>(null);
+  const previousPath = useRef(location.pathname);
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [thoughtOpen, setThoughtOpen] = useState(false);
 
@@ -22,6 +24,13 @@ export function AppShell() {
   }, []);
 
   useEffect(() => refreshDashboard(), [location.pathname, refreshDashboard]);
+
+  useEffect(() => {
+    if (previousPath.current === location.pathname) return;
+    previousPath.current = location.pathname;
+    window.scrollTo(0, 0);
+    mainRef.current?.focus({ preventScroll: true });
+  }, [location.pathname]);
 
   useEffect(() => {
     const update = (event: Event) => {
@@ -51,9 +60,13 @@ export function AppShell() {
 
   const offToday = location.pathname !== "/";
   const activeTask = dashboard?.hero.task;
+  const sessionOnToday = !offToday && (activeTask?.status === "IN_PROGRESS" || activeTask?.status === "PAUSED");
 
   return (
-    <div className={styles.shell} id="app-shell">
+    <div className={`${styles.shell} ${sessionOnToday ? styles.shellSessionOnToday : ""}`} id="app-shell">
+      <a className={styles.skipLink} href="#main-content" onClick={() => mainRef.current?.focus()}>
+        Skip to main content
+      </a>
       <header className={styles.header} data-dialog-background>
         <div className={styles.headerInner}>
           <NavLink to="/" className={`${styles.wordmark}`}>Engineering Journey</NavLink>
@@ -75,10 +88,10 @@ export function AppShell() {
           window.dispatchEvent(new CustomEvent("journey:dashboard-changed", { detail: next }));
         }} />
       ) : null}
-      <main className={`${styles.main} ${location.pathname === "/journey" || location.pathname.startsWith("/quarter") ? styles.mainWide : ""}`} id="main-content" data-dialog-background>
+      <main ref={mainRef} className={`${styles.main} ${location.pathname === "/journey" || location.pathname.startsWith("/quarter") ? styles.mainWide : ""}`} id="main-content" tabIndex={-1} data-dialog-background>
         <Outlet />
       </main>
-      <nav className={styles.mobileNav} aria-label="Main navigation" data-dialog-background>
+      <nav className={`${styles.mobileNav} ${sessionOnToday ? styles.mobileNavDuringSession : ""}`} aria-label="Main navigation" data-dialog-background>
         <NavLink to="/" end>Today</NavLink>
         <NavLink to="/quarter">Quarter</NavLink>
         <NavLink to="/journey">Journey</NavLink>

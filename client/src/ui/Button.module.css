@@ -7,7 +7,7 @@
   font: inherit;
   font-size: var(--text-compact);
   line-height: var(--line-compact);
-  font-weight: 600;
+  font-weight: var(--weight-control);
   cursor: pointer;
   transition: opacity 120ms;
 }
@@ -39,6 +39,12 @@
 .ghost {
   color: var(--color-text-secondary);
   background: transparent;
+}
+
+@media (max-width: 720px) {
+  .primary {
+    min-height: 48px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

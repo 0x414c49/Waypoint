@@ -32,11 +32,14 @@ Avoid gradients, glass effects, giant whitespace, oversized radii, decorative Gi
 Use native system fonts. This avoids a font request, feels familiar on every platform, and keeps rendering fast.
 
 ```css
---font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-  Helvetica, Arial, sans-serif;
+--font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+  Roboto, Helvetica, Arial, sans-serif;
 --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas,
   "Liberation Mono", monospace;
 ```
+
+Let the operating system and browser choose native text rasterization; do not
+apply global font-smoothing overrides.
 
 | Role | Desktop size / line | Mobile size / line | Weight | Use |
 |---|---:|---:|---:|---|
@@ -132,6 +135,7 @@ Accessibility rules:
 - State and validation always include words; color is redundant.
 - Normal text and essential controls must meet WCAG AA contrast.
 - Focus is a visible `2px` focus-ring with a `2px` offset; never remove it.
+- On bordered native controls, hide the resting border while the focus ring is shown so the focus state reads as one clear ring, not two nested borders.
 - Test both themes independently; dark mode is not a mechanical inversion.
 
 ## Contribution levels

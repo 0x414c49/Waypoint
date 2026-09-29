@@ -255,6 +255,22 @@ export function TodayPage() {
         <ActivityPreview activity={dashboard.activityPreview} milestone={dashboard.milestoneSummary} />
       </div>
 
+      {dashboard.hero.task && (dashboard.state === "RUNNING" || dashboard.state === "PAUSED") ? (
+        <aside className={styles.sessionDock} aria-label="Session action dock">
+          <div className={styles.sessionDockIdentity}>
+            <span>{dashboard.state === "RUNNING" ? "Running" : "Paused"}</span>
+            <strong>{dashboard.hero.task.displayPlan.title}</strong>
+          </div>
+          <Button
+            variant="primary"
+            disabled={busy}
+            onClick={() => dashboard.state === "RUNNING" ? pause(dashboard.hero.task!) : resume(dashboard.hero.task!)}
+          >
+            {dashboard.state === "RUNNING" ? "Pause" : "Resume"}
+          </Button>
+        </aside>
+      ) : null}
+
       {finishTask ? (
         <FinishDialog
           task={finishTask}

@@ -107,6 +107,17 @@ export async function updateJourneyEntry(
   return read<JourneyEntry>(response);
 }
 
+export async function deleteJourneyEntry(entry: JourneyEntry): Promise<void> {
+  const response = await fetch(`/api/journey/${encodeURIComponent(entry.id)}`, {
+    method: "DELETE",
+    headers: {
+      Accept: "application/json",
+      "If-Match": entry.etag,
+    },
+  });
+  if (response.status !== 204) await read<unknown>(response);
+}
+
 export async function getActivity(from: string, to: string, signal?: AbortSignal): Promise<ActivityResponse> {
   const query = new URLSearchParams({ from, to });
   const response = await fetch(`/api/activity?${query.toString()}`, { headers: { Accept: "application/json" }, ...(signal ? { signal } : {}) });

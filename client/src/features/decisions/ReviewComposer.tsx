@@ -9,18 +9,20 @@ interface Props {
 }
 
 export function ReviewComposer({ busy, onSubmit }: Props) {
-  const [outcome, setOutcome] = useState<DecisionReviewOutcome>("HOLDS");
+  const [outcome, setOutcome] = useState<DecisionReviewOutcome | null>(null);
   const [notes, setNotes] = useState("");
   const [nextReviewDate, setNextReviewDate] = useState("");
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (!outcome) return;
     const saved = await onSubmit({
       outcome,
       ...(notes.trim() ? { notes: notes.trim() } : {}),
       ...(nextReviewDate ? { nextReviewDate } : {}),
     });
     if (!saved) return;
+    setOutcome(null);
     setNotes("");
     setNextReviewDate("");
   };
@@ -32,22 +34,24 @@ export function ReviewComposer({ busy, onSubmit }: Props) {
       <form onSubmit={(event) => void submit(event)}>
         <fieldset className={styles.reviewOutcomes}>
           <legend>What is true now?</legend>
-          {(["HOLDS", "ADJUST", "SUPERSEDE", "DEFERRED"] as const).map((value) => (
+          {(["HOLDS", "ADJUST", "SUPERSEDE", "DEFERRED"] as const).map((value, index) => (
             <label key={value} data-selected={outcome === value}>
-              <input type="radio" name="outcome" value={value} checked={outcome === value} onChange={() => setOutcome(value)} />
+              <input type="radio" name="outcome" value={value} required={index === 0} checked={outcome === value} onChange={() => setOutcome(value)} />
               {{ HOLDS: "It still holds", ADJUST: "I would adjust it", SUPERSEDE: "Replace it", DEFERRED: "Postpone review" }[value]}
             </label>
           ))}
         </fieldset>
-        {outcome !== "DEFERRED" ? (
+        {outcome && outcome !== "DEFERRED" ? (
           <label className={styles.field}><span>What changed or still holds?</span><textarea value={notes} onChange={(event) => setNotes(event.target.value)} /></label>
         ) : null}
-        <label className={styles.field}>
-          <span>{outcome === "DEFERRED" ? "Review later" : "Next review date (optional)"}</span>
-          <input type="date" required={outcome === "DEFERRED"} value={nextReviewDate} onChange={(event) => setNextReviewDate(event.target.value)} />
-        </label>
+        {outcome ? (
+          <label className={styles.field}>
+            <span>{outcome === "DEFERRED" ? "Review later" : "Next review date (optional)"}</span>
+            <input type="date" required={outcome === "DEFERRED"} value={nextReviewDate} onChange={(event) => setNextReviewDate(event.target.value)} />
+          </label>
+        ) : null}
         <div className={styles.formActions}>
-          <Button type="submit" variant="primary" disabled={busy}>{outcome === "DEFERRED" ? "Postpone review" : "Add review"}</Button>
+          <Button type="submit" variant="primary" disabled={busy || !outcome}>{outcome === "DEFERRED" ? "Postpone review" : "Add review"}</Button>
         </div>
       </form>
     </section>

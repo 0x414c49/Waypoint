@@ -213,7 +213,7 @@ The app needs a recommendation policy, not the fiction that the plan always cont
 
 **Primary action:** Save thought.
 
-**Secondary actions:** Remove inferred task link; expand optional details later.
+**Secondary actions:** Edit or delete a saved thought. Deletion asks for confirmation and removes only that user-authored thought; generated session, finish, and decision history remain unchanged.
 
 **Possible confusion:** Auto-linking must be visible and reversible. Requiring a title, tags, category, or link would turn capture into filing.
 

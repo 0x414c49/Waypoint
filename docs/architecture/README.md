@@ -16,14 +16,14 @@ The confirmed API/persistence checkpoint is documented in:
 - [Persistence contract](persistence-contract.md)
 - [API and persistence review](api-review.md)
 
-The proposed final system architecture is documented in:
+The accepted system architecture is documented in:
 
 - [System design](system-design.md)
 - [Technology stack](technology-stack.md)
 - [Architecture review](architecture-review.md)
 - [Architecture decision records](../adr/README.md)
 
-Implementation remains gated by `planning/implementation-gate.md`.
+Implementation was authorized by `planning/implementation-gate.md`; delivered slices and their validation notes are tracked in `planning/`.
 
 The design tracks three intentionally small seams:
 
@@ -31,4 +31,4 @@ The design tracks three intentionally small seams:
 - `CurrentUserProvider`
 - `AIReviewer`
 
-All three seams and their v1 adapters are specified in the system design. These remain design constraints, not authorization to begin implementation before the final gate.
+All three seams and their v1 adapters are specified in the system design. They keep the current local-first implementation modular without introducing speculative infrastructure.

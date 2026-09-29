@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import type { SessionDetail, TaskDetail } from "./types.js";
-import { carryForward, correctSession, createJourneyEntry } from "./api.js";
+import type { JourneyEntry, SessionDetail, TaskDetail } from "./types.js";
+import { carryForward, correctSession, createJourneyEntry, deleteJourneyEntry } from "./api.js";
 
 function json(value: unknown, status = 200): Response {
   return new Response(JSON.stringify(value), { status, headers: { "Content-Type": "application/json" } });
@@ -56,6 +56,19 @@ describe("Journey API client", () => {
     expect(JSON.parse(fetchMock.mock.calls[0]?.[1]?.body as string)).toMatchObject({
       relatedTaskId: null,
       relatedMilestoneId: "week-5",
+    });
+  });
+
+  it("deletes exactly one thought with its current ETag", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const entry = { id: "thought-1", etag: '"journey-1"' } as JourneyEntry;
+
+    await deleteJourneyEntry(entry);
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/journey/thought-1", {
+      method: "DELETE",
+      headers: { Accept: "application/json", "If-Match": '"journey-1"' },
     });
   });
 });

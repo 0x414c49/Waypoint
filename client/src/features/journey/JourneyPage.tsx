@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "../../ui/Button.js";
 import { getDashboard } from "../today/api.js";
 import { ActivityHistory } from "./ActivityHistory.js";
@@ -25,6 +25,8 @@ export function JourneyPage() {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<JourneyEntry | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
 
   const load = useCallback((signal?: AbortSignal, cursor?: string) => {
     const activityRequest = cursor
@@ -96,7 +98,7 @@ export function JourneyPage() {
     <div className={styles.page}>
       <header className={styles.pageHeading}>
         <div>
-          <h1>Journey</h1>
+          <h1 ref={titleRef} id="journey-page-title" tabIndex={-1}>Journey</h1>
           <p>The record of what you noticed and changed.</p>
         </div>
         <Button variant="secondary" onClick={() => window.dispatchEvent(new Event("journey:open-thought"))}>+ Thought</Button>
@@ -104,8 +106,10 @@ export function JourneyPage() {
       <JourneyFilters filters={filters} tasks={tasks} milestones={milestones} onChange={(next) => {
         setLoading(true);
         setError(null);
+        setNotice(null);
         setFilters(next);
       }} />
+      {notice ? <p className={styles.muted} role="status">{notice}</p> : null}
       {error ? (
         <div className={styles.errorPanel} role="alert">
           <p>{error}</p>
@@ -122,9 +126,15 @@ export function JourneyPage() {
       ) : null}
       {!loading && items.length > 0 ? <JourneyTimeline items={items} onEdit={setEditing} /> : null}
       {nextCursor ? <Button variant="secondary" disabled={loadingMore} onClick={() => { setLoadingMore(true); setError(null); load(undefined, nextCursor); }}>{loadingMore ? "Loading…" : "Load more"}</Button> : null}
-      {editing ? <JourneyEntryEditor entry={editing} onClose={() => setEditing(null)} onSaved={(updated) => {
+      {editing ? <JourneyEntryEditor entry={editing} focusFallbackSelector="#journey-page-title" onClose={() => setEditing(null)} onSaved={(updated) => {
         setItems((current) => current.map((item) => item.type !== "SESSION" && item.type !== "TASK_FINISHED" && item.id === updated.id ? updated : item));
         setEditing(null);
+      }} onDeleted={(entryId) => {
+        setItems((current) => current.filter((item) =>
+          (item.type !== "THOUGHT" && item.type !== "WEEKLY_REFLECTION") || item.id !== entryId,
+        ));
+        setEditing(null);
+        setNotice("Thought removed from Journey.");
       }} /> : null}
     </div>
   );

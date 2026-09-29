@@ -1,8 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App.js";
+import { AppShell } from "./AppShell.js";
 
 const lightDashboard = {
   dataRevision: 1,
@@ -51,5 +52,31 @@ describe("application shell", () => {
     await user.click(screen.getByRole("button", { name: "Use dark appearance" }));
     expect(document.documentElement.dataset.theme).toBe("dark");
     expect(localStorage.getItem("journey-theme")).toBe("dark");
+  });
+
+  it("offers a keyboard skip link and moves focus to main content after route navigation", async () => {
+    const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <Routes>
+          <Route element={<AppShell />}>
+            <Route path="/" element={<p>Today body</p>} />
+            <Route path="/quarter" element={<p>Quarter body</p>} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await user.tab();
+    const skipLink = screen.getByRole("link", { name: "Skip to main content" });
+    expect(document.activeElement).toBe(skipLink);
+    await user.click(skipLink);
+    expect(document.activeElement).toBe(screen.getByRole("main"));
+
+    await user.click(screen.getAllByRole("link", { name: "Quarter" })[0]!);
+    expect(await screen.findByText("Quarter body")).toBeTruthy();
+    expect(scrollTo).toHaveBeenCalledWith(0, 0);
+    expect(document.activeElement).toBe(screen.getByRole("main"));
   });
 });

@@ -56,7 +56,7 @@ export function TodayHero({
 
   const plan = task.displayPlan;
   return (
-    <Surface className={styles.hero}>
+    <Surface className={styles.hero} data-session-state={state === "RUNNING" || state === "PAUSED" ? state.toLowerCase() : undefined}>
       <p className={styles.eyebrow}>
         {plan.focusArea?.name ?? plan.milestone?.title ?? "Today"} · {stateCopy[state]}
       </p>

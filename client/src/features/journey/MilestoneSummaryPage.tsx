@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "../../ui/Button.js";
 import { JourneyEntryEditor } from "./JourneyEntryEditor.js";
@@ -25,6 +25,7 @@ export function MilestoneSummaryPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editingReflection, setEditingReflection] = useState(false);
+  const reflectionHeadingRef = useRef<HTMLHeadingElement>(null);
 
   const load = useCallback((signal?: AbortSignal) => {
     void getMilestoneSummary(quarterId, milestoneId, signal).then(setSummary).catch((caught: unknown) => {
@@ -107,7 +108,7 @@ export function MilestoneSummaryPage() {
       ) : null}
 
       <section className={styles.reflection} aria-labelledby="weekly-thought-title">
-        <h2 id="weekly-thought-title">Optional weekly thought</h2>
+        <h2 ref={reflectionHeadingRef} id="weekly-thought-title" tabIndex={-1}>Optional weekly thought</h2>
         {summary.reflection.entry ? (
           <>
             <blockquote>{summary.reflection.entry.text}</blockquote>
@@ -127,8 +128,25 @@ export function MilestoneSummaryPage() {
       {editingReflection && summary.reflection.entry ? (
         <JourneyEntryEditor
           entry={summary.reflection.entry}
+          focusFallbackSelector="#weekly-thought-title"
           onClose={() => setEditingReflection(false)}
           onSaved={() => { setEditingReflection(false); load(); }}
+          onDeleted={() => {
+            const deleted = summary.reflection.entry;
+            if (!deleted) return;
+            setEditingReflection(false);
+            setSummary((current) => current ? {
+              ...current,
+              thoughts: current.thoughts.filter((thought) => thought.id !== deleted.id),
+              changedMyMindCount: Math.max(0, current.changedMyMindCount - (deleted.changedMyMind ? 1 : 0)),
+              eventsDuringPeriod: {
+                ...current.eventsDuringPeriod,
+                thoughtsCaptured: Math.max(0, current.eventsDuringPeriod.thoughtsCaptured - 1),
+              },
+              reflection: { ...current.reflection, entry: null },
+            } : current);
+            load();
+          }}
         />
       ) : null}
     </div>

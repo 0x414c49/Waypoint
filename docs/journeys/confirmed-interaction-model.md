@@ -93,6 +93,7 @@ The complete interaction must remain under 20 seconds in the normal case. If the
 - The active item is inferred as context and shown as a reversible link.
 - No title, category, tag, or relationship is required.
 - A keyboard shortcut may accelerate capture later but cannot be the only entry point.
+- User-authored thoughts can be edited or explicitly deleted after confirmation; deletion removes only that thought and never cascades into session, finish, or decision history.
 
 ## Weekly review
 
@@ -128,7 +129,7 @@ The complete interaction must remain under 20 seconds in the normal case. If the
 
 ## Language rules
 
-Use plain verbs for controls: Start, Pause, Resume, Finish, Skip, Add thought.
+Use plain verbs for controls: Start, Pause, Resume, Finish, Skip, Add thought, Edit thought, Delete thought.
 
 GitHub is a structural metaphor, not role-play. “Merged” may appear subtly in history, but the learner should not have to translate Git vocabulary to use the product.
 
