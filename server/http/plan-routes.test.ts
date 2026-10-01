@@ -14,7 +14,7 @@ import { buildApp } from "./build-app.js";
 
 const roots: string[] = [];
 const trusted = { host: "127.0.0.1:4173", origin: "http://127.0.0.1:4173", "content-type": "application/json" };
-const fixture = readFileSync(resolve(process.cwd(), "planning/fixtures/q4-2026-engineering-growth.yaml"), "utf8");
+const fixture = readFileSync(resolve(process.cwd(), "planning/fixtures/example-quarter.yaml"), "utf8");
 let app: Awaited<ReturnType<typeof buildApp>>;
 let store: JsonJourneyStore;
 let setTime: (value: string) => void;
@@ -48,7 +48,7 @@ describe("Slice 4 plan and Quarter HTTP", () => {
 
     const preview = await app.inject({ method: "POST", url: "/api/plans/preview", headers: trusted, payload: { sourceFormat: "yaml", content: fixture } });
     expect(preview.statusCode, preview.body).toBe(200);
-    expect(preview.json()).toMatchObject({ mode: "CREATE_QUARTER", quarterId: "q4-2026", basePlanRevision: null, summary: { added: 82, changed: 0, removed: 0, conflicts: 0 } });
+    expect(preview.json()).toMatchObject({ mode: "CREATE_QUARTER", quarterId: "q4-2026", basePlanRevision: null, summary: { added: 17, changed: 0, removed: 0, conflicts: 0 } });
     const competingCreate = await app.inject({ method: "POST", url: "/api/plans/preview", headers: trusted, payload: { sourceFormat: "yaml", content: fixture } });
 
     const missingGuard = await app.inject({ method: "POST", url: "/api/plans/apply", headers: { ...trusted, "idempotency-key": "plan-create-http-0001" }, payload: { previewToken: preview.json().previewToken, acknowledgementIds: [] } });
@@ -67,10 +67,10 @@ describe("Slice 4 plan and Quarter HTTP", () => {
     const detail = await app.inject({ method: "GET", url: "/api/quarters/q4-2026", headers: { host: trusted.host } });
     expect(detail.headers.etag).toBe(applied.headers.etag);
     expect(detail.json()).toMatchObject({ successCriteria: expect.arrayContaining([expect.objectContaining({ text: expect.any(String) })]), focusAreas: expect.any(Array), milestones: expect.any(Array) });
-    expect(detail.json().successCriteria).toHaveLength(9);
-    expect(detail.json().focusAreas).toHaveLength(4);
-    expect(detail.json().milestones).toHaveLength(13);
-    expect(detail.json().tasks).toHaveLength(64);
+    expect(detail.json().successCriteria).toHaveLength(2);
+    expect(detail.json().focusAreas).toHaveLength(2);
+    expect(detail.json().milestones).toHaveLength(6);
+    expect(detail.json().tasks).toHaveLength(8);
     expect(JSON.stringify(detail.json())).not.toContain("status");
 
     const exported = await app.inject({ method: "GET", url: "/api/plans/export/q4-2026", headers: { host: trusted.host } });

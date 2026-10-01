@@ -77,7 +77,6 @@ Start with:
 18. [Persistence contract](docs/architecture/persistence-contract.md)
 19. [API and persistence review](docs/architecture/api-review.md)
 20. [Plan YAML format](docs/product/plan-format-v1.md)
-21. [Representative Q4 mapping review](planning/q4-plan-mapping-review.md)
 22. [System design](docs/architecture/system-design.md)
 23. [Technology stack](docs/architecture/technology-stack.md)
 24. [Architecture review](docs/architecture/architecture-review.md)

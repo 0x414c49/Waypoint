@@ -1,0 +1,134 @@
+version: 1
+
+quarter:
+  id: q4-2026
+  title: Example Quarter — Engineering Practice
+  description: A small starter plan that demonstrates Waypoint's import format.
+  mantra: Learn deliberately. Record evidence. Adjust the plan.
+  start: 2026-10-01
+  end: 2026-12-31
+  successCriteria:
+    - id: q4-2026-criterion-1
+      text: Complete one focused practice task each week.
+    - id: q4-2026-criterion-2
+      text: Record one technical decision with its trade-offs.
+
+focusAreas:
+  - id: q4-2026-systems
+    name: Systems Reliability
+    description: Practice designing predictable behavior under failure.
+    targetMinutes: 360
+  - id: q4-2026-delivery
+    name: Delivery Practice
+    description: Build small changes and verify them with evidence.
+    targetMinutes: 240
+
+milestones:
+  - id: q4-2026-w01
+    title: Week 1
+    description: Establish a small, repeatable practice loop.
+    start: 2026-10-01
+    end: 2026-10-09
+    mode: STANDARD
+  - id: q4-2026-w02
+    title: Week 2
+    start: 2026-10-10
+    end: 2026-10-18
+    mode: STANDARD
+  - id: q4-2026-w03
+    title: Week 3
+    start: 2026-10-19
+    end: 2026-10-25
+    mode: STANDARD
+  - id: q4-2026-w04
+    title: Week 4
+    start: 2026-10-26
+    end: 2026-11-01
+    mode: BUFFER
+  - id: q4-2026-w05
+    title: Week 5
+    description: Practice failure handling and document one choice.
+    start: 2026-11-02
+    end: 2026-11-06
+    mode: STANDARD
+  - id: q4-2026-w06
+    title: Closing period
+    start: 2026-11-07
+    end: 2026-12-31
+    mode: LIGHT
+
+tasks:
+  - id: 2026-10-05-go-foundations
+    milestoneId: q4-2026-w01
+    focusAreaId: q4-2026-delivery
+    date: 2026-10-05
+    title: Define a small service boundary
+    description: Write down one responsibility, one input, and one observable result.
+    plannedMinutes: 30
+
+  - id: 2026-10-06-timeouts
+    milestoneId: q4-2026-w01
+    focusAreaId: q4-2026-systems
+    date: 2026-10-06
+    title: Add a timeout boundary
+    description: Make one slow dependency fail predictably and verify the outcome.
+    plannedMinutes: 45
+    tags: [example, reliability]
+
+  - id: 2026-10-09-durable-execution
+    milestoneId: q4-2026-w01
+    date: 2026-10-09
+    title: Explore durable execution
+    description: Note when retrying work would need durable state.
+    plannedMinutes: 30
+    tags: [example, exploration]
+    recommendationMode: WHEN_CLEAR
+
+  - id: 2026-10-20-idempotency
+    milestoneId: q4-2026-w03
+    focusAreaId: q4-2026-systems
+    date: 2026-10-20
+    title: Idempotency
+    description: Make a repeated command safe and capture the test evidence.
+    plannedMinutes: 45
+    tags: [example, reliability]
+
+  - id: 2026-11-02-rust-foundations
+    milestoneId: q4-2026-w05
+    focusAreaId: q4-2026-delivery
+    date: 2026-11-02
+    title: Prepare a failure-handling example
+    description: Create the smallest setup needed for the week's exercises.
+    plannedMinutes: 30
+    tags: [example, preparation]
+
+  - id: 2026-11-03-partial-failure
+    milestoneId: q4-2026-w05
+    focusAreaId: q4-2026-systems
+    date: 2026-11-03
+    title: Partial failure
+    description: Handle one dependency succeeding while another fails.
+    plannedMinutes: 45
+    tags: [example, reliability]
+
+  - id: 2026-11-04-adr-3-consistency
+    milestoneId: q4-2026-w05
+    focusAreaId: q4-2026-systems
+    date: 2026-11-04
+    title: Choose a consistency model
+    description: Compare two approaches and record the trade-offs for a sample feature.
+    plannedMinutes: 45
+    tags: [example, decision]
+    decisionPrompt:
+      decisionId: q4-2026-adr-3
+      suggestedTitle: Consistency model for a sample feature
+      initialReviewDate: 2026-12-01
+
+  - id: 2026-11-06-ai-agent-protocols
+    milestoneId: q4-2026-w05
+    date: 2026-11-06
+    title: Explore an automation protocol
+    description: Compare one structured tool interface with an ad-hoc command.
+    plannedMinutes: 30
+    tags: [example, exploration]
+    recommendationMode: WHEN_CLEAR

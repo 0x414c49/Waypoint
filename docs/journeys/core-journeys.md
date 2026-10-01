@@ -1,7 +1,7 @@
 # Core Journey Exploration
 
 Status: Historical exploration; selected choices are recorded in `confirmed-interaction-model.md`
-Representative scenario: Q4 2026 Engineering Growth Plan
+Representative scenario: Example Quarter Engineering Practice Plan
 
 ## Proposed interaction model
 

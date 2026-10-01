@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { validateJourneyState, type JourneyState } from "./journey-state.js";
 import { parseAndNormalizePlanYaml } from "./plan.js";
 
-const fixturePath = resolve(process.cwd(), "planning/fixtures/q4-2026-engineering-growth.yaml");
+const fixturePath = resolve(process.cwd(), "planning/fixtures/example-quarter.yaml");
 
 export function createProductionSeed(writtenAt: string): JourneyState {
   const plan = parseAndNormalizePlanYaml(readFileSync(fixturePath, "utf8"));
@@ -16,7 +16,7 @@ export function createProductionSeed(writtenAt: string): JourneyState {
       users: {
         "local-user": {
           id: "local-user",
-          name: "Ali",
+          name: "Local user",
           timeZone: "Europe/Amsterdam",
           createdAt: writtenAt,
         },

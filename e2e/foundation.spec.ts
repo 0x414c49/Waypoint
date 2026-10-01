@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parse, stringify } from "yaml";
 
-const q4Fixture = readFileSync(resolve(process.cwd(), "planning/fixtures/q4-2026-engineering-growth.yaml"), "utf8");
+const q4Fixture = readFileSync(resolve(process.cwd(), "planning/fixtures/example-quarter.yaml"), "utf8");
 
 function q4PlanWithout(taskId: string): string {
   const plan = parse(q4Fixture) as { tasks: Array<{ id: string }> };
@@ -84,7 +84,7 @@ test("mobile route changes reset scroll before focusing the new main content", a
   expect(startingScrollY).toBeGreaterThan(0);
 
   await page.getByRole("navigation", { name: "Main navigation" }).last().getByRole("link", { name: "Quarter" }).click();
-  await expect(page.getByRole("heading", { name: /Engineering Growth/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Engineering Practice/ })).toBeVisible();
   await expect(page.getByRole("main")).toBeFocused();
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
 });
@@ -200,9 +200,9 @@ test("a decision keeps its original reasoning and appends hindsight", async ({ p
   await expect(page.getByRole("link", { name: "View technical choice" }).first()).toBeVisible();
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 
-  await page.goto("/tasks/2026-10-07-adr-1-live-stack-decision");
+  await page.goto("/tasks/2026-11-04-adr-3-consistency");
   await page.getByRole("button", { name: "Draft technical choice" }).click();
-  await expect(page.getByRole("heading", { name: "Live decision from the current stack" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Consistency model for a sample feature" })).toBeVisible();
   await expect(page.getByText("draft", { exact: true })).toBeVisible();
 });
 
@@ -374,7 +374,7 @@ test("task history supports correction, carry forward, and milestone review", as
 
 test("Quarter overview navigates to Focus Areas and Milestones accessibly at desktop and 360px", async ({ page }) => {
   await page.goto("/quarter");
-  await expect(page.getByRole("heading", { name: /Engineering Growth/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Engineering Practice/ })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Schedule", exact: true })).toBeVisible();
   await expect(page.getByText("This week", { exact: true })).toBeVisible();
   await expect(page.getByLabel("Choose quarter")).toBeVisible();
@@ -401,7 +401,7 @@ test("Quarter overview navigates to Focus Areas and Milestones accessibly at des
 
 test("plan preview, explicit removal acknowledgement, YAML export and unchanged reimport work", async ({ page }, testInfo) => {
   await page.goto("/quarter");
-  await expect(page.getByRole("heading", { name: /Engineering Growth/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Engineering Practice/ })).toBeVisible();
   await page.getByRole("button", { name: "Update plan" }).click();
   const removedTaskId = testInfo.project.name === "desktop" ? "2026-10-05-go-foundations" : "2026-10-06-timeouts";
   await page.locator('input[type="file"]').setInputFiles({
@@ -410,7 +410,7 @@ test("plan preview, explicit removal acknowledgement, YAML export and unchanged 
   await page.getByRole("button", { name: "Validate and preview" }).click();
   await expect(page.getByRole("heading", { name: "Review before applying" })).toBeVisible();
   await expect(page.getByText("History preserved", { exact: true })).toBeVisible();
-  const requestedRemovalLabel = testInfo.project.name === "desktop" ? "Confirm removing Go foundations" : "Confirm removing Timeouts";
+  const requestedRemovalLabel = testInfo.project.name === "desktop" ? "Confirm removing Define a small service boundary" : "Confirm removing Add a timeout boundary";
   await expect(page.getByRole("checkbox", { name: new RegExp(requestedRemovalLabel) })).toBeVisible();
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
@@ -435,7 +435,7 @@ test("plan preview, explicit removal acknowledgement, YAML export and unchanged 
 
   if (testInfo.project.name !== "desktop") return;
   await page.getByRole("button", { name: "Apply plan" }).click();
-  await expect(page.getByRole("heading", { name: /Engineering Growth/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Engineering Practice/ })).toBeVisible();
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export plan" }).click();
   const download = await downloadPromise;

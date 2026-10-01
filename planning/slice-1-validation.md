@@ -33,5 +33,5 @@ Environment: macOS, local workspace; dependency contract targets Node.js 24 LTS.
 
 - Automated axe-core checks do not replace manual keyboard, screen-reader, contrast, reduced-motion, and 200% zoom review.
 - The host did not provide Node.js 24, so the same checks should be repeated on Node.js 24 before treating the runtime contract as release-proven.
-- The production clock is honest: before the supplied Q4 plan begins, Today shows the quiet quarter-not-started state. No test-only date control is exposed in production.
+- The production clock is honest: outside the starter plan's dates, Today shows the appropriate quiet state. No test-only date control is exposed in production.
 - Journey browsing, Thoughts, Session correction, weekly reflection, and Carry forward remain intentionally deferred to Slice 2.

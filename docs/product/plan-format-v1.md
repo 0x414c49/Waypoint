@@ -19,7 +19,7 @@ version: 1
 
 quarter:
   id: q4-2026
-  title: Q4 2026 — Engineering Growth
+  title: Example Quarter — Engineering Practice
   description: Optional longer context.
   mantra: Own the why. Design the system. Verify reality.
   start: 2026-10-05
@@ -234,8 +234,8 @@ Importing an unchanged normalized export must produce an empty semantic diff.
 
 ## Representative fixture
 
-The complete Q4 mapping lives at:
+A compact, generic starter plan lives at:
 
-`planning/fixtures/q4-2026-engineering-growth.yaml`
+`planning/fixtures/example-quarter.yaml`
 
-Its mapping notes are documented in `planning/q4-plan-mapping-review.md`.
+It demonstrates every optional task behavior without including a real user's plan.

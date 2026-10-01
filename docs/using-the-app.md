@@ -64,7 +64,7 @@ The owner can open **Access** to create one-time, email-bound member invites. Co
 4. Choose **Finish item**, select the honest outcome, and optionally leave one useful takeaway.
 5. Leave. Session time, activity, and Journey history are produced automatically from those actions.
 
-The supplied Q4 2026 plan is loaded on a fresh installation. Today follows the real calendar, so before that plan begins it truthfully says the quarter has not started. You can still capture Thoughts and Decisions.
+A small example plan is loaded on a fresh installation. Today follows the real calendar, so outside that example's dates it truthfully says no current work is scheduled. You can still capture Thoughts and Decisions.
 
 ## Quarter and plan updates
 

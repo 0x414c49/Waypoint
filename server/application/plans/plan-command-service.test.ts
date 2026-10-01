@@ -16,7 +16,7 @@ import { PlanCommandService, exportQuarterPlanYaml } from "./plan-command-servic
 
 const roots: string[] = [];
 const now = new Date("2026-11-03T17:00:00.000Z");
-const fixture = readFileSync(resolve(process.cwd(), "planning/fixtures/q4-2026-engineering-growth.yaml"), "utf8");
+const fixture = readFileSync(resolve(process.cwd(), "planning/fixtures/example-quarter.yaml"), "utf8");
 const targetTask = "2026-11-03-partial-failure";
 
 function planWithoutTask(taskId: string): string {
@@ -64,7 +64,7 @@ describe("Slice 4 plan lifecycle", () => {
     expect(replay).toMatchObject({ mode: "CREATE_QUARTER", planRevision: 1, changed: false, replayed: true });
     const state = await store.read((value) => value);
     expect(state.storeRevision).toBe(1);
-    expect(Object.keys(state.records.tasks)).toHaveLength(64);
+    expect(Object.keys(state.records.tasks)).toHaveLength(8);
     expect(Object.values(state.records.tasks).every((task) => task.status === "NOT_STARTED" && !task.planSnapshot)).toBe(true);
     expect(Object.values(state.records.milestones).every((item) => !item.intentSnapshot)).toBe(true);
     expect(state.records.quarters["q4-2026"]?.intentSnapshot).toBeUndefined();
@@ -164,8 +164,8 @@ describe("Slice 4 plan lifecycle", () => {
     plan.milestones = [];
     plan.tasks = [];
     const preview = await service.preview(stringify(plan));
-    expect(preview.summary).toMatchObject({ added: 0, changed: 0, removed: 81, historicalPreserved: 0, conflicts: 0 });
-    expect(preview.requiredAcknowledgements).toHaveLength(81);
+    expect(preview.summary).toMatchObject({ added: 0, changed: 0, removed: 16, historicalPreserved: 0, conflicts: 0 });
+    expect(preview.requiredAcknowledgements).toHaveLength(16);
     expect(preview.changes.filter((change) => change.operation === "REMOVE" && change.historyPreserved)).toEqual([]);
     await service.apply({ previewToken: preview.previewToken, acknowledgementIds: preview.requiredAcknowledgements.map((item) => item.id) }, "plan-empty-quarter-0001", { ifMatch: preview.baseEtag! });
     const after = await store.read((state) => state);

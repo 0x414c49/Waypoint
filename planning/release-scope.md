@@ -25,7 +25,7 @@ Gate: the foundation harness starts locally with an injected validated no-histor
 
 Deliver only the shortest valuable loop:
 
-- canonical local User and supplied Q4 plan seed, loaded from the bundled fixture through strict validation but with no import-management UI or execution/completion history
+- canonical local User and generic starter plan, loaded from the bundled fixture through strict validation but with no import-management UI or execution/completion history
 - Dashboard states needed for Light/Ready/Running/Paused/Finished
 - one Today hero and compact Up next
 - Start, Do 10 minutes, Pause, Resume, Finish, and Undo/Reopen

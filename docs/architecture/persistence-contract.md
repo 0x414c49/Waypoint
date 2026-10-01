@@ -238,7 +238,7 @@ storeRevision = 0
 writtenAt = initialization instant
 User = { id: local-user, name: Ali, timeZone: Europe/Amsterdam,
          createdAt: initialization instant }
-Q4 plan = bundled, validated q4-2026-engineering-growth fixture
+starter plan = bundled, validated generic example fixture
 Quarter planRevision = 1
 Quarter lastPlanImportedAt = absent
 all generated plan-record createdAt/updatedAt values = initialization instant

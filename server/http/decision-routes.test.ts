@@ -48,12 +48,12 @@ describe("Slice 3 Decision HTTP", () => {
   it("creates one contextual Draft, captures plan context, replays, and leaves Task lifecycle unchanged", async () => {
     const first = await contextual();
     expect(first.statusCode, first.body).toBe(201);
-    expect(first.json()).toMatchObject({ id: "q4-2026-adr-3", status: "DRAFT", title: "Strong vs eventual consistency for a real feature", relatedTask: { id: "2026-11-04-adr-3-consistency" } });
+    expect(first.json()).toMatchObject({ id: "q4-2026-adr-3", status: "DRAFT", title: "Consistency model for a sample feature", relatedTask: { id: "2026-11-04-adr-3-consistency" } });
     const replay = await app.inject({ method: "POST", url: "/api/tasks/2026-11-04-adr-3-consistency/decision-draft", headers: { ...trusted, "if-match": (await task("2026-11-04-adr-3-consistency")).etag, "idempotency-key": "decision-context-0002" }, payload: {} });
     expect(replay.statusCode).toBe(200);
     const current = await task("2026-11-04-adr-3-consistency");
     expect(current).toMatchObject({ status: "NOT_STARTED", decisionContext: { action: "OPEN_DECISION", decision: { id: "q4-2026-adr-3", status: "DRAFT" } } });
-    await expect(store.read((state) => ({ task: state.records.tasks["2026-11-04-adr-3-consistency"]?.planSnapshot?.title, milestone: state.records.milestones["q4-2026-w05"]?.intentSnapshot?.title, quarter: state.records.quarters["q4-2026"]?.intentSnapshot?.title, count: Object.keys(state.records.decisionRecords).length }))).resolves.toEqual({ task: "ADR-3 — Strong vs eventual consistency", milestone: "Week 5", quarter: "Q4 2026 — Engineering Growth", count: 1 });
+    await expect(store.read((state) => ({ task: state.records.tasks["2026-11-04-adr-3-consistency"]?.planSnapshot?.title, milestone: state.records.milestones["q4-2026-w05"]?.intentSnapshot?.title, quarter: state.records.quarters["q4-2026"]?.intentSnapshot?.title, count: Object.keys(state.records.decisionRecords).length }))).resolves.toEqual({ task: "Choose a consistency model", milestone: "Week 5", quarter: "Example Quarter — Engineering Practice", count: 1 });
   });
 
   it("does not borrow a later current-plan prompt when historical Task context had none", async () => {

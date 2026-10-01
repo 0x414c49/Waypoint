@@ -79,7 +79,7 @@ describe("TaskCommandService", () => {
     ).resolves.toMatchObject({
       taskSnapshot: { title: "Partial failure" },
       milestoneSnapshot: { title: "Week 5" },
-      quarterSnapshot: { title: "Q4 2026 — Engineering Growth" },
+      quarterSnapshot: { title: "Example Quarter — Engineering Practice" },
       createdIds: ["session-1"],
     });
 

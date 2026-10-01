@@ -68,20 +68,20 @@ describe("Slice 2 Journey HTTP", () => {
       task: state.records.tasks["2026-11-04-adr-3-consistency"]?.planSnapshot?.title,
       milestone: state.records.milestones["q4-2026-w05"]?.intentSnapshot?.title,
       quarter: state.records.quarters["q4-2026"]?.intentSnapshot?.title,
-    }))).resolves.toEqual({ task: "ADR-3 — Strong vs eventual consistency", milestone: "Week 5", quarter: "Q4 2026 — Engineering Growth" });
+    }))).resolves.toEqual({ task: "Choose a consistency model", milestone: "Week 5", quarter: "Example Quarter — Engineering Practice" });
     expect(await store.read((state) => Object.keys(state.records.journeyEntries))).toHaveLength(2);
   });
 
   it("updates with ETags, explicitly deletes one entry, and validates timeline dates", async () => {
     const created = await app.inject({ method: "POST", url: "/api/journey", headers: { ...trusted, "idempotency-key": "thought-edit-00001" }, payload: { text: "Before", relatedTaskId: "2026-11-04-adr-3-consistency" } });
     expect(created.statusCode).toBe(201);
-    expect(await store.read((state) => state.records.tasks["2026-11-04-adr-3-consistency"]?.planSnapshot?.title)).toBe("ADR-3 — Strong vs eventual consistency");
+    expect(await store.read((state) => state.records.tasks["2026-11-04-adr-3-consistency"]?.planSnapshot?.title)).toBe("Choose a consistency model");
     await store.transact({ kind: "PLAN_APPLY" }, (draft) => {
       draft.records.tasks["2026-11-04-adr-3-consistency"]!.title = "Current plan wording";
       return { kind: "changed", value: undefined };
     });
     const historicalTimeline = await app.inject({ method: "GET", url: "/api/journey?taskId=2026-11-04-adr-3-consistency", headers: { host: trusted.host } });
-    expect(historicalTimeline.json().items[0].relatedTask.title).toBe("ADR-3 — Strong vs eventual consistency");
+    expect(historicalTimeline.json().items[0].relatedTask.title).toBe("Choose a consistency model");
     const id = created.json().id as string;
     const updated = await app.inject({ method: "PUT", url: `/api/journey/${id}`, headers: { ...trusted, "if-match": created.json().etag }, payload: { text: "After", tags: ["retry"], changedMyMind: true, relatedTaskId: null, relatedMilestoneId: null, relatedDecisionId: null } });
     expect(updated.statusCode, updated.body).toBe(200);

@@ -7,7 +7,7 @@ import { createProductionSeed } from "./production-seed.js";
 import { validateJourneyState } from "./journey-state.js";
 
 const fixture = readFileSync(
-  resolve(process.cwd(), "planning/fixtures/q4-2026-engineering-growth.yaml"),
+  resolve(process.cwd(), "planning/fixtures/example-quarter.yaml"),
   "utf8",
 );
 const instant = "2026-09-27T10:00:00.000Z";
@@ -38,10 +38,10 @@ describe("plan YAML", () => {
   it("parses the complete fixture and applies only documented defaults", () => {
     const plan = parseAndNormalizePlanYaml(fixture);
 
-    expect(plan.quarter.successCriteria).toHaveLength(9);
-    expect(plan.focusAreas).toHaveLength(4);
-    expect(plan.milestones).toHaveLength(13);
-    expect(plan.tasks).toHaveLength(64);
+    expect(plan.quarter.successCriteria).toHaveLength(2);
+    expect(plan.focusAreas).toHaveLength(2);
+    expect(plan.milestones).toHaveLength(6);
+    expect(plan.tasks).toHaveLength(8);
     expect(plan.tasks[0]).toMatchObject({
       id: "2026-10-05-go-foundations",
       tags: [],
@@ -91,13 +91,13 @@ tasks: []
 });
 
 describe("production seed", () => {
-  it("creates the canonical validated no-history Q4 state", () => {
+  it("creates the validated no-history starter state", () => {
     const state = createProductionSeed(instant);
 
     expect(validateJourneyState(state)).toEqual([]);
     expect(state.storeRevision).toBe(0);
     expect(state.records.users["local-user"]).toMatchObject({
-      name: "Ali",
+      name: "Local user",
       timeZone: "Europe/Amsterdam",
       createdAt: instant,
     });
@@ -106,9 +106,9 @@ describe("production seed", () => {
       startDate: "2026-10-01",
       endDate: "2026-12-31",
     });
-    expect(Object.keys(state.records.focusAreas)).toHaveLength(4);
-    expect(Object.keys(state.records.milestones)).toHaveLength(13);
-    expect(Object.keys(state.records.tasks)).toHaveLength(64);
+    expect(Object.keys(state.records.focusAreas)).toHaveLength(2);
+    expect(Object.keys(state.records.milestones)).toHaveLength(6);
+    expect(Object.keys(state.records.tasks)).toHaveLength(8);
     expect(Object.values(state.records.tasks).every((task) => task.status === "NOT_STARTED"))
       .toBe(true);
     expect(state.records.tasks["2026-10-05-go-foundations"]).toMatchObject({

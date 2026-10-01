@@ -290,7 +290,7 @@ Responsibilities:
 
 V1 is one Node.js process at `127.0.0.1:4173`, serving frontend and API from one origin with exact Host/Origin allowlists. It is responsive at phone sizes but not remotely accessible over LAN/public internet.
 
-`JourneyStore` reads immutable validated snapshots and transacts with a closed capability (`STANDARD`, `PLAN_APPLY`, exact `JOURNEY_DELETE`, or internal `SCHEMA_MIGRATION`). JsonJourneyStore uses one in-process mutex, validation, same-directory temp, fsync, rolling backup, atomic replace, and fail-closed recovery. Default data is `data/store`; production first run seeds `local-user` and the supplied Q4 plan with no execution history.
+`JourneyStore` reads immutable validated snapshots and transacts with a closed capability (`STANDARD`, `PLAN_APPLY`, exact `JOURNEY_DELETE`, or internal `SCHEMA_MIGRATION`). JsonJourneyStore uses one in-process mutex, validation, same-directory temp, fsync, rolling backup, atomic replace, and fail-closed recovery. Default data is `data/store`; production first run seeds `local-user` and a generic starter plan with no execution history.
 
 Authoritative detail: [System design](../docs/architecture/system-design.md), [Technology stack](../docs/architecture/technology-stack.md), [Persistence contract](../docs/architecture/persistence-contract.md), [Architecture review](../docs/architecture/architecture-review.md), and [ADRs](../docs/adr/README.md).
 
@@ -319,9 +319,9 @@ Each slice exposes only completed destinations/actions. The heart is validated b
 
 ## 8. Representative Q4 plan
 
-The [normative YAML fixture](fixtures/q4-2026-engineering-growth.yaml) is a complete in-range schedule mapping: four lanes, 13 Milestones, 64 Tasks, nine success criteria, nine conditional technology explorations, six detailed ADR prompts, buffer reflections, holiday optional work, and Quarter retrospectives.
+The [example YAML fixture](fixtures/example-quarter.yaml) is a compact, generic schedule that exercises focus areas, milestones, recommendations, and a decision prompt without embedding a real user's plan.
 
-It preserves the “Standard” capability statement and discloses source tensions: the overview asks for eight ADRs while weekly detail specifies six; Dec 25 is outside Week 12; Week 13 has five activities across four dates. It invents no planned minutes, execution, completion, or decision reasoning. Full review: [Q4 mapping](q4-plan-mapping-review.md).
+It contains plan intent only and invents no execution, completion, or decision reasoning.
 
 ## 9. Known hypotheses and required evidence
 

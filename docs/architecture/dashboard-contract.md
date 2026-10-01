@@ -17,7 +17,7 @@ Dashboard is the server-resolved read model for Today. It answers “What should
   "timeZone": "Europe/Amsterdam",
   "quarter": {
     "id": "q4-2026",
-    "title": "Q4 2026 — Engineering Growth",
+    "title": "Example Quarter — Engineering Practice",
     "planRevision": 3
   },
   "state": "PAUSED",
