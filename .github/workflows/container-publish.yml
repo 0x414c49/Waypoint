@@ -1,27 +1,19 @@
 name: Publish container
 
 on:
-  # A v* tag is the release event for the image. Keeping one tag trigger avoids
-  # publishing twice when a GitHub Release is created from the same tag.
   push:
     branches:
       - main
-    tags:
-      - "v*"
   workflow_dispatch:
-    inputs:
-      publish_latest:
-        description: "Also move :latest (normally only v* tags do this)"
-        required: false
-        default: false
-        type: boolean
 
 permissions:
   contents: read
 
 concurrency:
-  group: waypoint-container-${{ github.ref }}
-  cancel-in-progress: true
+  # Serialize releases so two closely spaced merges cannot calculate the same
+  # next version or move :latest out of order.
+  group: waypoint-container-main-release
+  cancel-in-progress: false
 
 jobs:
   checks:
@@ -33,13 +25,10 @@ jobs:
   publish:
     name: Publish linux/amd64 and linux/arm64
     needs: checks
-    if: >-
-      github.ref == 'refs/heads/main' ||
-      startsWith(github.ref, 'refs/tags/v') ||
-      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
       id-token: write
       attestations: write
@@ -47,6 +36,42 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Calculate the release version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --force --tags origin
+
+          current_tag="$(git tag --points-at "$GITHUB_SHA" --list 'v*' --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || true)"
+          if [[ -n "$current_tag" ]]; then
+            version="${current_tag#v}"
+            existing=true
+          else
+            latest_tag="$(git tag --list 'v*' --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || true)"
+            if [[ -z "$latest_tag" ]]; then
+              version="0.1.0"
+            elif [[ "$latest_tag" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+              version="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((BASH_REMATCH[3] + 1))"
+            else
+              echo "Latest release tag is not valid semantic version: $latest_tag" >&2
+              exit 1
+            fi
+            existing=false
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+          echo "existing=$existing" >> "$GITHUB_OUTPUT"
+          echo "Release version: $version"
+
+      - name: Stamp package metadata for the image
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: npm version "$RELEASE_VERSION" --no-git-tag-version --ignore-scripts
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
@@ -69,12 +94,13 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            type=ref,event=branch
-            type=semver,pattern={{version}}
+            type=raw,value=main
+            type=raw,value=${{ steps.version.outputs.version }}
+            type=raw,value=latest
             type=sha,prefix=sha-,format=long
-            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.publish_latest == true) }}
           labels: |
             org.opencontainers.image.source=https://github.com/0x414c49/Waypoint
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
 
       - name: Build and publish multi-platform image
         id: push
@@ -87,7 +113,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            VERSION=${{ steps.meta.outputs.version }}
+            VERSION=${{ steps.version.outputs.version }}
           cache-from: type=gha,scope=waypoint
           cache-to: type=gha,mode=max,scope=waypoint
           sbom: true
@@ -99,3 +125,13 @@ jobs:
           subject-name: ghcr.io/0x414c49/waypoint
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
+
+      - name: Create release Git tag
+        if: steps.version.outputs.existing != 'true'
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag --annotate "$RELEASE_TAG" --message "Release $RELEASE_TAG" "$GITHUB_SHA"
+          git push origin "refs/tags/$RELEASE_TAG"

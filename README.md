@@ -40,6 +40,8 @@ For HTTPS behind a reverse proxy, set `WAYPOINT_PUBLIC_URL=https://waypoint.exam
 
 The image supports `linux/amd64` (x86-64, the architecture usually called x86) and `linux/arm64`. True 32-bit `linux/386` is not supported or advertised because the Node.js 24 base image and native ecosystem are not a supported target.
 
+Releases are automatic. Every successful push to `main` runs the checks once, increments the patch number from the newest `vMAJOR.MINOR.PATCH` Git tag, publishes `main`, the numbered version, `latest`, and the immutable commit-SHA image tags, then creates the matching Git tag. The generated tag does not trigger another workflow. A manual rerun on an already-tagged commit reuses that version instead of creating another release.
+
 For Unraid, import [`unraid/waypoint.xml`](unraid/waypoint.xml) into Community Applications, keep the data mapping at `/mnt/user/appdata/waypoint:/app/data`, and set the required `JOURNEY_PUBLIC_URL` field to the exact address users will open (for example `http://192.168.1.25:4173`). The template supplies Docker's non-root `--user=99:100` (Unraid `nobody:users`) so new appdata files use the normal Unraid share ownership. If this directory already exists with different ownership, adjust it once before starting:
 
 ```sh
