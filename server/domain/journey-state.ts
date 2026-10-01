@@ -33,6 +33,20 @@ export {
   type TaskPlanSnapshot,
   type TaskRecord,
   type UserRecord,
+  AuthRoleSchema,
+  PasswordVerifierSchema,
+  TotpSecretCipherSchema,
+  AccountRecordSchema,
+  AuthInviteRecordSchema,
+  AuthSessionRecordSchema,
+  MediaRecordSchema,
+  type AuthRole,
+  type PasswordVerifier,
+  type TotpSecretCipher,
+  type AccountRecord,
+  type AuthInviteRecord,
+  type AuthSessionRecord,
+  type MediaRecord,
 } from "./journey-records.js";
 export { JourneyStateSchema, type JourneyState } from "./journey-state-schema.js";
 export { projectTaskStatus, validateJourneyState } from "./journey-state-validation.js";

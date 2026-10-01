@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { Button } from "../../ui/Button.js";
 import { DueDecisionNotice } from "../decisions/DueDecisionNotice.js";
 import { actOnTask, ApiError, createIdempotencyKey, getDashboard } from "./api.js";
 import { ActiveSessionConflictDialog } from "./ActiveSessionConflictDialog.js";
 import { ActivityPreview } from "./ActivityPreview.js";
-import { FinishDialog } from "./FinishDialog.js";
 import { TodayContext } from "./TodayContext.js";
 import { TodayHero } from "./TodayHero.js";
 import type {
@@ -17,6 +16,8 @@ import type {
   TaskProjection,
 } from "./types.js";
 import styles from "./Today.module.css";
+
+const FinishDialog = lazy(() => import("./FinishDialog.js").then((module) => ({ default: module.FinishDialog })));
 
 interface PendingSwitch {
   task: TaskProjection;
@@ -216,8 +217,8 @@ export function TodayPage() {
       <div id="today-content" className={styles.page}>
         <header className={styles.pageHeader}>
           <div>
-            <p className={styles.eyebrow}>{friendlyDate(dashboard.today)}</p>
             <h1 className={styles.pageTitle}>Today</h1>
+            <p className={styles.dateLine}>{friendlyDate(dashboard.today)}</p>
           </div>
           <span className={styles.localStatus}>Stored on this device</span>
         </header>
@@ -272,12 +273,14 @@ export function TodayPage() {
       ) : null}
 
       {finishTask ? (
-        <FinishDialog
-          task={finishTask}
-          busy={busy}
-          onClose={closeFinish}
-          onFinish={(outcome, keyLearning) => void finish(outcome, keyLearning)}
-        />
+        <Suspense fallback={<p role="status">Opening the finish form…</p>}>
+          <FinishDialog
+            task={finishTask}
+            busy={busy}
+            onClose={closeFinish}
+            onFinish={(outcome, keyLearning) => void finish(outcome, keyLearning)}
+          />
+        </Suspense>
       ) : null}
       {pendingSwitch ? (
         <ActiveSessionConflictDialog

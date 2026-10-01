@@ -7,6 +7,18 @@ import { closedSessionSegments } from "./temporal.js";
 const seededAt = "2026-09-27T10:00:00.000Z";
 
 describe("Today dashboard projection", () => {
+  it("opens the Quarter on October 1 without inventing scheduled work", () => {
+    const dashboard = projectDashboard(
+      createProductionSeed(seededAt),
+      "local-user",
+      new Date("2026-10-01T12:00:00.000Z"),
+    );
+    expect(dashboard.today).toBe("2026-10-01");
+    expect(dashboard.quarter?.id).toBe("q4-2026");
+    expect(dashboard.state).toBe("LIGHT");
+    expect(dashboard.hero).toMatchObject({ reason: "NO_PLANNED_ITEM", task: null });
+  });
+
   it("renders the scheduled Default item as Ready with a zeroed activity preview", () => {
     const dashboard = projectDashboard(
       createProductionSeed(seededAt),

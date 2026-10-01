@@ -3,6 +3,7 @@ import { Button } from "../../ui/Button.js";
 import { DecisionOptionEditor } from "./DecisionOptionEditor.js";
 import type { DecisionDraftInput, DecisionOption } from "./types.js";
 import styles from "./Decisions.module.css";
+import { MarkdownEditor } from "../../ui/MarkdownEditor.js";
 
 interface Props {
   initial: DecisionDraftInput;
@@ -14,8 +15,10 @@ interface Props {
 }
 
 function lines(value: string): string[] {
-  return value.split("\n").map((item) => item.trim()).filter(Boolean);
+  return value.split("\n").map((item) => item.replace(/^\s*(?:[-*+]\s+|\d+[.)]\s+)/, "").trim()).filter(Boolean);
 }
+
+function listMarkdown(items: string[]): string { return items.map((item) => `- ${item}`).join("\n"); }
 
 function optional(value: string): string | undefined {
   const trimmed = value.trim();
@@ -79,15 +82,18 @@ export function DecisionEditor({ initial, busy, canAccept, initialSaved = true, 
       <section className={styles.documentSection} aria-labelledby="decision-basics">
         <h2 id="decision-basics">The gist</h2>
         <label className={styles.field}><span>Title</span><input required value={draft.title} onChange={(event) => setText("title", event.target.value)} /></label>
-        <label className={styles.field}><span>What is going on?</span><textarea value={draft.context ?? ""} onChange={(event) => setText("context", event.target.value)} /></label>
-        <label className={styles.field}><span>What did you decide?</span><textarea value={draft.decision ?? ""} onChange={(event) => setText("decision", event.target.value)} /></label>
+        <label className={styles.field}><span>What is going on?</span></label>
+        <MarkdownEditor value={draft.context ?? ""} onChange={(value) => setText("context", value)} ariaLabel="What is going on?" />
+        <label className={styles.field}><span>What did you decide?</span></label>
+        <MarkdownEditor value={draft.decision ?? ""} onChange={(value) => setText("decision", value)} ariaLabel="What did you decide?" />
         <label className={styles.field}><span>Decision date <small>Needed to accept</small></span><input type="date" value={draft.decisionDate ?? ""} onChange={(event) => setText("decisionDate", event.target.value)} /></label>
       </section>
 
       <details className={styles.moreDetail} open={moreDetailOpen} onToggle={(event) => setMoreDetailOpen(event.currentTarget.open)}>
         <summary>Add more detail <span>Optional: alternatives, constraints, consequences, and what might change your mind</span></summary>
         <div className={styles.moreDetailContent}>
-          <label className={styles.field}><span>Constraints <small>one per line</small></span><textarea value={draft.constraints.join("\n")} onChange={(event) => setDraft((current) => ({ ...current, constraints: lines(event.target.value) }))} /></label>
+          <label className={styles.field}><span>Constraints</span></label>
+          <MarkdownEditor value={listMarkdown(draft.constraints)} onChange={(value) => setDraft((current) => ({ ...current, constraints: lines(value) }))} ariaLabel="Constraints" />
           <section className={styles.optionalGroup} aria-labelledby="decision-options">
             <div className={styles.sectionHeading}><h3 id="decision-options">Options considered</h3><Button type="button" variant="ghost" onClick={addOption}>Add option</Button></div>
             {draft.options.map((option, index) => (
@@ -100,9 +106,12 @@ export function DecisionEditor({ initial, busy, canAccept, initialSaved = true, 
               />
             ))}
           </section>
-          <label className={styles.field}><span>Consequences</span><textarea value={draft.consequences ?? ""} onChange={(event) => setText("consequences", event.target.value)} /></label>
-          <label className={styles.field}><span>Assumptions <small>one per line</small></span><textarea value={draft.assumptions.join("\n")} onChange={(event) => setDraft((current) => ({ ...current, assumptions: lines(event.target.value) }))} /></label>
-          <label className={styles.field}><span>What might change your mind?</span><textarea value={draft.falsifier ?? ""} onChange={(event) => setText("falsifier", event.target.value)} /></label>
+          <label className={styles.field}><span>Consequences</span></label>
+          <MarkdownEditor value={draft.consequences ?? ""} onChange={(value) => setText("consequences", value)} ariaLabel="Consequences" />
+          <label className={styles.field}><span>Assumptions</span></label>
+          <MarkdownEditor value={listMarkdown(draft.assumptions)} onChange={(value) => setDraft((current) => ({ ...current, assumptions: lines(value) }))} ariaLabel="Assumptions" />
+          <label className={styles.field}><span>What might change your mind?</span></label>
+          <MarkdownEditor value={draft.falsifier ?? ""} onChange={(value) => setText("falsifier", value)} ariaLabel="What might change your mind?" />
           <label className={styles.field}><span>First review date <small>Optional reminder</small></span><input type="date" value={draft.initialReviewDate ?? ""} onChange={(event) => setDraft((current) => ({ ...current, initialReviewDate: event.target.value }))} /></label>
         </div>
       </details>

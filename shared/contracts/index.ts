@@ -1,4 +1,9 @@
 export { CurrentUserSchema, type CurrentUser } from "./current-user.js";
+export {
+  AuthRoleSchema, AuthUserSchema, AuthSessionResponseSchema, AuthInviteViewSchema,
+  AuthInviteListSchema, AuthInviteCreateResponseSchema, TotpSetupResponseSchema, type AuthUser,
+  type TotpSetupResponse,
+} from "./auth.js";
 export { ProblemDetailsSchema, type ProblemDetails } from "./problem.js";
 export {
   SearchContentTypeSchema,
@@ -37,6 +42,7 @@ export {
   ActivitySchema,
   CarryForwardResponseSchema,
   JourneyEntrySchema,
+  FeelingSchema,
   JourneyTimelineSchema,
   MilestoneSummarySchema,
   SessionListSchema,

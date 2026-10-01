@@ -26,28 +26,28 @@ export function JourneyFilters({ filters, tasks, milestones, onChange }: Journey
   };
   return (
     <section className={styles.filters} aria-label="Filter Journey">
-      <label>
+      <label className={styles.dateFilter}>
         <span>From</span>
         <input type="date" value={filters.from ?? ""} onChange={(event) => onChange(withValue("from", event.target.value || undefined))} />
       </label>
-      <label>
+      <label className={styles.dateFilter}>
         <span>To</span>
         <input type="date" value={filters.to ?? ""} onChange={(event) => onChange(withValue("to", event.target.value || undefined))} />
       </label>
-      <label>
+      <label className={styles.taskFilter}>
         <span>Task</span>
         <select value={filters.taskId ?? ""} onChange={(event) => onChange(withValue("taskId", event.target.value || undefined))}>
           <option value="">All tasks</option>
           {tasks.map((task) => <option key={task.id} value={task.id}>{task.title}</option>)}
         </select>
       </label>
-      <label>
+      <label className={styles.typeFilter}>
         <span>Type</span>
         <select value={filters.type ?? ""} onChange={(event) => onChange(withValue("type", event.target.value as JourneyItemType | ""))}>
           {types.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
         </select>
       </label>
-      <label>
+      <label className={styles.milestoneFilter}>
         <span>Milestone</span>
         <select value={filters.milestoneId ?? ""} onChange={(event) => onChange(withValue("milestoneId", event.target.value || undefined))}>
           <option value="">All milestones</option>

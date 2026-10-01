@@ -1,5 +1,6 @@
 import type { DecisionReview } from "./types.js";
 import styles from "./Decisions.module.css";
+import { MarkdownContent } from "../../ui/MarkdownContent.js";
 
 const outcomeLabel = {
   HOLDS: "Still holds",
@@ -20,7 +21,7 @@ export function ReviewHistory({ reviews }: { reviews: DecisionReview[] }) {
                 <strong>{outcomeLabel[review.outcome]}</strong>
                 <time dateTime={review.reviewedAt}>{new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(review.reviewedAt))}</time>
               </div>
-              {review.notes ? <p>{review.notes}</p> : null}
+              {review.notes ? <MarkdownContent>{review.notes}</MarkdownContent> : null}
               {review.nextReviewDate ? <p className={styles.muted}>Next review: {review.nextReviewDate}</p> : null}
             </li>
           ))}

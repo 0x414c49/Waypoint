@@ -24,6 +24,7 @@ export function projectJourneyEntry(state: JourneyState, entry: JourneyEntryReco
     text: entry.text,
     tags: [...entry.tags],
     changedMyMind: entry.changedMyMind,
+    ...(entry.feeling ? { feeling: entry.feeling } : {}),
     relatedTask: task && taskTitle ? { id: task.id, title: taskTitle } : null,
     relatedMilestone: milestone ? { id: milestone.id, quarterId: milestone.quarterId, title: milestone.intentSnapshot?.title ?? milestone.title } : null,
     relatedDecision: decision ? { id: decision.id, title: titleForUnknown(decision) ?? decision.id } : null,

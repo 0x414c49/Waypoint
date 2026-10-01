@@ -1,6 +1,6 @@
 # ADR-0005: Resolve current user behind a port
 
-Status: Accepted — 2026-09-27
+Status: Superseded by ADR-0009 and ADR-0011 — 2026-09-30
 
 ## Context
 
@@ -19,3 +19,5 @@ This tiny seam keeps ownership explicit and later authentication replaceable wit
 - Ownership remains explicit in every use case.
 - A future authenticated adapter can change user resolution without rewriting domain policies.
 - V1 must remain loopback-only because this seam is not security by itself.
+
+The seam remains, but the production adapter now resolves the authenticated request identity. `LocalCurrentUserProvider` remains an explicit test adapter only.

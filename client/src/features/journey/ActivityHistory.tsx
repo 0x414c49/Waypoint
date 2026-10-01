@@ -69,34 +69,23 @@ export function ActivityHistory({ activity }: { activity: ActivityResponse }) {
       </div>
 
       <div ref={scroller} className={styles.activityScroller} role="region" aria-label="Scrollable learning activity calendar" tabIndex={0}>
-        <div
-          className={styles.activityCalendar}
-          role="list"
-          aria-label={`${activity.days.length} days of recorded session activity`}
-          style={{ "--activity-weeks": weekCount } as React.CSSProperties}
-        >
-          {[...monthLabels].map(([week, label]) => (
-            <span key={`${week}-${label}`} className={styles.activityMonth} style={{ gridColumn: week + 2 }}>{label}</span>
-          ))}
-          <span className={styles.activityDay} style={{ gridRow: 3 }}>Mon</span>
-          <span className={styles.activityDay} style={{ gridRow: 5 }}>Wed</span>
-          <span className={styles.activityDay} style={{ gridRow: 7 }}>Fri</span>
-          {activity.days.map((day, index) => {
-            const weekday = new Date(`${day.date}T00:00:00.000Z`).getUTCDay();
-            const week = Math.floor((startDay + index) / 7);
-            const description = `${friendlyDate(day.date)}: ${cellDuration(day.sessionSeconds)}`;
-            return (
-              <span
-                key={day.date}
-                role="listitem"
-                className={styles.activityCell}
-                data-level={day.level}
-                aria-label={description}
-                title={description}
-                style={{ gridColumn: week + 2, gridRow: weekday + 2 }}
-              />
-            );
-          })}
+        <div className={styles.activityCalendar}>
+          <div className={styles.activityDayLabels} aria-hidden="true">
+            <span /> <span /> <span>Mon</span> <span /> <span>Wed</span> <span /> <span>Fri</span> <span />
+          </div>
+          <div className={styles.activityPlot}>
+            <div className={styles.activityMonths} aria-hidden="true">
+              {Array.from({ length: weekCount }, (_, week) => <span className={styles.activityMonth} key={week}>{monthLabels.get(week) ?? ""}</span>)}
+            </div>
+            <div className={styles.activityWeeks} role="list" aria-label={`${activity.days.length} days of recorded session activity`}>
+              {Array.from({ length: startDay }, (_, index) => <span className={styles.activityEmptyCell} aria-hidden="true" key={`before-${index}`} />)}
+              {activity.days.map((day) => {
+                const description = `${friendlyDate(day.date)}: ${cellDuration(day.sessionSeconds)}`;
+                return <span key={day.date} role="listitem" className={styles.activityCell} data-level={day.level} aria-label={description} title={description} />;
+              })}
+              {Array.from({ length: weekCount * 7 - startDay - activity.days.length }, (_, index) => <span className={styles.activityEmptyCell} aria-hidden="true" key={`after-${index}`} />)}
+            </div>
+          </div>
         </div>
       </div>
       <p className={styles.activityScrollHint}>Latest weeks shown. Scroll sideways for earlier months.</p>

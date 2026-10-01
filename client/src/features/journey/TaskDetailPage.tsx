@@ -8,10 +8,17 @@ import { SessionCorrectionDialog } from "./SessionCorrectionDialog.js";
 import { TaskSessions } from "./TaskSessions.js";
 import type { SessionDetail, TaskDetail } from "./types.js";
 import styles from "./Journey.module.css";
+import { MarkdownContent } from "../../ui/MarkdownContent.js";
+import { FeelingNote } from "./FeelingPicker.js";
+import { Icon } from "../../ui/Icon.js";
 
 function duration(seconds: number): string {
   const minutes = Math.round(seconds / 60);
   return minutes < 60 ? `${minutes} min` : `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+}
+
+function taskStatus(status: TaskDetail["task"]["status"]): string {
+  return { NOT_STARTED: "Not started", IN_PROGRESS: "Running", PAUSED: "Paused", FINISHED: "Finished", SKIPPED: "Skipped" }[status];
 }
 
 export function TaskDetailPage() {
@@ -43,8 +50,8 @@ export function TaskDetailPage() {
     <>
     <div className={styles.page} id="task-detail-content">
       <header className={styles.detailHeader}>
-        <Link to="/journey">← Journey</Link>
-        <div className={styles.entryMeta}><span>{task.status.replaceAll("_", " ")}</span><span>{duration(task.timing.actualSecondsAtGeneratedAt)} recorded</span></div>
+        <Link className={styles.backLink} to="/journey"><Icon name="back" width={16} height={16} />Back to Journey</Link>
+        <div className={styles.entryMeta}><span>{taskStatus(task.status)}</span><span>{duration(task.timing.actualSecondsAtGeneratedAt)} recorded</span></div>
         <h1>{plan.title}</h1>
         <p>{plan.focusArea?.name ?? "Learning plan"} · planned {plan.plannedDate}</p>
         {task.displayPlanSource === "HISTORICAL" ? <p className={styles.historyNotice}>Showing the plan text captured when this work began.</p> : null}
@@ -56,7 +63,7 @@ export function TaskDetailPage() {
         <section className={styles.detailSection} aria-labelledby="outcome-title">
           <h2 id="outcome-title">Outcome</h2>
           <p><strong>{latestReview.outcome === "PARTIAL" ? "Made progress" : latestReview.outcome.replace("_", " ").toLowerCase()}</strong></p>
-          {latestReview.keyLearning ? <blockquote>{latestReview.keyLearning}</blockquote> : null}
+          {latestReview.keyLearning ? <blockquote><MarkdownContent>{latestReview.keyLearning}</MarkdownContent></blockquote> : null}
         </section>
       ) : null}
 
@@ -65,7 +72,7 @@ export function TaskDetailPage() {
       <section className={styles.detailSection} aria-labelledby="thoughts-title">
         <h2 id="thoughts-title">Thoughts</h2>
         {detail.thoughts.length === 0 ? <p className={styles.muted}>No related thoughts yet.</p> : (
-          <ul className={styles.thoughtList}>{detail.thoughts.map((thought) => <li key={thought.id}><time dateTime={thought.occurredAt}>{new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(thought.occurredAt))}</time><p>{thought.text}</p></li>)}</ul>
+          <ul className={styles.thoughtList}>{detail.thoughts.map((thought) => <li key={thought.id}><div className={styles.entryMeta}><time dateTime={thought.occurredAt}>{new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(thought.occurredAt))}</time><FeelingNote value={thought.feeling} /></div><MarkdownContent>{thought.text}</MarkdownContent></li>)}</ul>
         )}
       </section>
 

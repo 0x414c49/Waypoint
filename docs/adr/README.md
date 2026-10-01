@@ -10,5 +10,10 @@ ADRs preserve decisions that materially constrain implementation. `Accepted` rec
 6. [ADR-0006 — Store AI reviews as separate history (superseded)](0006-ai-review-as-separate-history.md)
 7. [ADR-0007 — TypeScript modular monolith](0007-typescript-modular-monolith.md)
 8. [ADR-0008 — Local loopback single-process runtime](0008-local-loopback-single-process.md)
+9. [ADR-0009 — Invite-gated accounts and memory-hard passwords](0009-invite-gated-accounts-and-passwords.md)
+10. [ADR-0010 — Opaque server sessions in protected cookies](0010-opaque-server-sessions.md)
+11. [ADR-0011 — Role checks plus owner-scoped private records](0011-role-and-owner-scoped-authorization.md)
+12. [ADR-0012 — Mandatory TOTP two-factor authentication (superseded)](0012-mandatory-totp-two-factor-authentication.md)
+13. [ADR-0013 — Optional TOTP two-factor authentication](0013-optional-totp-two-factor-authentication.md)
 
 Superseded ADRs remain in this folder and link to their replacements. Product and UX decisions remain in `planning/decision-log.md`.

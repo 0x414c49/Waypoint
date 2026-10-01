@@ -38,19 +38,18 @@
 }
 
 .pageTitle {
-  margin: var(--space-4) 0 0;
+  margin: 0;
   font-size: var(--text-h1);
   line-height: var(--line-h1);
 }
 
-.eyebrow,
-.contextLabel {
+.dateLine { margin: 3px 0 0; color: var(--color-text-secondary); font-size: var(--text-compact); }
+
+.eyebrow {
   color: var(--color-text-secondary);
   font-size: var(--text-metadata);
   line-height: var(--line-metadata);
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
 .localStatus {
@@ -61,7 +60,12 @@
 .hero {
   display: grid;
   gap: var(--space-16);
+  position: relative;
+  border-left: 3px solid var(--color-accent);
 }
+
+.recommendation { margin: 0; color: var(--color-accent); font-size: var(--text-small); font-weight: 700; }
+.contextLabel { margin: -10px 0 0; color: var(--color-text-secondary); font-size: var(--text-small); font-weight: 400; letter-spacing: 0; text-transform: none; }
 
 .sessionDock {
   display: none;
@@ -353,12 +357,12 @@
     gap: var(--space-4);
   }
 
-  .sessionDockIdentity span {
+.sessionDockIdentity span {
     color: var(--color-text-secondary);
     font-size: var(--text-metadata);
     font-weight: var(--weight-control);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    letter-spacing: 0;
+    text-transform: none;
   }
 
   .sessionDockIdentity strong {

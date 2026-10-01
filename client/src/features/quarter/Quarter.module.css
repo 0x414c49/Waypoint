@@ -9,6 +9,16 @@
   gap: var(--space-8);
 }
 
+.heading blockquote {
+  max-width: 72ch;
+  margin: var(--space-8) 0 0;
+  padding-left: var(--space-16);
+  color: var(--color-text);
+  border-left: 2px solid var(--color-accent);
+  font-size: var(--text-body-large);
+  line-height: var(--line-body-large);
+}
+
 .heading h1,
 .heading p,
 .section h2,
@@ -39,9 +49,8 @@
 .eyebrow {
   margin-bottom: 0;
   color: var(--color-text-secondary);
-  font-size: var(--text-metadata);
+  font-size: var(--text-small);
   font-weight: 600;
-  letter-spacing: .04em;
 }
 
 .lead {
@@ -82,10 +91,58 @@
   gap: var(--space-8);
 }
 
+.quarterControls {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-16);
+  padding: var(--space-16);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-surface);
+  background: var(--color-surface);
+}
+
+.viewSwitch { display: flex; gap: var(--space-4); }
+.viewSwitch > button { min-width: 100px; }
+.quarterControls .actions { flex: 1 1 auto; align-items: flex-end; justify-content: flex-end; }
+.quarterPicker select { min-width: 190px; }
+
 .actions > a {
   margin-right: auto;
   color: var(--color-accent);
 }
+
+.backLink { display: inline-flex; align-items: center; gap: var(--space-8); }
+
+.schedule {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-16);
+}
+
+.scheduleHeader { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-16); }
+.scheduleHeader h2 { margin: 0; font-size: 19px; line-height: 27px; }
+.scheduleHeader p { margin: var(--space-4) 0 0; color: var(--color-text-secondary); }
+.scheduleHeader > span { flex: none; color: var(--color-text-secondary); font-size: var(--text-small); }
+.scheduleWeeks { display: grid; gap: var(--space-12); }
+.scheduleWeek { min-width: 0; overflow: clip; border: 1px solid var(--color-border); border-radius: var(--radius-surface); background: var(--color-surface); }
+.scheduleWeek > summary { display: grid; grid-template-columns: minmax(150px, 210px) minmax(0, 1fr) auto auto; align-items: center; gap: var(--space-12); min-height: 56px; padding: var(--space-12) var(--space-16); cursor: pointer; }
+.scheduleWeek[open] > summary { border-bottom: 1px solid var(--color-border); }
+.weekDate { color: var(--color-text-secondary); font-size: var(--text-small); font-variant-numeric: tabular-nums; }
+.weekTitle { overflow: hidden; color: var(--color-text); font-size: var(--text-body); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.thisWeek { padding: 3px 7px; color: var(--color-accent); border-radius: var(--radius-small); background: var(--color-accent-soft); font-size: var(--text-metadata); white-space: nowrap; }
+.weekCount { color: var(--color-text-secondary); font-size: var(--text-small); white-space: nowrap; }
+.weekBody { display: grid; gap: 0; padding: var(--space-8) var(--space-16) var(--space-16); }
+.scheduleDay { display: grid; grid-template-columns: 132px minmax(0, 1fr); gap: var(--space-16); min-width: 0; padding: var(--space-12) 0; }
+.scheduleDay + .scheduleDay { border-top: 1px solid var(--color-border); }
+.scheduleDay > time { color: var(--color-text-secondary); font-size: var(--text-small); font-variant-numeric: tabular-nums; }
+.scheduleDay ul { display: grid; gap: var(--space-8); margin: 0; padding: 0; list-style: none; }
+.scheduleDay li { display: grid; gap: var(--space-4); }
+.scheduleDay li + li { padding-top: var(--space-8); border-top: 1px solid var(--color-border); }
+.scheduleDay li a { color: var(--color-accent); font-size: var(--text-body-large); line-height: var(--line-body-large); font-weight: 600; }
+.scheduleDay li span { color: var(--color-text-secondary); font-size: var(--text-small); }
+.scheduleEmptyDay { margin: 0; color: var(--color-text-secondary); font-size: var(--text-small); }
 
 .quarterPicker,
 .fileLabel,
@@ -113,8 +170,10 @@
   display: grid;
   gap: var(--space-12);
   min-width: 0;
-  padding-top: var(--space-24);
-  border-top: 1px solid var(--color-border);
+  padding: var(--space-24);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-surface);
+  background: var(--color-surface);
 }
 
 .section h2,
@@ -310,13 +369,19 @@
 
 @media (max-width: 720px) {
   .empty,
-  .preview {
+  .preview,
+  .section {
     padding: var(--space-16);
   }
 
   .actions {
     align-items: stretch;
   }
+
+  .quarterControls { display: grid; align-items: stretch; padding: var(--space-16); }
+  .viewSwitch { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .viewSwitch > button { min-width: 0; }
+  .quarterControls .actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; }
 
   .actions > button,
   .previewActions > button {
@@ -330,7 +395,18 @@
 
   .quarterPicker {
     width: 100%;
+    grid-column: 1 / -1;
   }
+
+  .quarterPicker select { width: 100%; }
+  .scheduleHeader { align-items: flex-start; flex-direction: column; gap: var(--space-4); }
+  .scheduleWeek > summary { grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-4) var(--space-8); padding: var(--space-12) var(--space-16); }
+  .weekDate { grid-column: 1; }
+  .weekTitle { grid-column: 1; grid-row: 2; }
+  .thisWeek { grid-column: 2; grid-row: 1; }
+  .weekCount { grid-column: 2; grid-row: 2; }
+  .weekBody { padding: var(--space-4) var(--space-16) var(--space-12); }
+  .scheduleDay { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
 
   .taskList li {
     grid-template-columns: minmax(0, 1fr);

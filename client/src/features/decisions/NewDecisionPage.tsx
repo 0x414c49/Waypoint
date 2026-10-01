@@ -4,6 +4,7 @@ import { DecisionEditor } from "./DecisionEditor.js";
 import { createDecision, saveDecision } from "./api.js";
 import type { DecisionDetail, DecisionDraftInput } from "./types.js";
 import styles from "./Decisions.module.css";
+import { Icon } from "../../ui/Icon.js";
 
 const emptyDraft: DecisionDraftInput = { title: "", constraints: [], options: [], assumptions: [] };
 
@@ -35,7 +36,7 @@ export function NewDecisionPage() {
 
   return (
     <div className={styles.page}>
-      <header className={styles.detailHeading}><Link to="/decisions">← Decisions</Link><p className={styles.eyebrow}>New Draft</p><h1>Capture a decision</h1><p>Start with only what is useful. You can leave it as a Draft.</p></header>
+      <header className={styles.detailHeading}><Link className={styles.backLink} to="/decisions"><Icon name="back" width={16} height={16} />Back to choices</Link><p className={styles.eyebrow}>New draft</p><h1>Record a technical choice</h1><p>Write down the engineering choice, why you made it, and what could make you reconsider it.</p></header>
       {error ? <p className={styles.error} role="alert">{error}</p> : null}
       <DecisionEditor initial={emptyDraft} busy={busy} canAccept={false} initialSaved={false} onSave={save} />
     </div>

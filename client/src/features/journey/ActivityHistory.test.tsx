@@ -24,11 +24,11 @@ describe("ActivityHistory", () => {
     const calendar = screen.getByRole("list", { name: "8 days of recorded session activity" });
     expect(within(calendar).getAllByRole("listitem")).toHaveLength(8);
     const monday = within(calendar).getByRole("listitem", { name: "Sep 28, 2026: 10 minutes recorded" });
-    expect(monday.style.gridColumn).toBe("2");
-    expect(monday.style.gridRow).toBe("3");
+    expect(monday.getAttribute("data-level")).toBe("1");
     const nextSunday = within(calendar).getByRole("listitem", { name: "Oct 4, 2026: no recorded session time" });
-    expect(nextSunday.style.gridColumn).toBe("3");
-    expect(nextSunday.style.gridRow).toBe("2");
+    expect(nextSunday.getAttribute("data-level")).toBe("0");
+    expect(calendar.querySelectorAll("[aria-hidden='true']")).toHaveLength(6);
+    expect(calendar.querySelector("[style]")).toBeNull();
     expect(screen.getByText("Closed session time—quiet context, never a streak.")).toBeTruthy();
   });
 });

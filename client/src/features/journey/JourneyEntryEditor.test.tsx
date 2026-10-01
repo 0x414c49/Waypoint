@@ -35,6 +35,7 @@ describe("Journey entry editor", () => {
     expect(request.headers).toMatchObject({ "If-Match": entry.etag });
     expect(JSON.parse(request.body as string)).toEqual({
       text: "Revised view", tags: ["reliability"], changedMyMind: true,
+      feeling: null,
       relatedTaskId: null, relatedMilestoneId: "week-5", relatedDecisionId: null,
     });
     expect(onSaved).toHaveBeenCalledWith(updated);

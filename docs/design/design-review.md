@@ -17,7 +17,7 @@ The proposed Quiet Workshop visual system and four-destination information archi
 | No guilt mechanics | Pass | Skipped/light days are neutral; no streaks, red missed days, or goals. |
 | GitHub-inspired, not copied | Pass | Compact structure and contribution texture remain; warmer neutrals and teal create a distinct identity. |
 | Mobile is prioritized, not compressed | Pass | Four bottom destinations, thumb-reachable action dock, mobile sheets, and stable navigation. |
-| History stays meaningful | Pass | Journey owns lived history; Decisions preserves original reasoning and append-only reviews. |
+| History stays meaningful | Pass | Journey owns the learning record; Tech choices preserves original reasoning and append-only reviews. |
 
 ## Q4 representative scenarios
 
@@ -27,7 +27,7 @@ Today presents the plan item as the single hero. Start is the only filled contro
 
 ### Bundled Wednesday ADR + leadership rep
 
-The umbrella learning item can show both pieces as plan context in the hero/task detail without creating multiple competing Today cards. Decisions links to the canonical ADR; Today still owns the action.
+The umbrella learning item can show both pieces as plan context in the hero/task detail without creating multiple competing Today cards. Tech choices links to the canonical ADR; Today still owns the action.
 
 ### Unfinished work collides with today
 
@@ -43,7 +43,7 @@ The page uses calm body copy and a legitimate optional action. No empty-state il
 
 ### Quarter retro
 
-Quarter supplies plan intent; Journey supplies lived evidence; Decisions supplies original reasoning and review outcomes. The retro can reference all three without adding a separate Analytics destination or composite learning score.
+Quarter supplies plan intent; Journey supplies the learning record; Tech choices supplies original reasoning and review outcomes. The retro can reference all three without adding a separate Analytics destination or composite learning score.
 
 ## Accessibility evidence
 
@@ -69,7 +69,7 @@ These representative combinations meet WCAG AA for normal text. Component-level 
 - **GitHub density vs friendliness:** keep compact lists and familiar structure; warm the canvas and language rather than adding decoration.
 - **Mobile focus vs navigation:** Pause/Resume dominates a dock, but navigation remains available during long sessions.
 - **Contribution history vs gamification:** show session-time texture with accessible date/duration; exclude streak and ranking interpretations.
-- **Decisions as core vs infrequent:** retain the destination for now because it expresses engineering growth; revisit only with real usage evidence.
+- **Tech choices as core vs infrequent:** retain the destination for now because it expresses engineering growth; revisit only with real usage evidence.
 - **Quick capture vs action competition:** global utility in the header and contextual action during work; no floating button competing with Start/Pause.
 
 ## Rejected directions
@@ -86,7 +86,7 @@ These representative combinations meet WCAG AA for normal text. Component-level 
 Confirmed together:
 
 1. **Quiet Workshop:** warm neutral surfaces, deep teal accent, compact native typography, radii capped at 8px.
-2. **Four destinations:** Today, Quarter, Journey, Decisions.
+2. **Four destinations:** Today, Quarter, Journey, Tech choices.
 3. **Utilities:** Thought and Search in the header/overlay; Settings in overflow.
 4. **Responsive behavior:** bottom navigation remains accessible while the active-session dock sits above it.
 

@@ -14,10 +14,11 @@ describe("Quick Thought", () => {
     await waitFor(() => expect(document.activeElement).toBe(textarea));
     expect(screen.getByText("Partial failure")).toBeTruthy();
     await user.type(textarea, "Retries need one owner.");
+    await user.click(screen.getByRole("button", { name: "Curious" }));
     await user.click(screen.getByRole("button", { name: "Remove" }));
     await user.click(screen.getByRole("button", { name: "Save thought" }));
 
-    expect(save).toHaveBeenCalledWith("Retries need one owner.", null);
+    expect(save).toHaveBeenCalledWith("Retries need one owner.", null, "curious");
   });
 
   it("requires only text and keeps save errors inside the dialog", async () => {
@@ -40,7 +41,7 @@ describe("Quick Thought", () => {
     await user.type(screen.getByRole("textbox"), "A standalone thought");
     await user.click(screen.getByRole("button", { name: "Save thought" }));
 
-    expect(save).toHaveBeenCalledWith("A standalone thought", null);
+    expect(save).toHaveBeenCalledWith("A standalone thought", null, null);
   });
 
   it("inerts the Journey background and restores focus to its opener", async () => {

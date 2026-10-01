@@ -39,7 +39,7 @@ it("searches globally, opens the canonical Task route, and restores the backgrou
     <MemoryRouter><SearchHarness onClose={onClose} /></MemoryRouter>,
   );
 
-  const input = screen.getByRole("searchbox", { name: "Search your plan, Journey, and Decisions" });
+  const input = screen.getByRole("searchbox", { name: "Search your plan, Journey, and technical choices" });
   await waitFor(() => expect(document.activeElement).toBe(input));
   await user.type(input, "idempotency");
   const result = await screen.findByRole("link", { name: /Idempotency/ });

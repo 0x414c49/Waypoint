@@ -8,7 +8,7 @@ import { PlanImportPage } from "./PlanImportPage.js";
 afterEach(() => vi.unstubAllGlobals());
 
 const quarter = {
-  id: "q4-2026", title: "Q4 Engineering Growth", startDate: "2026-10-05", endDate: "2026-12-31",
+  id: "q4-2026", title: "Q4 Engineering Growth", startDate: "2026-10-01", endDate: "2026-12-31",
   phase: "CURRENT", planRevision: 1, etag: '"quarter-v1"', successCriteria: [{ id: "criterion", text: "Ship a reliable service", position: 0 }],
   focusAreas: [{ id: "systems", name: "Systems Reliability", description: "Learn to design failure behavior.", position: 0 }],
   milestones: [{ id: "week-1", title: "Week 1", startDate: "2026-10-05", endDate: "2026-10-09", mode: "STANDARD", position: 0, taskCount: 1 }],
@@ -27,6 +27,40 @@ function routeApp(initialEntry: string) {
 }
 
 describe("Quarter plan navigation", () => {
+  it("shows the partial opening week when a Quarter starts midweek", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url === "/api/dashboard") return new Response(JSON.stringify({ today: "2026-10-01" }));
+      if (url === "/api/quarters") return new Response(JSON.stringify({ items: [quarter] }));
+      return new Response(JSON.stringify(quarter));
+    }));
+    render(routeApp("/quarter/q4-2026"));
+
+    expect(await screen.findByText("Oct 1–Oct 4, 2026")).toBeTruthy();
+    expect(screen.getByText("Quarter opens")).toBeTruthy();
+    expect(screen.getByText("This week")).toBeTruthy();
+  });
+
+  it("keeps previous Quarters available in the history picker", async () => {
+    const previous = { ...quarter, id: "q3-2026", title: "Q3 2026", startDate: "2026-07-01", endDate: "2026-09-30", phase: "PAST", tasks: [] };
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url === "/api/dashboard") return new Response(JSON.stringify({ today: "2026-11-03" }));
+      if (url === "/api/quarters") return new Response(JSON.stringify({ items: [
+        { id: quarter.id, title: quarter.title, startDate: quarter.startDate, endDate: quarter.endDate, phase: "CURRENT", planRevision: 1, etag: quarter.etag },
+        { id: previous.id, title: previous.title, startDate: previous.startDate, endDate: previous.endDate, phase: "PAST", planRevision: 1, etag: "past-etag" },
+      ] }));
+      return new Response(JSON.stringify(url.endsWith("q3-2026") ? previous : quarter));
+    }));
+    const user = userEvent.setup();
+    render(routeApp("/quarter/q4-2026"));
+
+    const picker = await screen.findByRole("combobox", { name: "Choose quarter" });
+    expect(screen.getByRole("group", { name: "Previous quarters" })).toBeTruthy();
+    await user.selectOptions(picker, "q3-2026");
+    expect(await screen.findByRole("heading", { name: "Q3 2026" })).toBeTruthy();
+  });
+
   it("shows intent and opens canonical Focus Area and Milestone views", async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
@@ -38,11 +72,13 @@ describe("Quarter plan navigation", () => {
     render(routeApp("/quarter/q4-2026"));
 
     expect(await screen.findByRole("heading", { name: "Q4 Engineering Growth" })).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Plan details" }));
     expect(screen.getByText("Ship a reliable service")).toBeTruthy();
     await user.click(screen.getByRole("link", { name: "Systems Reliability" }));
     expect(await screen.findByRole("heading", { name: "Systems Reliability" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Study timeouts" }).getAttribute("href")).toBe("/tasks/timeouts");
     await user.click(screen.getByRole("link", { name: /Back to Quarter/ }));
+    await user.click(await screen.findByRole("button", { name: "Plan details" }));
     await user.click(screen.getByRole("link", { name: /Week 1/ }));
     expect(await screen.findByRole("heading", { name: "Week 1" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "View what happened during this milestone" }).getAttribute("href"))
@@ -54,7 +90,7 @@ describe("Quarter plan navigation", () => {
     const user = userEvent.setup();
     render(routeApp("/quarter"));
     expect(await screen.findByRole("heading", { name: "No Quarter is loaded yet." })).toBeTruthy();
-    await user.click(screen.getByRole("button", { name: "Import a learning plan" }));
+    await user.click(screen.getByRole("button", { name: "Add a learning plan" }));
     expect(await screen.findByRole("heading", { name: "Bring in a learning plan" })).toBeTruthy();
     expect(screen.getByLabelText("Plan content")).toBeTruthy();
   });
@@ -97,7 +133,7 @@ describe("Quarter plan navigation", () => {
     const user = userEvent.setup();
     render(routeApp("/quarter/q4-2026"));
     expect(await screen.findByRole("heading", { name: "Q4 Engineering Growth" })).toBeTruthy();
-    await user.click(screen.getByRole("button", { name: "Export YAML" }));
+    await user.click(screen.getByRole("button", { name: "Export plan" }));
     expect((await screen.findByRole("alert")).textContent).toContain("Export is temporarily unavailable.");
     expect(screen.getByRole("heading", { name: "Q4 Engineering Growth" })).toBeTruthy();
     await user.click(screen.getByRole("button", { name: "Try export again" }));

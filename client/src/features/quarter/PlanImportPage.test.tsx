@@ -16,7 +16,7 @@ const preview = {
 };
 
 const quarterDetail = {
-  id: "q4-2026", title: "Q4 Engineering Growth", startDate: "2026-10-05", endDate: "2026-12-31", phase: "CURRENT", planRevision: 4, etag: '"quarter-four"',
+  id: "q4-2026", title: "Q4 Engineering Growth", startDate: "2026-10-01", endDate: "2026-12-31", phase: "CURRENT", planRevision: 4, etag: '"quarter-four"',
   successCriteria: [], focusAreas: [], milestones: [], tasks: [],
 };
 
@@ -43,7 +43,7 @@ describe("plan preview and apply", () => {
     await user.click(screen.getByRole("button", { name: "Validate and preview" }));
 
     expect(await screen.findByRole("heading", { name: "Review before applying" })).toBeTruthy();
-    expect(screen.getByText(/Sessions, reflections, Decisions, outcomes/)).toBeTruthy();
+    expect(screen.getByText(/sessions, reflections, technical choices, outcomes/)).toBeTruthy();
     const applyButton = screen.getByRole("button", { name: "Apply plan" }) as HTMLButtonElement;
     expect(applyButton.disabled).toBe(true);
     await user.click(screen.getByRole("checkbox", { name: preview.requiredAcknowledgements[0]!.description }));

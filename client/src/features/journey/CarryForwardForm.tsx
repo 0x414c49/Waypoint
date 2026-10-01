@@ -4,6 +4,7 @@ import { Button } from "../../ui/Button.js";
 import { carryForward } from "./api.js";
 import type { TaskDetail } from "./types.js";
 import styles from "./Journey.module.css";
+import { MarkdownEditor } from "../../ui/MarkdownEditor.js";
 
 export function CarryForwardForm({ detail }: { detail: TaskDetail }) {
   const navigate = useNavigate();
@@ -38,7 +39,8 @@ export function CarryForwardForm({ detail }: { detail: TaskDetail }) {
       <h2 id="carry-forward-title">Carry remaining work forward</h2>
       <p>This closes this item as made progress and creates one linked continuation. Earlier sessions stay here.</p>
       <label className={styles.fieldLabel}>Continuation date<input type="date" value={date} onChange={(event) => setDate(event.target.value)} /></label>
-      <label className={styles.fieldLabel}>What remains? <span>Optional</span><textarea value={learning} onChange={(event) => setLearning(event.target.value)} /></label>
+      <label className={styles.fieldLabel}>What remains? <span>Optional</span></label>
+      <MarkdownEditor value={learning} onChange={setLearning} ariaLabel="What remains?" />
       {error ? <p className={styles.error} role="alert">{error}</p> : null}
       <div className={styles.inlineActions}>
         <Button variant="ghost" onClick={() => setOpen(false)} disabled={busy}>Cancel</Button>

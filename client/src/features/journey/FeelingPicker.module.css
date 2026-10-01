@@ -1,0 +1,8 @@
+.picker { display: grid; gap: 6px; margin: 12px 0 0; padding: 0; border: 0; }
+.picker legend { margin-bottom: 2px; color: var(--color-text-secondary); font-size: var(--text-small); font-weight: 600; }
+.options { display: flex; flex-wrap: wrap; gap: 6px; }
+.option { display: inline-flex; min-height: 38px; align-items: center; gap: 6px; padding: 5px 9px; color: var(--color-text-secondary); border: 1px solid var(--color-border); border-radius: 5px; background: var(--color-surface); font: inherit; font-size: var(--text-small); cursor: pointer; }
+.option > span:first-child { font-size: 17px; line-height: 20px; }
+.option:hover { border-color: var(--color-border-strong); color: var(--color-text); }
+.option[aria-pressed="true"] { color: var(--color-text); border-color: var(--color-accent); background: var(--color-accent-soft); }
+.note { display: inline-flex; align-items: center; gap: 4px; color: var(--color-text-secondary); font-size: var(--text-small); }

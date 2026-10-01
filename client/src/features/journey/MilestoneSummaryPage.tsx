@@ -5,6 +5,11 @@ import { JourneyEntryEditor } from "./JourneyEntryEditor.js";
 import { createJourneyEntry, getMilestoneSummary } from "./api.js";
 import type { MilestoneSummary } from "./types.js";
 import styles from "./Journey.module.css";
+import { FeelingPicker } from "./FeelingPicker.js";
+import type { Feeling } from "./feelings.js";
+import { MarkdownEditor } from "../../ui/MarkdownEditor.js";
+import { MarkdownContent } from "../../ui/MarkdownContent.js";
+import { Icon } from "../../ui/Icon.js";
 
 function duration(seconds: number): string {
   const minutes = Math.round(seconds / 60);
@@ -22,6 +27,7 @@ export function MilestoneSummaryPage() {
   const { quarterId = "", milestoneId = "" } = useParams();
   const [summary, setSummary] = useState<MilestoneSummary | null>(null);
   const [reflection, setReflection] = useState("");
+  const [feeling, setFeeling] = useState<Feeling | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editingReflection, setEditingReflection] = useState(false);
@@ -45,8 +51,9 @@ export function MilestoneSummaryPage() {
     setBusy(true);
     setError(null);
     try {
-      await createJourneyEntry({ text: reflection.trim(), relatedTaskId: null, relatedMilestoneId: summary.milestone.id });
+      await createJourneyEntry({ text: reflection.trim(), relatedTaskId: null, relatedMilestoneId: summary.milestone.id, feeling });
       setReflection("");
+      setFeeling(null);
       load();
       window.dispatchEvent(new Event("journey:entries-changed"));
     } catch (caught) {
@@ -62,7 +69,7 @@ export function MilestoneSummaryPage() {
   return (
     <div className={styles.page}>
       <header className={styles.detailHeader}>
-        <Link to="/journey">← Journey</Link>
+        <Link className={styles.backLink} to="/journey"><Icon name="back" width={16} height={16} />Back to Journey</Link>
         <p className={styles.eyebrow}>{summary.milestone.startDate}–{summary.milestone.endDate}</p>
         <h1>{summary.milestone.title}</h1>
         <p>Here’s how this part of the journey unfolded.</p>
@@ -111,15 +118,14 @@ export function MilestoneSummaryPage() {
         <h2 ref={reflectionHeadingRef} id="weekly-thought-title" tabIndex={-1}>Optional weekly thought</h2>
         {summary.reflection.entry ? (
           <>
-            <blockquote>{summary.reflection.entry.text}</blockquote>
+            <blockquote><MarkdownContent>{summary.reflection.entry.text}</MarkdownContent></blockquote>
             <Button variant="secondary" onClick={() => setEditingReflection(true)}>Edit weekly thought</Button>
           </>
         ) : (
           <>
-            <label className={styles.fieldLabel}>
-              {summary.reflection.prompt ?? "What should the next part of the journey remember?"}
-              <textarea value={reflection} onChange={(event) => setReflection(event.target.value)} />
-            </label>
+            <label className={styles.fieldLabel}>{summary.reflection.prompt ?? "What should the next part of the journey remember?"}</label>
+            <MarkdownEditor value={reflection} onChange={setReflection} ariaLabel={summary.reflection.prompt ?? "What should the next part of the journey remember?"} />
+            <FeelingPicker value={feeling} onChange={setFeeling} />
             <Button variant="primary" disabled={busy || !reflection.trim()} onClick={() => void saveReflection()}>{busy ? "Saving…" : "Save thought"}</Button>
           </>
         )}

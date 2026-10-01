@@ -1,4 +1,4 @@
-# Using Engineering Journey Tracker
+# Using Waypoint
 
 The tracker supports the daily learning loop, factual activity history, reflections, durable engineering Decisions, safe plan updates, Quarter navigation, and global Search.
 
@@ -8,10 +8,13 @@ You need Node.js 24 and npm.
 
 ```sh
 npm install
+npm run auth:bootstrap -- --email you@example.com
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173` in a browser. Keep the terminal running while you use the app.
+Open `http://127.0.0.1:5173/register` in a browser and paste the one-time invite ID printed by the bootstrap command. Two-factor authentication is optional: choose **Add authenticator** to scan the QR code or enter its setup key manually, then confirm the current six-digit code. Otherwise create the account without opening that section. The invite expires after seven days and works only with the email supplied to the command. Keep the terminal running while you use the app.
+
+There is no default user or password. Sign in with the registered email and password. If that account enabled 2FA, Waypoint then asks for a fresh six-digit authenticator code.
 
 For a production-style local run:
 
@@ -22,7 +25,9 @@ npm start
 
 Then open `http://127.0.0.1:4173`.
 
-Your data stays on this machine in `data/store`. Preserve that directory when backing up or moving the app; do not hand-edit its files while the server is running.
+Your data stays on this machine in `data/store`. Preserve that directory—including `auth.key`—when backing up or moving the app; do not hand-edit its files while the server is running. Backups contain password verifiers, encrypted authenticator secrets, the key needed to decrypt them, and private activity, so keep them private.
+
+The owner can open **Access** to create one-time, email-bound member invites. Copy a new invite immediately: only its secure digest is stored, so the raw invite ID cannot be shown again. Members get their own private Quarter, Journey, Decisions, and media; they cannot see another person’s records or manage invites.
 
 ## The friendly daily loop
 
@@ -70,10 +75,11 @@ Generated AI advice and model-provider connections have been removed from the tr
 
 ## Useful commands
 
+- `npm run auth:bootstrap -- --email you@example.com` creates or rotates the unused first-owner invite.
 - `npm run check` runs type checks, lint, automated tests, and the production build.
 - `npm run test:browser` runs the browser and accessibility scenarios.
 - Stop the local app with `Control-C` in its terminal.
 
 ## Current boundary
 
-This is a private, single-user local app. It has no cloud sync, accounts, collaboration, notifications, or remote backup. Back up `data/store` yourself. Plan changes go through Quarter’s preview/apply flow rather than editing stored JSON manually.
+This is a private local app with invite-only accounts, optional authenticator-app 2FA, and owner/member roles. It has no cloud sync, shared records, email delivery, password-reset email, authenticator recovery flow, notifications, or remote backup. Back up `data/store` yourself. Plan changes go through Quarter’s preview/apply flow rather than editing stored JSON manually.

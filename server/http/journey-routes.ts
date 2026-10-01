@@ -10,6 +10,7 @@ import { Type } from "@sinclair/typebox";
 import {
   ActivitySchema,
   CarryForwardResponseSchema,
+  FeelingSchema,
   JourneyEntrySchema,
   JourneyTimelineSchema,
   MilestoneSummarySchema,
@@ -42,6 +43,7 @@ const EntryCreateBody = Type.Object({
   text: Type.String({ minLength: 1, maxLength: 20_000 }),
   tags: Type.Optional(Type.Array(Type.String({ minLength: 1, maxLength: 64 }), { maxItems: 20 })),
   changedMyMind: Type.Optional(Type.Boolean()),
+  feeling: Type.Optional(Type.Union([FeelingSchema, Type.Null()])),
   relatedTaskId: Type.Optional(NullableId),
   relatedMilestoneId: Type.Optional(NullableId),
   relatedDecisionId: Type.Optional(NullableId),
@@ -50,6 +52,7 @@ const EntryUpdateBody = Type.Object({
   text: Type.String({ minLength: 1, maxLength: 20_000 }),
   tags: Type.Array(Type.String({ minLength: 1, maxLength: 64 }), { maxItems: 20 }),
   changedMyMind: Type.Boolean(),
+  feeling: Type.Optional(Type.Union([FeelingSchema, Type.Null()])),
   relatedTaskId: NullableId,
   relatedMilestoneId: NullableId,
   relatedDecisionId: NullableId,

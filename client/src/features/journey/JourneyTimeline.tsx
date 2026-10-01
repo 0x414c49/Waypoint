@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import type { JourneyItem } from "./types.js";
 import { Button } from "../../ui/Button.js";
 import styles from "./Journey.module.css";
+import { FeelingNote } from "./FeelingPicker.js";
+import { MarkdownContent } from "../../ui/MarkdownContent.js";
 
 function duration(seconds: number): string {
   const minutes = Math.round(seconds / 60);
@@ -29,37 +31,40 @@ function heading(item: JourneyItem): string {
 
 export function JourneyTimeline({ items, onEdit, listLabel = "Journey entries" }: { items: JourneyItem[]; onEdit: (entry: Extract<JourneyItem, { type: "THOUGHT" | "WEEKLY_REFLECTION" }>) => void; listLabel?: string }) {
   return (
-      <ol className={styles.timeline} aria-label={listLabel}>
+    <ol className={styles.timeline} aria-label={listLabel}>
       {items.map((item) => (
         <li key={`${item.type}-${item.id}`} className={styles.timelineItem}>
           <div className={styles.entryMeta}>
             <time dateTime={item.occurredAt}>
               {new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.occurredAt))}
             </time>
-            <span>{label(item.type)}</span>
+            <span className={styles.entryKind}>{label(item.type)}</span>
             {(item.type === "THOUGHT" || item.type === "WEEKLY_REFLECTION") && item.changedMyMind ? <strong>Changed my mind</strong> : null}
+            {(item.type === "THOUGHT" || item.type === "WEEKLY_REFLECTION") ? <FeelingNote value={item.feeling} /> : null}
           </div>
-          <h2>{heading(item)}</h2>
-          {item.type === "THOUGHT" || item.type === "WEEKLY_REFLECTION"
-            ? <p className={styles.entryText}>{item.text}</p>
-              : item.type === "DECISION_REVIEW"
-                ? <p className={styles.entryText}>{item.notes ?? (item.outcome === "DEFERRED" ? `Review postponed${item.nextReviewDate ? ` until ${item.nextReviewDate}` : ""}.` : "Review recorded.")}</p>
-              : item.type === "TASK_FINISHED" && item.keyLearning
-              ? <p className={styles.entryText}>{item.keyLearning}</p>
-              : null}
-          <div className={styles.entryLinks}>
-            {item.type === "SESSION" ? <span>{duration(item.seconds)} recorded</span> : null}
-            {item.type === "SESSION" || item.type === "TASK_FINISHED"
-              ? <Link to={`/tasks/${encodeURIComponent(item.task.id)}`}>View task</Link>
-              : item.type === "DECISION_REVIEW"
-                ? <Link to={`/decisions/${encodeURIComponent(item.decision.id)}`}>View decision</Link>
-              : item.relatedTask
-                ? <Link to={`/tasks/${encodeURIComponent(item.relatedTask.id)}`}>View task</Link>
+          <div className={styles.entryBody}>
+            <h2>{heading(item)}</h2>
+            {item.type === "THOUGHT" || item.type === "WEEKLY_REFLECTION"
+              ? <div className={styles.entryText}><MarkdownContent>{item.text}</MarkdownContent></div>
+                : item.type === "DECISION_REVIEW"
+                  ? <div className={styles.entryText}><MarkdownContent>{item.notes ?? (item.outcome === "DEFERRED" ? `Review postponed${item.nextReviewDate ? ` until ${item.nextReviewDate}` : ""}.` : "Review recorded.")}</MarkdownContent></div>
+                : item.type === "TASK_FINISHED" && item.keyLearning
+                ? <p className={styles.entryText}>{item.keyLearning}</p>
                 : null}
-            {(item.type === "THOUGHT" || item.type === "WEEKLY_REFLECTION") && item.relatedMilestone
-              ? <Link to={`/quarters/${encodeURIComponent(item.relatedMilestone.quarterId)}/milestones/${encodeURIComponent(item.relatedMilestone.id)}/summary`}>View {item.relatedMilestone.title}</Link>
-              : null}
-            {item.type === "THOUGHT" || item.type === "WEEKLY_REFLECTION" ? <Button variant="ghost" onClick={() => onEdit(item)}>Edit</Button> : null}
+            <div className={styles.entryLinks}>
+              {item.type === "SESSION" ? <span>{duration(item.seconds)} recorded</span> : null}
+              {item.type === "SESSION" || item.type === "TASK_FINISHED"
+                ? <Link to={`/tasks/${encodeURIComponent(item.task.id)}`}>View task</Link>
+                : item.type === "DECISION_REVIEW"
+                  ? <Link to={`/decisions/${encodeURIComponent(item.decision.id)}`}>View technical choice</Link>
+                : item.relatedTask
+                  ? <Link to={`/tasks/${encodeURIComponent(item.relatedTask.id)}`}>View task</Link>
+                  : null}
+              {(item.type === "THOUGHT" || item.type === "WEEKLY_REFLECTION") && item.relatedMilestone
+                ? <Link to={`/quarters/${encodeURIComponent(item.relatedMilestone.quarterId)}/milestones/${encodeURIComponent(item.relatedMilestone.id)}/summary`}>View {item.relatedMilestone.title}</Link>
+                : null}
+              {item.type === "THOUGHT" || item.type === "WEEKLY_REFLECTION" ? <Button variant="ghost" onClick={() => onEdit(item)}>Edit</Button> : null}
+            </div>
           </div>
         </li>
       ))}

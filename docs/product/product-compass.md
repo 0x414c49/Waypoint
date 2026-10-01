@@ -5,7 +5,7 @@ Last updated: 2026-09-27
 
 ## One sentence
 
-Engineering Journey Tracker is a friendly learning companion that turns a structured growth plan into one obvious daily action while quietly preserving effort, insights, decisions, and change over time.
+Waypoint is a private learning companion that turns a structured growth plan into one obvious daily action while quietly preserving effort, insights, technical choices, and change over time.
 
 ## The problem
 
@@ -71,7 +71,7 @@ GitHub provides a useful structural metaphor, used quietly:
 | Work session | Commit | Session |
 | Daily reflection | Review | Reflection |
 | Completion | Merge | Finish, with a subtle “merged” result |
-| Architectural decision | ADR | Decision |
+| Engineering choice | ADR | Technical choice |
 | Activity history | Contribution graph | Activity |
 
 Normal language wins whenever Git terminology would require explanation.

@@ -5,7 +5,6 @@
   line-height: var(--line-metadata);
   font-weight: 600;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
 .title {

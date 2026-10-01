@@ -15,6 +15,10 @@ import {
   UtcInstantSchema,
   UserRecordSchema,
   JourneyEntryRecordSchema,
+  AccountRecordSchema,
+  AuthInviteRecordSchema,
+  AuthSessionRecordSchema,
+  MediaRecordSchema,
 } from "./journey-records.js";
 
 const recordMap = <T extends TSchema>(schema: T) => Type.Record(RecordIdSchema, schema);
@@ -25,6 +29,10 @@ export const JourneyStateSchema = Type.Object({
   writtenAt: UtcInstantSchema,
   records: Type.Object({
     users: recordMap(UserRecordSchema),
+    accounts: Type.Optional(recordMap(AccountRecordSchema)),
+    authInvites: Type.Optional(recordMap(AuthInviteRecordSchema)),
+    authSessions: Type.Optional(recordMap(AuthSessionRecordSchema)),
+    mediaRecords: Type.Optional(recordMap(MediaRecordSchema)),
     quarters: recordMap(QuarterRecordSchema),
     focusAreas: recordMap(FocusAreaRecordSchema),
     milestones: recordMap(MilestoneRecordSchema),

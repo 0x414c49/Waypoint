@@ -4,6 +4,7 @@ export type TransactionIntent =
   | { readonly kind: "STANDARD" }
   | { readonly kind: "PLAN_APPLY" }
   | { readonly kind: "JOURNEY_DELETE"; readonly journeyEntryId: string }
+  | { readonly kind: "AUTHENTICATION" }
   | {
       readonly kind: "SCHEMA_MIGRATION";
       readonly fromVersion: number;

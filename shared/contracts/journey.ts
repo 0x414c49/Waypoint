@@ -10,11 +10,16 @@ const TaskStatusSchema = Type.Union([
 const OutcomeSchema = Type.Union([
   Type.Literal("ACHIEVED"), Type.Literal("PARTIAL"), Type.Literal("NOT_ACHIEVED"),
 ]);
+export const FeelingSchema = Type.Union([
+  Type.Literal("curious"), Type.Literal("steady"), Type.Literal("stuck"),
+  Type.Literal("uncertain"), Type.Literal("proud"), Type.Literal("tired"),
+]);
 export const JourneyEntrySchema = Type.Object({
   id: Type.String(), etag: Type.String(),
   type: Type.Union([Type.Literal("THOUGHT"), Type.Literal("WEEKLY_REFLECTION")]),
   occurredAt: Type.String(), localDate: Type.String(), text: Type.String(), tags: Type.Array(Type.String()),
   changedMyMind: Type.Boolean(),
+  feeling: Type.Optional(FeelingSchema),
   relatedTask: Type.Union([RelationSchema, Type.Null()]),
   relatedMilestone: Type.Union([MilestoneRelationSchema, Type.Null()]),
   relatedDecision: Type.Union([RelationSchema, Type.Null()]),

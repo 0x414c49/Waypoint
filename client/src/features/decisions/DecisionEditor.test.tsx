@@ -18,7 +18,16 @@ it("keeps Accept separate from unsaved Draft edits", async () => {
   );
 
   expect((screen.getByRole("button", { name: "Accept decision" }) as HTMLButtonElement).disabled).toBe(false);
-  await user.type(screen.getByLabelText("What is going on?"), " More detail.");
+  const context = screen.getByLabelText("What is going on?");
+  const paragraph = context.querySelector("p")!;
+  const range = document.createRange();
+  range.selectNodeContents(paragraph);
+  range.collapse(false);
+  const selection = window.getSelection()!;
+  selection.removeAllRanges();
+  selection.addRange(range);
+  context.focus();
+  await user.type(context, " More detail.");
   expect((screen.getByRole("button", { name: "Accept decision" }) as HTMLButtonElement).disabled).toBe(true);
   await user.click(screen.getByRole("button", { name: "Save draft" }));
   expect(save).toHaveBeenCalledWith(expect.objectContaining({ context: "A retry crosses services. More detail." }));
@@ -104,6 +113,6 @@ it("keeps typed review evidence when the append fails", async () => {
   await user.type(screen.getByLabelText("Next review date (optional)"), "2026-12-01");
   await user.click(screen.getByRole("button", { name: "Add review" }));
 
-  expect((screen.getByLabelText("What changed or still holds?") as HTMLTextAreaElement).value).toBe("The load profile changed.");
+  expect(screen.getByLabelText("What changed or still holds?").textContent).toBe("The load profile changed.");
   expect((screen.getByLabelText("Next review date (optional)") as HTMLInputElement).value).toBe("2026-12-01");
 });

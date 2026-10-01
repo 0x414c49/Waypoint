@@ -1,6 +1,6 @@
-# Engineering Journey Tracker
+# Waypoint
 
-A quiet, friendly learning companion for turning an engineering growth plan into a sustainable daily habit.
+A private learning log for turning an engineering growth plan into a sustainable daily habit.
 
 The product is intentionally **not** a project-management system or a data-entry tracker. Its normal loop should be:
 
@@ -8,7 +8,17 @@ The product is intentionally **not** a project-management system or a data-entry
 
 ## Run and use it
 
-With Node.js 24 installed, run `npm install` and `npm run dev`, then open `http://127.0.0.1:5173`.
+With Node.js 24 installed, create the first owner account like this:
+
+```sh
+npm install
+npm run auth:bootstrap -- --email you@example.com
+npm run dev
+```
+
+Open `http://127.0.0.1:5173/register` and paste the one-time invite ID. You may optionally add two-factor authentication by scanning the displayed QR code—or entering its manual setup key—and confirming the six-digit code. The invite is bound to that email and expires after seven days. Creating a new bootstrap invite rotates any older unused bootstrap invite.
+
+There is no default user or password. Your login is the email and password you register; Waypoint asks for an authenticator code only if you enabled 2FA.
 
 The daily workflow, Quarter plan preview/export, local-data location, Journey activity calendar, and Decisions flow are explained in [Using the app](docs/using-the-app.md).
 
@@ -58,6 +68,7 @@ Start with:
 38. [Slice 5 validation evidence](planning/slice-5-validation.md)
 39. [Working agreement](planning/working-agreement.md)
 40. [Using the app](docs/using-the-app.md)
+41. [Authentication and authorization](docs/architecture/authentication-and-authorization.md)
 
 ## Working rule
 

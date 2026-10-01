@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "../../ui/Button.js";
 import type { DecisionReviewOutcome } from "./types.js";
 import styles from "./Decisions.module.css";
+import { MarkdownEditor } from "../../ui/MarkdownEditor.js";
 
 interface Props {
   busy: boolean;
@@ -30,7 +31,7 @@ export function ReviewComposer({ busy, onSubmit }: Props) {
   return (
     <section className={styles.reviewComposer} aria-labelledby="review-title">
       <p className={styles.eyebrow}>Hindsight, not rewriting</p>
-      <h2 id="review-title">Review this decision</h2>
+      <h2 id="review-title">Revisit this choice</h2>
       <form onSubmit={(event) => void submit(event)}>
         <fieldset className={styles.reviewOutcomes}>
           <legend>What is true now?</legend>
@@ -42,7 +43,10 @@ export function ReviewComposer({ busy, onSubmit }: Props) {
           ))}
         </fieldset>
         {outcome && outcome !== "DEFERRED" ? (
-          <label className={styles.field}><span>What changed or still holds?</span><textarea value={notes} onChange={(event) => setNotes(event.target.value)} /></label>
+          <>
+          <label className={styles.field}><span>What changed or still holds?</span></label>
+          <MarkdownEditor value={notes} onChange={setNotes} ariaLabel="What changed or still holds?" />
+          </>
         ) : null}
         {outcome ? (
           <label className={styles.field}>

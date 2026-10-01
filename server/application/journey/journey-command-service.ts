@@ -12,6 +12,7 @@ export interface JourneyEntryInput {
   text: string;
   tags?: string[];
   changedMyMind?: boolean;
+  feeling?: "curious" | "steady" | "stuck" | "uncertain" | "proud" | "tired" | null;
   relatedTaskId?: string | null;
   relatedMilestoneId?: string | null;
   relatedDecisionId?: string | null;
@@ -46,6 +47,7 @@ export class JourneyCommandService {
       text: input.text,
       tags: input.tags ?? [],
       changedMyMind: input.changedMyMind ?? false,
+      feeling: input.feeling ?? null,
       relatedTask: Object.prototype.hasOwnProperty.call(input, "relatedTaskId")
         ? input.relatedTaskId ?? null
         : "INFER_ACTIVE",
@@ -80,6 +82,7 @@ export class JourneyCommandService {
       const entry: JourneyEntryRecord = {
         id, userId, occurredAt, timeZoneAtOccurrence: draft.records.users[userId]!.timeZone,
         text: input.text, tags: [...(input.tags ?? [])], changedMyMind: input.changedMyMind ?? false,
+        ...(input.feeling ? { feeling: input.feeling } : {}),
         ...(relatedTaskId ? { relatedTaskId } : {}),
         ...(input.relatedMilestoneId ? { relatedMilestoneId: input.relatedMilestoneId } : {}),
         ...(input.relatedDecisionId ? { relatedDecisionId: input.relatedDecisionId } : {}),
@@ -122,7 +125,10 @@ export class JourneyCommandService {
       if (input.relatedDecisionId && draft.records.decisionRecords[input.relatedDecisionId]?.userId !== userId) throw notFound();
       if (task) captureTaskPlanContext(draft, task, draft.records.users[userId]!.timeZone, updatedAt);
       if (milestone) captureMilestoneContext(draft, milestone, draft.records.users[userId]!.timeZone, updatedAt);
-      entry.text = input.text; entry.tags = [...input.tags]; entry.changedMyMind = input.changedMyMind;
+       entry.text = input.text; entry.tags = [...input.tags]; entry.changedMyMind = input.changedMyMind;
+       if (Object.prototype.hasOwnProperty.call(input, "feeling")) {
+         if (input.feeling) entry.feeling = input.feeling; else delete entry.feeling;
+       }
       if (input.relatedTaskId) entry.relatedTaskId = input.relatedTaskId; else delete entry.relatedTaskId;
       if (input.relatedMilestoneId) entry.relatedMilestoneId = input.relatedMilestoneId; else delete entry.relatedMilestoneId;
       if (input.relatedDecisionId) entry.relatedDecisionId = input.relatedDecisionId; else delete entry.relatedDecisionId;

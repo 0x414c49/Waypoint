@@ -34,7 +34,7 @@ function ContextAction({ task, context, compact }: { task: TaskProjection; conte
   return (
     <div className={compact ? styles.contextActionCompact : styles.contextAction}>
       <Button type="button" variant="ghost" disabled={busy} onClick={() => void open()}>
-        {context.action === "CREATE_DRAFT" ? "Start decision draft" : "Open decision"}
+        {context.action === "CREATE_DRAFT" ? "Draft technical choice" : "Open technical choice"}
       </Button>
       {error ? <p role="alert" className={styles.contextError}>{error}</p> : null}
     </div>

@@ -66,23 +66,35 @@
 }
 
 .activityCalendar {
-  display: grid;
-  grid-template-columns: 28px repeat(var(--activity-weeks), 11px);
-  grid-template-rows: 16px repeat(7, 11px);
+  display: flex;
   gap: var(--space-4);
   width: max-content;
   min-width: max-content;
 }
 
-.activityMonth {
-  align-self: end;
-  white-space: nowrap;
+.activityDayLabels {
+  display: grid;
+  flex: none;
+  grid-template-rows: 16px repeat(7, 11px);
+  gap: var(--space-4);
+  width: 28px;
 }
 
-.activityDay {
-  grid-column: 1;
+.activityDayLabels span {
   align-self: center;
   line-height: 11px;
+}
+
+.activityPlot { display: grid; gap: var(--space-4); }
+.activityMonths,
+.activityWeeks { display: flex; gap: var(--space-4); }
+.activityMonth { display: block; flex: 0 0 11px; min-width: 11px; align-self: end; overflow: visible; white-space: nowrap; }
+.activityWeeks { display: grid; grid-auto-flow: column; grid-auto-columns: 11px; grid-template-rows: repeat(7, 11px); gap: var(--space-4); width: max-content; }
+.activityEmptyCell { width: 11px; height: 11px; }
+.activityWeeks .activityCell { align-self: stretch; }
+
+.activityWeeks > .activityEmptyCell[aria-hidden="true"] {
+  visibility: hidden;
 }
 
 .activityCell {

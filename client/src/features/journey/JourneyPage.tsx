@@ -9,6 +9,7 @@ import { JourneyEntryEditor } from "./JourneyEntryEditor.js";
 import { JourneyTimeline } from "./JourneyTimeline.js";
 import type { ActivityResponse, JourneyEntry, JourneyFilters as FilterValues, JourneyItem, TaskList } from "./types.js";
 import styles from "./Journey.module.css";
+import { Icon } from "../../ui/Icon.js";
 
 function dateDaysBefore(end: string, days: number): string {
   const date = new Date(`${end}T12:00:00.000Z`);
@@ -127,9 +128,9 @@ export function JourneyPage() {
       <header className={styles.pageHeading}>
         <div>
           <h1 ref={titleRef} id="journey-page-title" tabIndex={-1}>Journey</h1>
-          <p>The record of what you noticed and changed.</p>
+          <p>Your learning record: sessions, reflections, and what changed your mind.</p>
         </div>
-        <Button variant="secondary" onClick={() => window.dispatchEvent(new Event("journey:open-thought"))}>+ Thought</Button>
+        <Button variant="secondary" onClick={() => window.dispatchEvent(new Event("journey:open-thought"))}><Icon name="thought" width={17} height={17} />Thought</Button>
       </header>
       <JourneyFilters filters={filters} tasks={tasks} milestones={milestones} onChange={(next) => {
         setLoading(true);
@@ -150,7 +151,6 @@ export function JourneyPage() {
           <Button onClick={() => { setLoading(true); setError(null); load(); }}>Try again</Button>
         </div>
       ) : null}
-      {activity ? <ActivityHistory activity={activity} /> : null}
       {loading ? <p role="status" className={styles.muted}>Opening your Journey…</p> : null}
       {!loading && !error && items.length === 0 && !searchEntryId ? (
         <section className={styles.empty}>
@@ -160,6 +160,7 @@ export function JourneyPage() {
       ) : null}
       {!loading && remainingItems.length > 0 ? <JourneyTimeline items={remainingItems} onEdit={setEditing} /> : null}
       {nextCursor ? <Button variant="secondary" disabled={loadingMore} onClick={() => { setLoadingMore(true); setError(null); load(undefined, nextCursor); }}>{loadingMore ? "Loading…" : "Load more"}</Button> : null}
+      {activity ? <ActivityHistory activity={activity} /> : null}
       {editing ? <JourneyEntryEditor entry={editing} focusFallbackSelector="#journey-page-title" onClose={() => setEditing(null)} onSaved={(updated) => {
         setItems((current) => current.map((item) => item.type !== "SESSION" && item.type !== "TASK_FINISHED" && item.id === updated.id ? updated : item));
         setSearchEntryResult((current) => current?.entryId === updated.id ? { ...current, entry: updated } : current);

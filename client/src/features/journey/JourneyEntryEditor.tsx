@@ -5,6 +5,9 @@ import { useDialogA11y } from "../today/useDialogA11y.js";
 import { deleteJourneyEntry, updateJourneyEntry } from "./api.js";
 import type { JourneyEntry } from "./types.js";
 import styles from "./Journey.module.css";
+import { FeelingPicker } from "./FeelingPicker.js";
+import type { Feeling } from "./feelings.js";
+import { MarkdownEditor } from "../../ui/MarkdownEditor.js";
 
 export function JourneyEntryEditor({
   entry,
@@ -20,15 +23,14 @@ export function JourneyEntryEditor({
   focusFallbackSelector?: string;
 }) {
   const dialogRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
   const returnFocusToDelete = useRef(false);
   const [text, setText] = useState(entry.text);
+  const [feeling, setFeeling] = useState<Feeling | null>(entry.feeling ?? null);
   const [changedMyMind, setChangedMyMind] = useState(entry.changedMyMind);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
-  useDialogA11y(dialogRef, onClose, "#app-shell", focusFallbackSelector);
-  useEffect(() => inputRef.current?.focus(), []);
+  useDialogA11y(dialogRef, onClose, "#app-shell", focusFallbackSelector, '[role="textbox"]');
   useEffect(() => {
     if (confirmingDelete) {
       dialogRef.current?.querySelector<HTMLButtonElement>("[data-delete-cancel]")?.focus();
@@ -41,13 +43,12 @@ export function JourneyEntryEditor({
   const save = async () => {
     if (!text.trim()) {
       setError("Write a thought before saving.");
-      inputRef.current?.focus();
       return;
     }
     setBusy(true);
     setError(null);
     try {
-      const updated = await updateJourneyEntry(entry, { text: text.trim(), changedMyMind });
+      const updated = await updateJourneyEntry(entry, { text: text.trim(), changedMyMind, feeling });
       onSaved(updated);
       window.dispatchEvent(new Event("journey:entries-changed"));
     } catch (caught) {
@@ -80,7 +81,7 @@ export function JourneyEntryEditor({
           <section className={styles.deleteConfirmation} aria-labelledby="confirm-delete-thought-title">
             <h3 id="confirm-delete-thought-title">Remove this thought from Journey?</h3>
             <p>This permanently removes the thought. Sessions, finished items, and decision history stay unchanged.</p>
-            {text !== entry.text || changedMyMind !== entry.changedMyMind
+             {text !== entry.text || changedMyMind !== entry.changedMyMind || feeling !== (entry.feeling ?? null)
               ? <p>Your unsaved edits in this window will also be lost.</p>
               : null}
             {error ? <p className={styles.error} role="alert">{error}</p> : null}
@@ -98,8 +99,9 @@ export function JourneyEntryEditor({
           <>
             <label className={styles.fieldLabel}>
               What is worth keeping?
-              <textarea ref={inputRef} value={text} onChange={(event) => setText(event.target.value)} />
             </label>
+            <MarkdownEditor value={text} onChange={setText} ariaLabel="What is worth keeping?" />
+            <FeelingPicker value={feeling} onChange={setFeeling} />
             <label className={styles.checkboxLabel}>
               <input type="checkbox" checked={changedMyMind} onChange={(event) => setChangedMyMind(event.target.checked)} />
               This changed how I think

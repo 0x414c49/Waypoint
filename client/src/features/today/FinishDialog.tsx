@@ -3,6 +3,7 @@ import { Button } from "../../ui/Button.js";
 import type { FinishOutcome, TaskProjection } from "./types.js";
 import { useDialogA11y } from "./useDialogA11y.js";
 import styles from "./Today.module.css";
+import { MarkdownEditor } from "../../ui/MarkdownEditor.js";
 
 interface FinishDialogProps {
   task: TaskProjection;
@@ -77,13 +78,7 @@ export function FinishDialog({ task, busy, onClose, onFinish }: FinishDialogProp
           <label className={styles.textareaLabel} htmlFor="key-learning">
             One thing worth remembering? <span>Optional</span>
           </label>
-          <textarea
-            id="key-learning"
-            maxLength={2_000}
-            rows={3}
-            value={keyLearning}
-            onChange={(event) => setKeyLearning(event.currentTarget.value)}
-          />
+          <MarkdownEditor value={keyLearning} onChange={setKeyLearning} ariaLabel="One thing worth remembering?" minHeight={88} />
           <div className={styles.dialogActions}>
             <Button type="button" onClick={onClose} disabled={busy}>Cancel</Button>
             <Button variant="primary" type="submit" disabled={busy}>

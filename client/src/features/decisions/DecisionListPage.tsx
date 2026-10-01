@@ -51,7 +51,7 @@ export function DecisionListPage() {
       setDue(dueItems);
     } catch (caught) {
       if (caught instanceof DOMException && caught.name === "AbortError") return;
-      setError(caught instanceof Error ? caught.message : "Decisions could not open.");
+      setError(caught instanceof Error ? caught.message : "Technical choices could not open.");
     } finally {
       if (!signal?.aborted) setLoading(false);
     }
@@ -68,7 +68,7 @@ export function DecisionListPage() {
       setError(null);
     }).catch((caught: unknown) => {
       if (caught instanceof DOMException && caught.name === "AbortError") return;
-      setError(caught instanceof Error ? caught.message : "Decisions could not open.");
+      setError(caught instanceof Error ? caught.message : "Technical choices could not open.");
     }).finally(() => {
       if (!controller.signal.aborted) setLoading(false);
     });
@@ -93,8 +93,8 @@ export function DecisionListPage() {
   return (
     <div className={styles.page}>
       <header className={styles.pageHeading}>
-        <div><p className={styles.eyebrow}>Reasoning worth revisiting</p><h1>Decisions</h1><p>Write down what matters. Come back when it is useful.</p></div>
-        <Link className={styles.newLink} to="/decisions/new"><Icon name="add" />New decision</Link>
+        <div><h1>Technical choices</h1><p>Keep what you chose, why, and what could make you reconsider it.</p></div>
+        <Link className={styles.newLink} to="/decisions/new"><Icon name="add" />Record a choice</Link>
       </header>
 
       {error ? <div className={styles.error} role="alert"><span>{error}</span><Button variant="ghost" onClick={() => void load()}>Try again</Button></div> : null}
@@ -102,10 +102,10 @@ export function DecisionListPage() {
 
       {!loading && groups.drafts.length ? <section aria-labelledby="drafts-title"><SectionTitle id="drafts-title" icon="draft">Drafts to continue</SectionTitle><ul className={styles.decisionList}>{groups.drafts.map((decision) => <DecisionRow key={decision.id} decision={decision} />)}</ul></section> : null}
       {!loading && due.length ? <section aria-labelledby="ready-title"><SectionTitle id="ready-title" icon="review">Ready to revisit</SectionTitle><ul className={styles.decisionList}>{due.map((decision) => <DecisionRow key={decision.id} decision={decision} due />)}</ul></section> : null}
-      {!loading && groups.accepted.length ? <section aria-labelledby="accepted-title"><SectionTitle id="accepted-title" icon="accepted">Accepted decisions</SectionTitle><ul className={styles.decisionList}>{groups.accepted.map((decision) => <DecisionRow key={decision.id} decision={decision} />)}</ul></section> : null}
-      {!loading && groups.superseded.length ? <section aria-labelledby="superseded-title"><SectionTitle id="superseded-title" icon="history">Earlier decisions</SectionTitle><ul className={styles.decisionList}>{groups.superseded.map((decision) => <DecisionRow key={decision.id} decision={decision} />)}</ul></section> : null}
-      {!loading && all.items.length === 0 && due.length === 0 ? <div className={styles.empty}><h2>No decisions yet</h2><p>Capture a thought when there is reasoning you want to remember.</p></div> : null}
-      {all.nextCursor ? <div className={styles.more}><Button onClick={() => void more()}>Show more decisions</Button></div> : null}
+      {!loading && groups.accepted.length ? <section aria-labelledby="accepted-title"><SectionTitle id="accepted-title" icon="accepted">Choices in use</SectionTitle><ul className={styles.decisionList}>{groups.accepted.map((decision) => <DecisionRow key={decision.id} decision={decision} />)}</ul></section> : null}
+      {!loading && groups.superseded.length ? <section aria-labelledby="superseded-title"><SectionTitle id="superseded-title" icon="history">Earlier choices</SectionTitle><ul className={styles.decisionList}>{groups.superseded.map((decision) => <DecisionRow key={decision.id} decision={decision} />)}</ul></section> : null}
+      {!loading && all.items.length === 0 && due.length === 0 ? <div className={styles.empty}><h2>No technical choices yet</h2><p>Record an engineering choice when you want to remember why you made it.</p></div> : null}
+      {all.nextCursor ? <div className={styles.more}><Button onClick={() => void more()}>Show more choices</Button></div> : null}
     </div>
   );
 }

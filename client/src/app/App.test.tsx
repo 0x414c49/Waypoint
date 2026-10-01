@@ -23,7 +23,11 @@ const lightDashboard = {
 
 describe("application shell", () => {
   beforeEach(() => {
-    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(lightDashboard))));
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input.toString();
+      if (url.includes("/api/auth/session")) return new Response(JSON.stringify({ authenticated: true, user: { id: "local-user", name: "Local user", email: "local@example.test", timeZone: "UTC", role: "OWNER", createdAt: "2026-09-27T08:00:00.000Z" } }));
+      return new Response(JSON.stringify(lightDashboard));
+    }));
   });
 
   it("opens Today with only completed product destinations", async () => {
@@ -37,7 +41,7 @@ describe("application shell", () => {
     expect(screen.getAllByRole("link", { name: "Today" }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole("link", { name: "Journey" }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole("link", { name: "Quarter" }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("link", { name: "Decisions" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("link", { name: "Tech choices" }).length).toBeGreaterThan(0);
     expect(screen.getByText("Stored on this device")).toBeTruthy();
   });
 
@@ -49,7 +53,7 @@ describe("application shell", () => {
       </MemoryRouter>,
     );
 
-    await user.click(screen.getByRole("button", { name: "Use dark appearance" }));
+    await user.click(await screen.findByRole("button", { name: "Use dark appearance" }));
     expect(document.documentElement.dataset.theme).toBe("dark");
     expect(localStorage.getItem("journey-theme")).toBe("dark");
   });

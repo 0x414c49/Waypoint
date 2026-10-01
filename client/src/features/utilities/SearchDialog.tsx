@@ -7,7 +7,7 @@ import type { SearchGroupType, SearchResponseContract, SearchResultContract } fr
 import { searchRecords } from "./search-api.js";
 import styles from "./SearchDialog.module.css";
 
-const groupLabels: Record<SearchGroupType, string> = { PLAN: "Quarter plan", JOURNEY: "Journey", DECISION: "Decisions" };
+const groupLabels: Record<SearchGroupType, string> = { PLAN: "Quarter plan", JOURNEY: "Journey", DECISION: "Technical choices" };
 
 function resultPath(result: SearchResultContract): string | null {
   if (result.contentType === "TASK") return `/tasks/${encodeURIComponent(result.id)}`;
@@ -22,7 +22,7 @@ function resultPath(result: SearchResultContract): string | null {
 
 function contentLabel(result: SearchResultContract): string {
   if (result.contentType === "THOUGHT") return "Thought";
-  if (result.contentType === "DECISION") return "Decision";
+  if (result.contentType === "DECISION") return "Technical choice";
   if (result.contentType === "TASK") return "Planned work";
   if (result.contentType === "FOCUS_AREA") return "Focus area";
   if (result.contentType === "MILESTONE") return "Milestone";
@@ -94,11 +94,11 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
           <Button variant="ghost" onClick={close}>Close</Button>
         </header>
         <label className={styles.searchField}>
-          <span className={styles.visuallyHidden}>Search your plan, Journey, and Decisions</span>
-          <input ref={inputRef} type="search" maxLength={200} value={query} onChange={(event) => updateQuery(event.target.value)} placeholder="Try a task, thought, or decision" />
+          <span className={styles.visuallyHidden}>Search your plan, Journey, and technical choices</span>
+          <input ref={inputRef} type="search" maxLength={200} value={query} onChange={(event) => updateQuery(event.target.value)} placeholder="Try a task, thought, or technical choice" />
         </label>
         <div className={styles.results} aria-live="polite" aria-busy={loading || loadingMore}>
-          {!query.trim() ? <p className={styles.hint}>Search the Quarter plan, Journey thoughts, and Decisions. Results open in their original context.</p> : null}
+          {!query.trim() ? <p className={styles.hint}>Search the Quarter plan, Journey, and technical choices. Results open in their original context.</p> : null}
           {loading ? <p role="status" className={styles.hint}>Searching…</p> : null}
           {error ? <p role="alert" className={styles.error}>{error}</p> : null}
           {response && !loading && response.groups.length === 0 ? <p className={styles.hint}>No matches yet. Try another word.</p> : null}

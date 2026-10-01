@@ -1,0 +1,83 @@
+.editor {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+}
+
+.editor:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 24%, transparent);
+}
+
+.toolbar {
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-subtle);
+}
+
+.tool {
+  display: inline-flex;
+  min-width: 32px;
+  min-height: 30px;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 7px;
+  color: var(--color-text-secondary);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tool:hover,
+.tool[aria-pressed="true"] { color: var(--color-text); border-color: var(--color-border); background: var(--color-surface); }
+.tool svg { width: 16px; height: 16px; }
+.tool:disabled { cursor: wait; opacity: .65; }
+.destructiveTool { color: var(--color-error); }
+.contextLabel { flex: none; padding: 0 5px; color: var(--color-text-secondary); font-size: 12px; font-weight: 700; }
+.contextTool { flex: none; gap: 4px; padding-right: 6px; padding-left: 6px; font-size: 12px; }
+.contextTool svg { width: 15px; height: 15px; }
+.separator { width: 1px; height: 20px; margin: 0 4px; background: var(--color-border-strong); }
+.fileInput { display: none; }
+.content { min-height: 112px; overflow-x: auto; }
+.content :global(.tiptap) { min-height: 112px; padding: 10px 12px; outline: none; }
+.editorCompact .content,
+.editorCompact .content :global(.tiptap) { min-height: 88px; }
+.content :global(.tiptap > :first-child) { margin-top: 0; }
+.content :global(.tiptap > :last-child) { margin-bottom: 0; }
+.content :global(.tiptap p) { margin: 0 0 8px; }
+.content :global(.tiptap h2),
+.content :global(.tiptap h3) { margin: 16px 0 8px; line-height: 1.35; }
+.content :global(.tiptap h2) { font-size: 18px; }
+.content :global(.tiptap h3) { font-size: 16px; }
+.content :global(.tiptap ul),
+.content :global(.tiptap ol) { padding-left: 24px; }
+.content :global(.tiptap blockquote) { margin: 12px 0; padding-left: 14px; border-left: 2px solid var(--color-accent); color: var(--color-text-secondary); }
+.content :global(.tiptap mark) { background: var(--color-accent-soft); }
+.content :global(.tiptap img) { display: block; max-width: min(100%, 640px); max-height: 480px; object-fit: contain; }
+.content :global(.tiptap table) { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.content :global(.tiptap th),
+.content :global(.tiptap td) { min-width: 80px; padding: 6px 8px; border: 1px solid var(--color-border-strong); vertical-align: top; }
+.content :global(.tiptap th) { background: var(--color-surface-subtle); text-align: left; }
+.error { margin: 0; padding: 6px 12px; color: var(--color-error); font-size: var(--text-small); }
+
+@media (max-width: 520px) {
+  .toolbar { gap: 2px; flex-wrap: nowrap; overflow-x: auto; padding: 4px 6px; scrollbar-width: thin; }
+  .tool { min-width: 34px; min-height: 34px; padding: 4px; }
+  .contextTool { min-width: max-content; padding: 4px 6px; }
+  .separator { flex: none; margin: 0 2px; }
+}
+
+@media (max-width: 720px) {
+  .content :global(.tiptap) { font-size: 16px; line-height: 24px; }
+}

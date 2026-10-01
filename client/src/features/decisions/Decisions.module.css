@@ -70,8 +70,6 @@
   font-size: var(--text-metadata);
   line-height: var(--line-metadata);
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
 .newLink {
@@ -183,10 +181,8 @@
 .rowMeta span:first-child,
 .detailMeta span:first-child {
   color: var(--color-text-secondary);
-  font-size: var(--text-metadata);
+  font-size: var(--text-small);
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
 .groupTitle {
@@ -232,6 +228,8 @@
   display: grid;
   gap: var(--space-8);
 }
+
+.backLink { display: inline-flex; width: fit-content; align-items: center; gap: var(--space-8); }
 
 .editor,
 .documentSection,
@@ -370,8 +368,6 @@
 .reasoningBlock h3 {
   margin-bottom: var(--space-4);
   font-size: var(--text-small);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .reasoningBlock p {

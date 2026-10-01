@@ -44,6 +44,32 @@ type PreviewRecord = {
   acknowledgements: Acknowledgement[];
 };
 
+const LEGACY_USER_ID = "local-user";
+function namespacePlan(plan: NormalizedPlan, userId: string): NormalizedPlan {
+  if (userId === LEGACY_USER_ID) return plan;
+  const prefix = `${userId}--`;
+  const id = (value: string) => `${prefix}${value}`;
+  return {
+    ...plan,
+    quarter: { ...plan.quarter, id: id(plan.quarter.id), successCriteria: plan.quarter.successCriteria.map((item) => ({ ...item, id: id(item.id) })) },
+    focusAreas: plan.focusAreas.map((item) => ({ ...item, id: id(item.id) })),
+    milestones: plan.milestones.map((item) => ({ ...item, id: id(item.id) })),
+    tasks: plan.tasks.map((item) => ({ ...item, id: id(item.id), milestoneId: id(item.milestoneId), ...(item.focusAreaId ? { focusAreaId: id(item.focusAreaId) } : {}), ...(item.decisionPrompt ? { decisionPrompt: { ...item.decisionPrompt, decisionId: id(item.decisionPrompt.decisionId) } } : {}) })),
+  };
+}
+function sourcePlan(plan: NormalizedPlan, userId: string): NormalizedPlan {
+  if (userId === LEGACY_USER_ID) return plan;
+  const prefix = `${userId}--`;
+  const id = (value: string) => value.startsWith(prefix) ? value.slice(prefix.length) : value;
+  return {
+    ...plan,
+    quarter: { ...plan.quarter, id: id(plan.quarter.id), successCriteria: plan.quarter.successCriteria.map((item) => ({ ...item, id: id(item.id) })) },
+    focusAreas: plan.focusAreas.map((item) => ({ ...item, id: id(item.id) })),
+    milestones: plan.milestones.map((item) => ({ ...item, id: id(item.id) })),
+    tasks: plan.tasks.map((item) => ({ ...item, id: id(item.id), milestoneId: id(item.milestoneId), ...(item.focusAreaId ? { focusAreaId: id(item.focusAreaId) } : {}), ...(item.decisionPrompt ? { decisionPrompt: { ...item.decisionPrompt, decisionId: id(item.decisionPrompt.decisionId) } } : {}) })),
+  };
+}
+
 const PREVIEW_LIFETIME_MS = 30 * 60 * 1000;
 const route = "/api/plans/apply";
 
@@ -264,7 +290,7 @@ function assertIdentityAvailable(state: JourneyState, plan: NormalizedPlan): voi
   const quarterId = plan.quarter.id;
   const occupied = new Map<string, { kind: string; quarterId?: string; taskId?: string }>();
   for (const name of Object.keys(state.records) as Array<keyof JourneyState["records"]>) {
-    for (const [id, record] of Object.entries(state.records[name])) {
+    for (const [id, record] of Object.entries(state.records[name] ?? {})) {
       const item = record as unknown as { quarterId?: string; relatedTaskId?: string };
       occupied.set(id, { kind: name, ...(item.quarterId ? { quarterId: item.quarterId } : {}), ...(item.relatedTaskId ? { taskId: item.relatedTaskId } : {}) });
     }
@@ -475,7 +501,7 @@ function getReceipt(state: JourneyState, userId: string, key: string, fingerprin
 }
 
 export function exportQuarterPlanYaml(state: JourneyState, quarter: QuarterRecord): string {
-  const plan = currentPlan(state, quarter);
+  const plan = sourcePlan(currentPlan(state, quarter), quarter.userId);
   return stringify(plan, { lineWidth: 0 });
 }
 
@@ -492,6 +518,7 @@ export class PlanCommandService {
       throw error;
     }
     const userId = await this.currentUser.getCurrentUserId();
+    plan = namespacePlan(plan, userId);
     const now = this.clock.now();
     const view = await this.store.read((state) => {
       assertIdentityAvailable(state, plan);

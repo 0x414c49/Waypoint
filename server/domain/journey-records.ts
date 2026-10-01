@@ -35,6 +35,48 @@ export const UserRecordSchema = Type.Object({
 }, { additionalProperties: false });
 export type UserRecord = Static<typeof UserRecordSchema>;
 
+export const AuthRoleSchema = Type.Union([Type.Literal("OWNER"), Type.Literal("MEMBER")]);
+export type AuthRole = Static<typeof AuthRoleSchema>;
+export const PasswordVerifierSchema = Type.Object({
+  algorithm: Type.Literal("scrypt"), version: Type.Integer({ minimum: 1 }),
+  N: Type.Integer({ minimum: 2 }), r: Type.Integer({ minimum: 1 }), p: Type.Integer({ minimum: 1 }),
+  maxmem: Type.Integer({ minimum: 1 }), salt: Type.String({ minLength: 22, maxLength: 256 }),
+  derivedKey: Type.String({ minLength: 80, maxLength: 256 }),
+}, { additionalProperties: false });
+export type PasswordVerifier = Static<typeof PasswordVerifierSchema>;
+export const TotpSecretCipherSchema = Type.Object({
+  algorithm: Type.Literal("aes-256-gcm"), version: Type.Literal(1),
+  iv: Type.String({ minLength: 16, maxLength: 24 }), authTag: Type.String({ minLength: 20, maxLength: 32 }),
+  ciphertext: Type.String({ minLength: 40, maxLength: 64 }),
+}, { additionalProperties: false });
+export type TotpSecretCipher = Static<typeof TotpSecretCipherSchema>;
+export const AccountRecordSchema = Type.Object({
+  id: RecordIdSchema, userId: RecordIdSchema, email: Type.String({ minLength: 3, maxLength: 320 }),
+  role: AuthRoleSchema, passwordVerifier: PasswordVerifierSchema,
+  totpSecretCipher: Type.Optional(TotpSecretCipherSchema), lastTotpStep: Type.Optional(Type.Integer({ minimum: 0 })),
+  createdAt: UtcInstantSchema, updatedAt: UtcInstantSchema, disabledAt: Type.Optional(UtcInstantSchema),
+}, { additionalProperties: false });
+export type AccountRecord = Static<typeof AccountRecordSchema>;
+export const AuthInviteRecordSchema = Type.Object({
+  id: Type.String({ minLength: 64, maxLength: 64, pattern: "^[a-f0-9]+$" }),
+  intendedEmail: Type.String({ minLength: 3, maxLength: 320 }), role: AuthRoleSchema,
+  createdByUserId: Type.Optional(RecordIdSchema), bootstrap: Type.Boolean(),
+  legacyUserId: Type.Optional(RecordIdSchema), createdAt: UtcInstantSchema, expiresAt: UtcInstantSchema,
+  consumedAt: Type.Optional(UtcInstantSchema), consumedByUserId: Type.Optional(RecordIdSchema), revokedAt: Type.Optional(UtcInstantSchema),
+}, { additionalProperties: false });
+export type AuthInviteRecord = Static<typeof AuthInviteRecordSchema>;
+export const AuthSessionRecordSchema = Type.Object({
+  id: Type.String({ minLength: 64, maxLength: 64, pattern: "^[a-f0-9]+$" }), accountId: RecordIdSchema, userId: RecordIdSchema,
+  createdAt: UtcInstantSchema, lastSeenAt: UtcInstantSchema, expiresAt: UtcInstantSchema, revokedAt: Type.Optional(UtcInstantSchema),
+}, { additionalProperties: false });
+export type AuthSessionRecord = Static<typeof AuthSessionRecordSchema>;
+export const MediaRecordSchema = Type.Object({
+  id: Type.String({ minLength: 1, maxLength: 256 }), filename: Type.String({ minLength: 1, maxLength: 256 }), userId: RecordIdSchema,
+  mediaType: Type.Union([Type.Literal("image/png"), Type.Literal("image/jpeg"), Type.Literal("image/gif"), Type.Literal("image/webp")]),
+  byteLength: Type.Integer({ minimum: 1 }), createdAt: UtcInstantSchema,
+}, { additionalProperties: false });
+export type MediaRecord = Static<typeof MediaRecordSchema>;
+
 export const QuarterIntentSnapshotSchema = Type.Object({
   capturedAt: UtcInstantSchema,
   planRevision: Type.Integer({ minimum: 1 }),
@@ -205,6 +247,10 @@ export const JourneyEntryRecordSchema = Type.Object({
   relatedMilestoneId: Type.Optional(RecordIdSchema),
   relatedDecisionId: Type.Optional(RecordIdSchema),
   changedMyMind: Type.Boolean(),
+  feeling: Type.Optional(Type.Union([
+    Type.Literal("curious"), Type.Literal("steady"), Type.Literal("stuck"),
+    Type.Literal("uncertain"), Type.Literal("proud"), Type.Literal("tired"),
+  ])),
   createdAt: UtcInstantSchema,
   updatedAt: Type.Optional(UtcInstantSchema),
 }, { additionalProperties: false });

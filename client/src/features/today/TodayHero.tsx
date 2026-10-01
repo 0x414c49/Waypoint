@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Surface } from "../../ui/Surface.js";
 import { DecisionContextAction } from "../decisions/DecisionContextAction.js";
 import { ActiveTimer } from "./ActiveTimer.js";
+import { Icon } from "../../ui/Icon.js";
 import type { Dashboard, TaskProjection } from "./types.js";
 import styles from "./Today.module.css";
 
@@ -57,9 +58,8 @@ export function TodayHero({
   const plan = task.displayPlan;
   return (
     <Surface className={styles.hero} data-session-state={state === "RUNNING" || state === "PAUSED" ? state.toLowerCase() : undefined}>
-      <p className={styles.eyebrow}>
-        {plan.focusArea?.name ?? plan.milestone?.title ?? "Today"} · {stateCopy[state]}
-      </p>
+      <p className={styles.recommendation}>{state === "READY" ? "Start here" : stateCopy[state]}</p>
+      <p className={styles.contextLabel}>{plan.focusArea?.name ?? plan.milestone?.title ?? "Today"}</p>
       <h2>{plan.title}</h2>
       {plan.description ? <p className={styles.heroDescription}>{plan.description}</p> : null}
 
@@ -98,7 +98,7 @@ export function TodayHero({
 
       {(state === "RUNNING" || state === "PAUSED" || state === "READY") ? (
         <div className={styles.secondaryActions}>
-          <Button variant="ghost" onClick={onThought}>+ Thought</Button>
+          <Button variant="ghost" onClick={onThought}><Icon name="thought" width={17} height={17} />Thought</Button>
           <DecisionContextAction task={task} compact />
           {(state === "RUNNING" || state === "PAUSED") ? (
             <Button variant="ghost" disabled={busy} onClick={() => onFinish(task)}>

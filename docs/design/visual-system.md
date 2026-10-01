@@ -1,27 +1,27 @@
-# Visual System — Quiet Workshop
+# Visual System — Waypoint
 
-Status: Confirmed on 2026-09-27
+Status: Replaced and revised on 2026-09-29
 Depends on: `docs/journeys/confirmed-interaction-model.md`
 
 ## Direction
 
-**Quiet Workshop** combines GitHub’s clarity, compactness, and developer familiarity with a warmer and more personal character. It should feel like a well-kept workbench: the current work is obvious, useful context is close, and nothing performs for attention.
+**Waypoint** is a private engineering-learning log. Its interface combines developer-tool clarity with a personal, reflective record. An original route-and-checkpoint mark names the four destinations and makes a change of direction part of the visual identity.
 
 Distinctiveness comes from:
 
-- warm neutral canvas rather than a cool admin-dashboard gray
-- deep teal for the current action rather than copied GitHub green
-- one generous work surface instead of a grid of cards
-- compact evidence/history rows
-- plain language and restrained status treatment
+- blue-gray instrument color rather than copied GitHub green
+- a visible icon and word for each of the four destinations
+- a clear, first-position “Start session” action on Today
+- compact evidence/history rows, with longer material disclosed when useful
+- optional feeling notes, not a progress score
 
-Avoid gradients, glass effects, giant whitespace, oversized radii, decorative Git motifs, and card grids.
+Avoid gradients, glass effects, giant whitespace, oversized radii, decorative Git motifs, and card grids. Journal images are stored locally beside the JSON data; formatted writing is stored as Markdown.
 
 ## Visual principles
 
 1. **One accent action.** Only the current primary action receives the filled accent treatment.
 2. **Hierarchy through type and space.** Borders and fills support structure; they do not create it alone.
-3. **One hero surface.** Today may have one bordered work surface. Secondary content is usually separated by spacing or rules, not nested cards.
+3. **One hero surface.** Today has one bordered work surface. Secondary content is separated by spacing or rules, not nested cards.
 4. **Color communicates with words.** Every state has a text label and, when helpful, an icon in addition to color.
 5. **Compact is not cramped.** Information density may increase on desktop, but readable type and touch targets remain protected.
 6. **Time is evidence, not a score.** Elapsed time is prominent only while work is active.
@@ -29,11 +29,10 @@ Avoid gradients, glass effects, giant whitespace, oversized radii, decorative Gi
 
 ## Typography
 
-Use native system fonts. This avoids a font request, feels familiar on every platform, and keeps rendering fast.
+Use Avenir Next where available, with system sans-serif fallbacks. Timer numerals alone use system monospace.
 
 ```css
---font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-  Roboto, Helvetica, Arial, sans-serif;
+--font-sans: "Avenir Next", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
 --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas,
   "Liberation Mono", monospace;
 ```
@@ -43,9 +42,9 @@ apply global font-smoothing overrides.
 
 | Role | Desktop size / line | Mobile size / line | Weight | Use |
 |---|---:|---:|---:|---|
-| Display | 32 / 40px | 28 / 36px | 600 | Rare quarter/empty-state statement |
-| Heading 1 | 24 / 32px | 22 / 30px | 600 | Page title |
-| Hero title | 20 / 28px | 20 / 28px | 600 | Current learning item |
+| Display | 36 / 44px | 30 / 38px | 600 | Rare quarter/empty-state statement |
+| Heading 1 | 30 / 38px | 26 / 34px | 600 | Page title |
+| Hero title | 22 / 30px | 22 / 30px | 600 | Current learning item |
 | Heading 2 | 16 / 24px | 16 / 24px | 600 | Section heading |
 | Body large | 16 / 24px | 16 / 24px | 400 | Important description or prompt |
 | Body | 15 / 22px | 15 / 22px | 400 | Default prose |
@@ -57,7 +56,7 @@ apply global font-smoothing overrides.
 Rules:
 
 - Buttons use Compact UI at weight 600 and sentence case.
-- Metadata may use uppercase with `0.04em` letter spacing, but never for paragraphs.
+- Labels use sentence case; avoid all-caps decoration.
 - Timer numerals use the monospace stack with tabular numbers.
 - Monospace is otherwise limited to code and ADR identifiers. It is not decorative “developer styling.”
 - Default body text remains at least 15px. Do not shrink content to make a dense design fit.
@@ -78,8 +77,8 @@ Use one finite scale:
 
 Layout:
 
-- Maximum desktop content width: `960px`
-- Focused Today column: `680px`
+- Maximum desktop content width: `1120px`
+- Focused Today column: `760px`
 - Desktop page gutter: `24px`, growing naturally on wide screens
 - Mobile page gutter: `16px`
 - Hero padding: `24px` desktop, `20px` mobile
@@ -90,9 +89,9 @@ Do not introduce a new spacing value to repair a local layout. Use the nearest t
 ## Radii, borders, and elevation
 
 ```text
-4px  compact tags, inputs, contribution cells
-6px  buttons and controls
-8px  hero surface, sheets, dialogs
+3px  compact tags and contribution cells
+5px  buttons and controls
+6px  hero surface, sheets, dialogs
 ```
 
 - Default border: `1px`.
@@ -107,20 +106,20 @@ These tokens define roles, not components. Components must not use raw palette v
 
 | Token | Light | Dark | Purpose |
 |---|---|---|---|
-| `canvas` | `#F7F8F6` | `#0F1412` | Page background |
-| `surface` | `#FFFFFF` | `#171D1A` | Main work surface |
-| `surface-subtle` | `#F0F3EF` | `#202823` | Secondary rows and grouped context |
-| `surface-raised` | `#FFFFFF` | `#252E29` | Menus, sheets, dialogs |
-| `border` | `#D8DED9` | `#344039` | Standard separation |
-| `border-strong` | `#BBC5BD` | `#4B5A51` | Interactive boundary |
-| `text` | `#1F2521` | `#E9EEE9` | Primary text |
-| `text-secondary` | `#616B64` | `#AAB4AC` | Supporting text |
-| `text-decorative` | `#7C877F` | `#89938B` | Nonessential decoration only |
-| `accent` | `#176B5B` | `#63C6AE` | Primary action and active emphasis |
-| `accent-hover` | `#125848` | `#7BD3BD` | Hover |
-| `accent-pressed` | `#0D463A` | `#4CB198` | Pressed |
-| `accent-soft` | `#E3F1ED` | `#193D34` | Selected/active background |
-| `on-accent` | `#FFFFFF` | `#092019` | Text/icon on accent |
+| `canvas` | `#F2F5F3` | `#111A1F` | Page background |
+| `surface` | `#FCFDFC` | `#19242A` | Main work surface |
+| `surface-subtle` | `#E9EFEC` | `#222F36` | Secondary rows and grouped context |
+| `surface-raised` | `#FCFDFC` | `#26343B` | Menus, sheets, dialogs |
+| `border` | `#D5DEDA` | `#35464E` | Standard separation |
+| `border-strong` | `#AEBBB6` | `#526771` | Interactive boundary |
+| `text` | `#253139` | `#EAF0EF` | Primary text |
+| `text-secondary` | `#5D6A70` | `#A5B3B6` | Supporting text |
+| `text-decorative` | `#819094` | `#839498` | Nonessential decoration only |
+| `accent` | `#315F7C` | `#83B4D0` | Primary action and active emphasis |
+| `accent-hover` | `#254D68` | `#9BC4DB` | Hover |
+| `accent-pressed` | `#1D3F56` | `#6DA1BF` | Pressed |
+| `accent-soft` | `#E4EDF3` | `#243C49` | Selected/active background |
+| `on-accent` | `#FFFFFF` | `#12222B` | Text/icon on accent |
 | `focus-ring` | `#2563EB` | `#78A9FF` | Keyboard focus, distinct from brand |
 | `success` | `#276749` | `#89D3A5` | Finished/positive text |
 | `success-soft` | `#E5F3EA` | `#193328` | Finished background accent |
@@ -144,13 +143,13 @@ The contribution grid is a quiet historical texture showing recorded session tim
 
 | Level | Meaning | Light | Dark |
 |---|---|---|---|
-| 0 | No recorded session | `#E8ECE8` | `#27302B` |
-| 1 | 1–14 minutes | `#CDE5DE` | `#21463C` |
-| 2 | 15–29 minutes | `#98CDBE` | `#2D6A59` |
-| 3 | 30–59 minutes | `#53A98F` | `#42937B` |
-| 4 | 60+ minutes | `#176B5B` | `#63C6AE` |
+| 0 | No recorded session | `#E6EBE9` | `#27343A` |
+| 1 | 1–14 minutes | `#C9DCE5` | `#2A4857` |
+| 2 | 15–29 minutes | `#9DBDCD` | `#386A82` |
+| 3 | 30–59 minutes | `#6F9EB5` | `#598DA7` |
+| 4 | 60+ minutes | `#315F7C` | `#83B4D0` |
 
-Cells are `11 × 11px`, `4px` radius, with `4px` gaps. Each cell exposes date and duration through accessible text/tooltip. Zero means no recorded session, never failure.
+Cells are `11 × 11px`, `3px` radius, with `4px` gaps. Each cell exposes date and duration through accessible text/tooltip. Zero means no recorded session, never failure.
 
 Never show:
 
@@ -197,7 +196,8 @@ Never show:
 ## Inputs and choice controls
 
 - Input height: `40px` desktop, minimum `48px` for primary mobile entry
-- Textareas begin at three body-text lines and expand with content where practical
+- Long-form writing uses one Markdown-backed WYSIWYG editor with formatting, lists, tables, and locally stored images
+- Markdown toolbars use labeled SVG icons; table row/column controls appear while the caret is in a table
 - Labels remain visible; placeholders never replace labels
 - Outcome choices use a radio-card group with a visible radio indicator
 - The selected outcome uses `accent-soft` plus a `2px accent` boundary
@@ -221,7 +221,7 @@ No state is communicated only through a dot. Do not wash the entire card green o
 ### Today hero
 
 - The only large bordered surface on the normal Today page
-- Focus label, title, intent, planned guidance, primary action, then low-energy action
+- “Start here,” focus, task title, intent, planned guidance, one primary Start action, then the optional 10-minute action
 - Maximum content width keeps line length readable
 - Unfinished mode changes language to **Your place is saved**, not overdue
 
@@ -240,7 +240,7 @@ No state is communicated only through a dot. Do not wash the entire card green o
 
 ### Finish sheet
 
-- One title, session summary, outcome group, optional takeaway, one primary Finish button
+- One title, session summary, outcome group, optional Markdown takeaway, one primary Finish button
 - `8px` radius and raised-surface shadow
 - Desktop: centered compact dialog or anchored sheet
 - Mobile: bottom sheet above safe area
@@ -254,15 +254,15 @@ No state is communicated only through a dot. Do not wash the entire card green o
 
 - Primary breakpoint: `720px`
 - Single-column page below the breakpoint; no horizontal page scroll
-- Four stable bottom destinations: Today, Quarter, Journey, Decisions
-- Top bar holds Thought, Search, and overflow as space permits
+- Four stable bottom destinations with icon + word label: Today, Quarter, Journey, Tech choices
+- Top bar holds Thought, Search, and appearance control
 - On Today during a session, the action dock sits above subdued bottom navigation
 - Off Today, a compact active-session strip sits above navigation
 - Primary actions may span available width for thumb access
 - Safe-area padding is included in bottom controls and sheets
 - Contribution history may scroll horizontally inside its own region
 - Do not depend on hover to reveal essential actions
-- Do not hide navigation for the entire session; learning sessions may be long and Journey/Decisions may be useful during them
+- Do not hide navigation for the entire session; learning sessions may be long and Journey/Tech choices may be useful during them
 
 ## Rejected visual directions
 

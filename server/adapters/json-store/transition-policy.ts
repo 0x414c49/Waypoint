@@ -12,6 +12,9 @@ const executionCollections = new Set<keyof JourneyState["records"]>([
   "decisionReviews",
   "aiReviews",
 ]);
+const authCollections = new Set<keyof JourneyState["records"]>([
+  "users", "accounts", "authInvites", "authSessions", "mediaRecords",
+]);
 
 function fields(record: Record<string, unknown>, names: readonly string[]): Record<string, unknown> {
   return Object.fromEntries(names.map((name) => [name, record[name]]));
@@ -102,7 +105,7 @@ export function assertJourneyStateTransition(
       throw new StoreError("STORE_WRITE_FAILED", "Journey deletion must remove exactly the named entry.");
     }
   }
-  if (intent.kind !== "SCHEMA_MIGRATION" && !equalJson(before.records.users, after.records.users)) {
+  if (intent.kind !== "SCHEMA_MIGRATION" && intent.kind !== "AUTHENTICATION" && !equalJson(before.records.users, after.records.users)) {
     throw new StoreError(
       "STORE_WRITE_FAILED",
       "The canonical local user cannot be changed by application transactions.",
@@ -121,8 +124,8 @@ export function assertJourneyStateTransition(
 
   const collections = Object.keys(before.records) as Array<keyof JourneyState["records"]>;
   for (const collectionName of collections) {
-    const oldCollection = before.records[collectionName];
-    const newCollection = after.records[collectionName];
+    const oldCollection = before.records[collectionName] ?? {};
+    const newCollection = after.records[collectionName] ?? {};
 
     if (
       intent.kind === "PLAN_APPLY" &&
@@ -156,8 +159,18 @@ export function assertJourneyStateTransition(
           id,
         );
       const migrationDeletion = intent.kind === "SCHEMA_MIGRATION";
-      if (!exactJourneyDeletion && !planDeletion && !migrationDeletion) {
+      const authMutation = intent.kind === "AUTHENTICATION" && authCollections.has(collectionName);
+      if (!exactJourneyDeletion && !planDeletion && !migrationDeletion && !authMutation) {
         throw new StoreError("STORE_WRITE_FAILED", "History cannot be deleted by this transaction.");
+      }
+    }
+  }
+
+  if (intent.kind === "AUTHENTICATION") {
+    for (const collectionName of Object.keys(before.records) as Array<keyof JourneyState["records"]>) {
+      if (authCollections.has(collectionName)) continue;
+      if (!equalJson(before.records[collectionName], after.records[collectionName])) {
+        throw new StoreError("STORE_WRITE_FAILED", "Authentication transactions cannot change learning records.");
       }
     }
   }

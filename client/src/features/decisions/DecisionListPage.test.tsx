@@ -58,8 +58,8 @@ it("groups decisions by the next useful action without a status-filter control",
 
   expect(await screen.findByRole("heading", { name: "Drafts to continue" })).toBeTruthy();
   expect(screen.getByRole("heading", { name: "Ready to revisit" })).toBeTruthy();
-  expect(screen.getByRole("heading", { name: "Accepted decisions" })).toBeTruthy();
-  expect(screen.getByRole("heading", { name: "Earlier decisions" })).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "Choices in use" })).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "Earlier choices" })).toBeTruthy();
   expect(screen.queryByRole("combobox", { name: "Filter by status" })).toBeNull();
   expect(screen.getAllByRole("link", { name: "Decision 2" })).toHaveLength(1);
 });

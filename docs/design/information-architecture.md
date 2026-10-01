@@ -1,6 +1,6 @@
 # Information Architecture
 
-Status: Confirmed on 2026-09-27
+Status: Revised on 2026-09-30
 Principle: Today is home; detailed workflows remain contextual.
 
 ## Persistent destinations
@@ -8,24 +8,24 @@ Principle: Today is home; detailed workflows remain contextual.
 Use four—and only four—persistent destinations in v1:
 
 1. **Today** — what should I do now?
-2. **Quarter** — what did I intend, and where am I in the plan?
-3. **Journey** — what happened, and how did my thinking change?
-4. **Decisions** — what reasoning should be preserved or revisited?
+2. **Quarter** — what is on my learning schedule, and what did I plan?
+3. **Journey** — what did I learn, and how did my thinking change?
+4. **Tech choices** — what engineering choice did I make, and why?
 
 Do not add a separate Home destination; Today already fulfills that job.
 
-Search, Thought, and Settings are global utilities, not equal destinations.
+Search, Thought, and appearance are global utilities, not equal destinations.
 
 ## Conceptual boundaries
 
 | Area | Time orientation | Owns | Does not become |
 |---|---|---|---|
 | Today | Now | Current recommendation, active/paused state, next action | Dashboard or backlog |
-| Quarter | Forward + plan context | Weeks, focus areas, planned work, success criteria, plan update | Progress scorecard |
-| Journey | Backward + meaning | Sessions, thoughts, reflections, outcomes, changed thinking | Notes database or timesheet |
-| Decisions | Durable reasoning | Original ADRs, review dates, append-only outcomes | Interruptive approval queue |
+| Quarter | Forward + plan context | Week-by-week learning schedule, previous quarters, focus areas, success criteria | General life planner or progress scorecard |
+| Journey | Backward + meaning | The learning record: sessions, thoughts, reflections, outcomes, changed thinking | Notes database or timesheet |
+| Tech choices | Durable technical reasoning | Engineering choices, original reasoning, review dates, append-only outcomes | Interruptive approval queue |
 
-A decision review may appear chronologically in Journey, but it links to the canonical Decision rather than duplicating it.
+A review may appear chronologically in Journey, but it links to the canonical technical choice rather than duplicating it.
 
 ## Hierarchy
 
@@ -38,7 +38,12 @@ Application
 │   ├── Up next
 │   └── Quiet review-due prompt
 ├── Quarter
-│   ├── Current quarter overview
+│   ├── Week-by-week schedule
+│   ├── Current, previous, and upcoming quarters
+│   ├── Plan details
+│   │   ├── Success criteria
+│   │   ├── Focus areas
+│   │   └── Milestones
 │   ├── Week summary
 │   │   └── Task detail / session history
 │   ├── Focus area detail
@@ -51,9 +56,9 @@ Application
 │   ├── Chronological entries
 │   ├── Entry detail/edit
 │   └── Contextual filters
-├── Decisions
-│   ├── Due for review
-│   ├── All decisions
+├── Tech choices
+│   ├── Technical choices to revisit
+│   ├── All technical choices
 │   ├── Decision detail
 │   └── Add review outcome
 └── Global utilities
@@ -67,14 +72,13 @@ Application
 Use a compact top bar. A permanent sidebar would give a four-destination product unnecessary workspace weight.
 
 ```text
-Journey mark | Today  Quarter  Journey  Decisions | + Thought  Search  •••
+Waypoint mark | ◷ Today  ▦ Quarter  ↗ Journey  ◇ Tech choices | Thought  Search  Theme
 ```
 
-- The mark returns to Today.
-- The active destination uses text weight, a small boundary/underline, and an accessible current-page indicator—not color alone.
-- + Thought remains visible at normal desktop widths.
+- The Waypoint mark returns to Today.
+- Every destination pairs an icon with its word label. The active destination also has a filled quiet selection and an accessible current-page indicator.
+- Thought, Search, and the appearance toggle remain visible as utilities.
 - Search opens an overlay rather than navigating to an empty page first.
-- Settings lives under the overflow menu.
 - When browsing away from Today during a running or paused session, a restrained active-session strip appears below the header.
 
 A sidebar should be reconsidered only if later confirmed scope creates enough persistent destinations to require grouping.
@@ -84,15 +88,15 @@ A sidebar should be reconsidered only if later confirmed scope creates enough pe
 Use four stable bottom destinations:
 
 ```text
-Today       Quarter       Journey       Decisions
+Today       Quarter       Journey       Tech choices
 ```
 
-- Each item uses icon + word label.
-- Thought, Search, and overflow appear in the top bar; Thought is also available inside active Today.
+- Each item uses a distinct icon + word label.
+- Thought, Search, and appearance toggle appear in the top bar; Thought is also available inside active Today.
 - Do not add a floating action button; it would compete with Start/Pause and make the app resemble a generic task manager.
 - During an active Today session, a sticky action dock sits above subdued navigation.
 - Off Today, the compact session strip sits above the bottom navigation.
-- Do not remove navigation for the full duration of a session; learners may need Journey or Decisions while working.
+- Do not remove navigation for the full duration of a session; learners may need Journey or Tech choices while working.
 
 ## Contextual surfaces
 
@@ -132,7 +136,7 @@ Lives under the current Quarter’s actions because it changes quarter intent. I
 
 ### Decision review
 
-Opens from Decisions or a quiet Today prompt. It never interrupts Start, Pause, Resume, or Finish.
+Opens from Tech choices or a quiet Today prompt. It never interrupts Start, Pause, Resume, or Finish.
 
 ## Quick Thought
 
@@ -156,16 +160,15 @@ Search is a global utility overlay:
 
 Journey may expose date, task, and “changed my mind” filters for chronological browsing, but it uses the same search behavior rather than creating a second search system.
 
-## Settings
+## Appearance
 
-Keep Settings behind the overflow menu. Include only app-wide preferences that exist in v1, such as:
+Keep the appearance toggle in the top bar. It is the only app-wide preference in v1:
 
-- appearance: system/light/dark
-- read-only app/data-location information for support and recovery
+- light/dark theme
 
 Do not create profile, team, notification, integration, or permission sections before those capabilities exist.
 
-Appearance is stored in the browser and is not a domain/API setting. Timezone and week-convention controls are deferred until their historical effects have a designed workflow. Plan import/export belongs in Quarter. Low-level recovery is an explicit operator procedure, not a normal Settings control.
+Appearance is stored in the browser and is not a domain/API setting. Timezone and week-convention controls are deferred until their historical effects have a designed workflow. Plan import/export belongs in Quarter. Low-level recovery is an explicit operator procedure, not a normal preference.
 
 ## Navigation behavior during states
 
@@ -193,7 +196,7 @@ Appearance is stored in the browser and is not a domain/API setting. Timezone an
 ## Risks to watch
 
 - **Quarter/Journey ambiguity:** protect the planned-future versus lived-record distinction in copy and content.
-- **Decision frequency:** Decisions is core to engineering growth, but if real use is sparse it may later become a Journey section. Do not decide this from aesthetics alone.
+- **Decision frequency:** Technical choices are part of engineering growth, but if real use is sparse they may later become a Journey section. Do not decide this from aesthetics alone.
 - **Task-detail growth:** this is the likeliest place for forms and manual administration to accumulate.
 - **Quarter dashboard drift:** resist metric cards, alerts, and competing action buttons.
 - **Journey database drift:** chronological meaning remains the default; organization happens after capture and only when useful.

@@ -8,6 +8,7 @@ export function useDialogA11y(
   onClose: () => void,
   backgroundSelector = "#today-content",
   fallbackFocusSelector?: string,
+  initialFocusSelector?: string,
 ): void {
   useEffect(() => {
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -16,8 +17,20 @@ export function useDialogA11y(
       ? document.querySelector<HTMLElement>(fallbackFocusSelector)
       : null;
     for (const element of background) element.inert = true;
-    const first = dialogRef.current?.querySelector<HTMLElement>(focusable);
-    first?.focus();
+    let initialFocusObserver: MutationObserver | undefined;
+    const preferred = initialFocusSelector ? dialogRef.current?.querySelector<HTMLElement>(initialFocusSelector) : null;
+    if (preferred) preferred.focus();
+    else if (initialFocusSelector && dialogRef.current) {
+      initialFocusObserver = new MutationObserver(() => {
+        const target = dialogRef.current?.querySelector<HTMLElement>(initialFocusSelector);
+        if (!target) return;
+        target.focus();
+        initialFocusObserver?.disconnect();
+      });
+      initialFocusObserver.observe(dialogRef.current, { childList: true, subtree: true });
+    } else {
+      dialogRef.current?.querySelector<HTMLElement>(focusable)?.focus();
+    }
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -41,9 +54,10 @@ export function useDialogA11y(
     document.addEventListener("keydown", onKeyDown);
     return () => {
       document.removeEventListener("keydown", onKeyDown);
+      initialFocusObserver?.disconnect();
       for (const element of background) element.inert = false;
       if (previousFocus?.isConnected) previousFocus.focus();
       else fallbackFocus?.focus();
     };
-  }, [backgroundSelector, dialogRef, fallbackFocusSelector, onClose]);
+  }, [backgroundSelector, dialogRef, fallbackFocusSelector, initialFocusSelector, onClose]);
 }

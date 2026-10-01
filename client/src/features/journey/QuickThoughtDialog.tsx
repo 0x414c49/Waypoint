@@ -1,32 +1,33 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "../../ui/Button.js";
 import { useDialogA11y } from "../today/useDialogA11y.js";
 import type { ThoughtContext } from "./types.js";
+import { FeelingPicker } from "./FeelingPicker.js";
+import type { Feeling } from "./feelings.js";
+import { MarkdownEditor } from "../../ui/MarkdownEditor.js";
 import styles from "./Journey.module.css";
 
 interface QuickThoughtDialogProps {
   inferredContext: ThoughtContext | null;
   onClose: () => void;
-  onSave: (text: string, relatedTaskId: string | null) => Promise<void>;
+  onSave: (text: string, relatedTaskId: string | null, feeling: Feeling | null) => Promise<void>;
 }
 
 export function QuickThoughtDialog({ inferredContext, onClose, onSave }: QuickThoughtDialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [text, setText] = useState("");
+  const [feeling, setFeeling] = useState<Feeling | null>(null);
   const [contextRemoved, setContextRemoved] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  useDialogA11y(dialogRef, onClose, "#app-shell");
+  useDialogA11y(dialogRef, onClose, "#app-shell", undefined, '[role="textbox"]');
 
-  useEffect(() => inputRef.current?.focus(), []);
 
   const submit = async () => {
     const normalized = text.trim();
     if (!normalized) {
       setError("Write a thought before saving.");
-      inputRef.current?.focus();
       return;
     }
     setBusy(true);
@@ -35,6 +36,7 @@ export function QuickThoughtDialog({ inferredContext, onClose, onSave }: QuickTh
       await onSave(
         normalized,
         inferredContext && !contextRemoved ? inferredContext.taskId : null,
+        feeling,
       );
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "The thought could not be saved.");
@@ -49,17 +51,9 @@ export function QuickThoughtDialog({ inferredContext, onClose, onSave }: QuickTh
           <h2 id="thought-title">Add a thought</h2>
           <Button variant="ghost" onClick={onClose} aria-label="Close thought composer">Close</Button>
         </div>
-        <label className={styles.fieldLabel} htmlFor="quick-thought">What is worth keeping?</label>
-        <textarea
-          ref={inputRef}
-          id="quick-thought"
-          value={text}
-          onChange={(event) => setText(event.target.value)}
-          onKeyDown={(event) => {
-            if ((event.metaKey || event.ctrlKey) && event.key === "Enter") void submit();
-          }}
-          aria-describedby={error ? "thought-error" : undefined}
-        />
+        <label className={styles.fieldLabel}>What is worth keeping?</label>
+        <MarkdownEditor value={text} onChange={setText} ariaLabel="What is worth keeping?" />
+        <FeelingPicker value={feeling} onChange={setFeeling} />
         {inferredContext && !contextRemoved ? (
           <div className={styles.inferredContext}>
             <span>Related to: <strong>{inferredContext.taskTitle}</strong></span>

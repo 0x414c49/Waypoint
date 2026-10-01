@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "./Button.js";
+import { Icon } from "./Icon.js";
 
 type Theme = "light" | "dark";
 
@@ -26,7 +27,7 @@ export function ThemeToggle() {
       type="button"
       variant="ghost"
     >
-      {theme === "light" ? "Dark" : "Light"}
+      <Icon name={theme === "light" ? "moon" : "sun"} />
     </Button>
   );
 }

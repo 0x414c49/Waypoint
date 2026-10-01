@@ -4,6 +4,7 @@ import { Button } from "../../ui/Button.js";
 import { QuarterApiError, applyPlan, previewPlan } from "./api.js";
 import type { PlanPreview } from "./api.js";
 import styles from "./Quarter.module.css";
+import { Icon } from "../../ui/Icon.js";
 
 function valueText(value: unknown): string {
   if (value === undefined) return "(not set)";
@@ -64,10 +65,10 @@ export function PlanImportPage() {
   return (
     <div className={styles.page}>
       <header className={styles.heading}>
-        <Link to={backTo}>← Back to Quarter</Link>
-        <p className={styles.eyebrow}>PLAN · PRIVATE TO THIS DEVICE</p>
+        <Link className={styles.backLink} to={backTo}><Icon name="back" width={16} height={16} />Back to Quarter</Link>
+        <p className={styles.eyebrow}>Private to this device</p>
         <h1>{quarterId ? "Update your plan" : "Bring in a learning plan"}</h1>
-        <p>Preview first. Import changes planned intent only; Sessions, reflections, Decisions, outcomes, and captured history stay as they are.</p>
+        <p>Preview first. Import changes planned intent only; sessions, reflections, technical choices, outcomes, and captured history stay as they are.</p>
       </header>
 
       <section className={styles.section} aria-labelledby="plan-source-heading">
@@ -86,7 +87,7 @@ export function PlanImportPage() {
       {error ? <div className={styles.errorPanel} role="alert"><strong>Plan action could not continue.</strong><p>{error}</p>{validationErrors.length ? <ul>{validationErrors.map((item) => <li key={item}>{item}</li>)}</ul> : null}</div> : null}
 
       {preview ? <section className={styles.preview} aria-labelledby="preview-heading" aria-live="polite">
-        <p className={styles.eyebrow}>{preview.mode === "CREATE_QUARTER" ? "CREATE QUARTER" : "UPDATE QUARTER"} · REVISION {preview.basePlanRevision ?? "NEW"}</p>
+        <p className={styles.eyebrow}>{preview.mode === "CREATE_QUARTER" ? "Create Quarter" : "Update Quarter"} · revision {preview.basePlanRevision ?? "new"}</p>
         <h2 id="preview-heading">Review before applying</h2>
         <p>{preview.mode === "CREATE_QUARTER" ? "This will create a Quarter and its plan records." : "Only current plan intent changes. Execution history and immutable snapshots will not be rewritten."} Imported Tasks start Not started; planned dates do not imply completed work.</p>
         <dl className={styles.summary}>

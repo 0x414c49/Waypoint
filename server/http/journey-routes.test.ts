@@ -29,7 +29,7 @@ beforeEach(async () => {
   const ids = new RandomIdGenerator();
   store = new JsonJourneyStore({ directory: join(root, "store"), clock, idGenerator: ids, seed: createProductionSeed });
   await store.initialize();
-  app = await buildApp({ store, currentUserProvider: new LocalCurrentUserProvider(store), clock, idGenerator: ids, logger: createStructuredLogger("silent"), allowedHosts: new Set([trusted.host]), allowedMutationOrigins: new Set([trusted.origin]) });
+  app = await buildApp({ store, currentUserProvider: new LocalCurrentUserProvider(store), clock, idGenerator: ids, logger: createStructuredLogger("silent"), allowedHosts: new Set([trusted.host]), allowedMutationOrigins: new Set([trusted.origin]), mediaDirectory: join(root, "store", "media") });
 });
 
 afterEach(async () => { await app.close(); await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true }))); });
@@ -106,6 +106,41 @@ describe("Slice 2 Journey HTTP", () => {
     expect(replayAfterDelete.statusCode).toBe(410);
     expect(replayAfterDelete.json().code).toBe("IDEMPOTENT_RESULT_DELETED");
     expect(await store.read((state) => state.records.journeyEntries[id])).toBeUndefined();
+  });
+
+  it("stores a private feeling on a thought and allows it to be cleared", async () => {
+    const created = await app.inject({
+      method: "POST", url: "/api/journey",
+      headers: { ...trusted, "idempotency-key": "thought-feeling-0001" },
+      payload: { text: "I feel ready to test this.", feeling: "curious", relatedTaskId: null },
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    expect(created.json().feeling).toBe("curious");
+    const updated = await app.inject({
+      method: "PUT", url: `/api/journey/${created.json().id}`,
+      headers: { ...trusted, "if-match": created.json().etag },
+      payload: { text: "I feel ready to test this.", feeling: null, tags: [], changedMyMind: false, relatedTaskId: null, relatedMilestoneId: null, relatedDecisionId: null },
+    });
+    expect(updated.statusCode, updated.body).toBe(200);
+    expect(updated.json()).not.toHaveProperty("feeling");
+  });
+
+  it("keeps uploaded journal images in local media storage and serves only verified image types", async () => {
+    const image = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/9WQAAAAASUVORK5CYII=";
+    const uploaded = await app.inject({
+      method: "POST", url: "/api/media", headers: trusted,
+      payload: { dataUrl: `data:image/png;base64,${image}` },
+    });
+    expect(uploaded.statusCode, uploaded.body).toBe(201);
+    const imageResponse = await app.inject({ method: "GET", url: uploaded.json().src, headers: { host: trusted.host } });
+    expect(imageResponse.statusCode).toBe(200);
+    expect(imageResponse.headers["content-type"]).toContain("image/png");
+    expect(imageResponse.body).toContain("PNG");
+    const rejected = await app.inject({
+      method: "POST", url: "/api/media", headers: trusted,
+      payload: { dataUrl: "data:image/png;base64,AAAA" },
+    });
+    expect(rejected.statusCode).toBe(415);
   });
 
   it("does not duplicate Journey rows when a newer entry arrives between pages", async () => {

@@ -48,6 +48,7 @@ async function createAcceptedDecision(page: Page, title: string, keySuffix: stri
 
 test("Today is responsive and has no detectable accessibility violations", async ({ page }) => {
   await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Today", exact: true })).toBeVisible();
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Skip to main content" })).toBeFocused();
   await page.keyboard.press("Enter");
@@ -58,11 +59,11 @@ test("Today is responsive and has no detectable accessibility violations", async
   await expect(page.getByRole("heading", { name: "Today", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Today", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Journey", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Decisions", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Tech choices", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Quarter", exact: true })).toBeVisible();
   const currentUser = await page.request.get("/api/me");
   expect(currentUser.ok()).toBe(true);
-  expect(await currentUser.json()).toMatchObject({ id: "local-user", name: "Ali" });
+  expect(await currentUser.json()).toMatchObject({ id: "local-user", name: "Browser Owner" });
 
   const lightResults = await new AxeBuilder({ page }).analyze();
   expect(lightResults.violations).toEqual([]);
@@ -134,8 +135,8 @@ test("the mobile session dock stays above navigation and supports pause/resume",
 test("a decision keeps its original reasoning and appends hindsight", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "This flow deliberately mutates the shared local test store once.");
   await page.goto("/decisions");
-  await expect(page.getByRole("heading", { name: "Decisions", exact: true })).toBeVisible();
-  await page.getByRole("link", { name: "New decision" }).click();
+  await expect(page.getByRole("heading", { name: "Technical choices", exact: true })).toBeVisible();
+  await page.getByRole("link", { name: "Record a choice" }).click();
   await page.getByLabel("Title").fill("Retry ownership at the service boundary");
   await page.getByLabel("What is going on?").fill("Retries can amplify a partial failure across services.");
   await page.getByLabel("What did you decide?").fill("The caller owns retry policy and idempotency.");
@@ -168,15 +169,15 @@ test("a decision keeps its original reasoning and appends hindsight", async ({ p
   await page.getByRole("button", { name: "Save draft" }).click();
   await expect(page.getByRole("alert")).toContainText("Refresh it before saving");
   await page.getByRole("button", { name: "Refresh version, keep my text" }).click();
-  await expect(page.getByLabel("What is going on?")).toHaveValue("Retries can amplify a partial failure across services. Keep this local evidence.");
+  await expect(page.getByLabel("What is going on?")).toContainText("Retries can amplify a partial failure across services. Keep this local evidence.");
   await page.getByRole("button", { name: "Save draft" }).click();
   await page.getByRole("button", { name: "Accept decision" }).click();
   await expect(page.getByText("Read-only history")).toBeVisible();
   await expect(page.getByText("The caller owns retry policy and idempotency.")).toBeVisible();
 
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "1 decision is ready to revisit" })).toBeVisible();
-  await page.getByRole("link", { name: "See due decisions" }).click();
+  await expect(page.getByRole("heading", { name: "1 technical choice is ready to revisit" })).toBeVisible();
+  await page.getByRole("link", { name: "Review technical choices" }).click();
   await page.getByRole("link", { name: "Retry ownership at the service boundary" }).first().click();
   await page.getByRole("radio", { name: "I would adjust it" }).check();
   await page.getByLabel("What changed or still holds?").fill("The retry budget also belongs at the caller boundary.");
@@ -196,11 +197,11 @@ test("a decision keeps its original reasoning and appends hindsight", async ({ p
 
   await page.goto("/journey");
   await expect(page.getByText("The retry budget also belongs at the caller boundary.")).toBeVisible();
-  await expect(page.getByRole("link", { name: "View decision" }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: "View technical choice" }).first()).toBeVisible();
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 
   await page.goto("/tasks/2026-10-07-adr-1-live-stack-decision");
-  await page.getByRole("button", { name: "Start decision draft" }).click();
+  await page.getByRole("button", { name: "Draft technical choice" }).click();
   await expect(page.getByRole("heading", { name: "Live decision from the current stack" })).toBeVisible();
   await expect(page.getByText("draft", { exact: true })).toBeVisible();
 });
@@ -209,12 +210,12 @@ test("Decisions navigation and editor reflow without accessibility violations", 
   const acceptedTitle = `Responsive accepted decision · ${testInfo.project.name}`;
   await createAcceptedDecision(page, acceptedTitle, testInfo.project.name);
   await page.goto("/decisions");
-  await expect(page.getByRole("heading", { name: "Decisions", exact: true })).toBeVisible();
-  await page.getByRole("link", { name: "New decision" }).click();
-  await expect(page.getByRole("heading", { name: "Capture a decision" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Technical choices", exact: true })).toBeVisible();
+  await page.getByRole("link", { name: "Record a choice" }).click();
+  await expect(page.getByRole("heading", { name: "Record a technical choice" })).toBeVisible();
   const contextField = page.getByLabel("What is going on?");
   await expect(contextField).toBeVisible();
-  expect(await page.getByRole("heading", { name: "Capture a decision" }).evaluate((element) => getComputedStyle(element).fontWeight)).toBe("600");
+  expect(await page.getByRole("heading", { name: "Record a technical choice" }).evaluate((element) => getComputedStyle(element).fontWeight)).toBe("600");
   if (testInfo.project.name === "mobile-360") {
     expect(await contextField.evaluate((element) => getComputedStyle(element).fontSize)).toBe("16px");
     expect(await contextField.evaluate((element) => element.getBoundingClientRect().height)).toBeGreaterThanOrEqual(112);
@@ -300,13 +301,31 @@ test("Quick Thought returns to Journey and both themes remain accessible", async
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
   const thought = `Retry ownership belongs at one boundary · ${testInfo.project.name}`;
-  await page.getByRole("button", { name: "+ Thought" }).first().click();
+  await page.getByRole("button", { name: "Thought" }).first().click();
   const dialog = page.getByRole("dialog", { name: "Add a thought" });
   await expect(dialog.getByRole("textbox", { name: "What is worth keeping?" })).toBeFocused();
-  await dialog.getByRole("textbox", { name: "What is worth keeping?" }).fill(thought);
+  await dialog.getByRole("button", { name: "Insert table" }).click();
+  const table = dialog.getByRole("table");
+  await expect(table.getByRole("row")).toHaveCount(3);
+  await dialog.getByRole("button", { name: "Add row below" }).click();
+  await expect(table.getByRole("row")).toHaveCount(4);
+  await dialog.getByRole("button", { name: "Remove table" }).click();
+  await expect(table).toHaveCount(0);
+  const thoughtEditor = dialog.getByRole("textbox", { name: "What is worth keeping?" });
+  await thoughtEditor.fill(thought);
+  await dialog.getByLabel("Choose an image").setInputFiles({
+    name: "journey-map.png",
+    mimeType: "image/png",
+    buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/9WQAAAAASUVORK5CYII=", "base64"),
+  });
+  await expect(thoughtEditor.getByRole("img", { name: "journey-map" })).toBeVisible();
+  expect(await thoughtEditor.getByRole("img", { name: "journey-map" }).getAttribute("src")).toMatch(/^\/api\/media\/image-/);
+  await dialog.getByRole("button", { name: "Curious" }).click();
   await dialog.getByRole("button", { name: "Save thought" }).click();
   await expect(dialog).toBeHidden();
   await expect(page.getByText(thought)).toBeVisible();
+  await expect(page.getByLabel("Feeling: Curious")).toBeVisible();
+  await expect(page.getByRole("img", { name: "journey-map" })).toBeVisible();
   const entry = page.getByRole("list", { name: "Journey entries" }).getByRole("listitem").filter({ hasText: thought });
   await entry.getByRole("button", { name: "Edit" }).click();
   const editor = page.getByRole("dialog", { name: "Edit thought" });
@@ -341,7 +360,7 @@ test("task history supports correction, carry forward, and milestone review", as
 
   await page.getByRole("button", { name: "Carry remaining work forward" }).click();
   await page.getByLabel("Continuation date").fill("2026-11-04");
-  await page.getByLabel("What remains? Optional").fill("Validate the remaining failure path.");
+  await page.getByLabel("What remains?").fill("Validate the remaining failure path.");
   await page.getByRole("button", { name: "Create continuation" }).click();
   await expect(page.getByRole("heading", { name: "Partial failure" })).toBeVisible();
   await expect(page.getByText("No session time recorded yet.")).toBeVisible();
@@ -356,12 +375,17 @@ test("task history supports correction, carry forward, and milestone review", as
 test("Quarter overview navigates to Focus Areas and Milestones accessibly at desktop and 360px", async ({ page }) => {
   await page.goto("/quarter");
   await expect(page.getByRole("heading", { name: /Engineering Growth/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Schedule", exact: true })).toBeVisible();
+  await expect(page.getByText("This week", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Choose quarter")).toBeVisible();
+  await page.getByRole("button", { name: "Plan details" }).click();
   await expect(page.getByRole("heading", { name: "What would make this Quarter worthwhile" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Systems Reliability", exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Systems Reliability", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Systems Reliability", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Partial failure" }).first()).toBeVisible();
   await page.getByRole("link", { name: /Back to Quarter/ }).click();
+  await page.getByRole("button", { name: "Plan details" }).click();
   await page.getByRole("link", { name: "Week 5", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Week 5", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "View what happened during this milestone" })).toBeVisible();
@@ -413,7 +437,7 @@ test("plan preview, explicit removal acknowledgement, YAML export and unchanged 
   await page.getByRole("button", { name: "Apply plan" }).click();
   await expect(page.getByRole("heading", { name: /Engineering Growth/ })).toBeVisible();
   const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Export YAML" }).click();
+  await page.getByRole("button", { name: "Export plan" }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toBe("q4-2026-plan.yaml");
 
@@ -429,7 +453,7 @@ test("plan preview, explicit removal acknowledgement, YAML export and unchanged 
 
 test("global Search opens exact Journey and plan context", async ({ page }, testInfo) => {
   await page.goto("/journey");
-  await page.getByRole("button", { name: "+ Thought" }).first().click();
+  await page.getByRole("button", { name: "Thought" }).first().click();
   const thought = `Search returns to this thought · ${testInfo.project.name}`;
   const thoughtDialog = page.getByRole("dialog", { name: "Add a thought" });
   await thoughtDialog.getByRole("textbox", { name: "What is worth keeping?" }).fill(thought);

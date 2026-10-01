@@ -8,6 +8,7 @@ import { ReviewHistory } from "./ReviewHistory.js";
 import { acceptDecision, addDecisionReview, DecisionApiError, getDecision, saveDecision } from "./api.js";
 import type { DecisionDetail, DecisionDraftInput, DecisionReviewOutcome } from "./types.js";
 import styles from "./Decisions.module.css";
+import { Icon } from "../../ui/Icon.js";
 
 function toDraft(decision: DecisionDetail): DecisionDraftInput {
   return {
@@ -78,7 +79,7 @@ export function DecisionDetailPage() {
   return (
     <div className={styles.page}>
       <header className={styles.detailHeading}>
-        <Link to="/decisions">← Decisions</Link>
+        <Link className={styles.backLink} to="/decisions"><Icon name="back" width={16} height={16} />Back to choices</Link>
         <div className={styles.detailMeta}><span>{detail.status.toLowerCase()}</span>{detail.decisionDate ? <span>Decided {detail.decisionDate}</span> : null}</div>
         <h1>{detail.title || "Untitled decision"}</h1>
         {detail.relatedTask ? <p>From <Link to={`/tasks/${encodeURIComponent(detail.relatedTask.id)}`}>{detail.relatedTask.title}</Link></p> : null}

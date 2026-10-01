@@ -103,7 +103,7 @@ describe("production seed", () => {
     });
     expect(state.records.quarters["q4-2026"]).toMatchObject({
       planRevision: 1,
-      startDate: "2026-10-05",
+      startDate: "2026-10-01",
       endDate: "2026-12-31",
     });
     expect(Object.keys(state.records.focusAreas)).toHaveLength(4);

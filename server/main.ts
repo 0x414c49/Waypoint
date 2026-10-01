@@ -1,6 +1,9 @@
 import { resolve } from "node:path";
 import { JsonJourneyStore, StoreError } from "./adapters/json-store/index.js";
-import { LocalCurrentUserProvider } from "./adapters/local-current-user-provider.js";
+import { AuthenticatedCurrentUserProvider } from "./adapters/authenticated-current-user-provider.js";
+import { AuthService } from "./auth/auth-service.js";
+import { loadOrCreateTotpKey } from "./auth/totp.js";
+import { reconcileLegacyMedia } from "./http/media-routes.js";
 import { createProductionSeed } from "./domain/production-seed.js";
 import { buildApp } from "./http/build-app.js";
 import { createStructuredLogger } from "./infrastructure/structured-logger.js";
@@ -34,6 +37,7 @@ async function start(): Promise<void> {
 
   try {
     const diagnostics = await store.initialize();
+    await reconcileLegacyMedia(resolve(directory, "media"), store, clock.now().toISOString());
     logger.info(
       {
         storeId: diagnostics.storeId,
@@ -45,9 +49,12 @@ async function start(): Promise<void> {
     );
 
     const hostPort = (value: string) => new Set([`127.0.0.1:${value}`, `localhost:${value}`]);
+    const currentUserProvider = new AuthenticatedCurrentUserProvider(store);
+    const totpEncryptionKey = await loadOrCreateTotpKey(resolve(directory, "auth.key"));
+    const authService = new AuthService({ store, clock, idGenerator, totpEncryptionKey });
     const app = await buildApp({
       store,
-      currentUserProvider: new LocalCurrentUserProvider(store),
+      currentUserProvider,
       idGenerator,
       clock,
       logger,
@@ -58,6 +65,8 @@ async function start(): Promise<void> {
         ? new Set(["http://127.0.0.1:5173", "http://localhost:5173"])
         : new Set(["http://127.0.0.1:4173", "http://localhost:4173"]),
       serveFrontend: !development,
+      mediaDirectory: resolve(directory, "media"),
+      authService,
     });
     await app.listen({ host: "127.0.0.1", port });
   } catch (error) {

@@ -1,6 +1,7 @@
 import { Button } from "../../ui/Button.js";
 import type { DecisionOption } from "./types.js";
 import styles from "./Decisions.module.css";
+import { MarkdownEditor } from "../../ui/MarkdownEditor.js";
 
 interface Props {
   option: DecisionOption;
@@ -10,8 +11,10 @@ interface Props {
 }
 
 function lines(value: string): string[] {
-  return value.split("\n").map((item) => item.trim()).filter(Boolean);
+  return value.split("\n").map((item) => item.replace(/^\s*(?:[-*+]\s+|\d+[.)]\s+)/, "").trim()).filter(Boolean);
 }
+
+function listMarkdown(items: string[]): string { return items.map((item) => `- ${item}`).join("\n"); }
 
 export function DecisionOptionEditor({ option, index, onChange, onRemove }: Props) {
   return (
@@ -23,16 +26,16 @@ export function DecisionOptionEditor({ option, index, onChange, onRemove }: Prop
       </label>
       <label className={styles.field}>
         <span>Description</span>
-        <textarea value={option.description} onChange={(event) => onChange({ ...option, description: event.target.value })} />
+        <MarkdownEditor value={option.description} onChange={(description) => onChange({ ...option, description })} ariaLabel={`Option ${index + 1} description`} minHeight={88} />
       </label>
       <div className={styles.fieldPair}>
         <label className={styles.field}>
-          <span>Strengths <small>one per line</small></span>
-          <textarea value={option.strengths.join("\n")} onChange={(event) => onChange({ ...option, strengths: lines(event.target.value) })} />
+          <span>Strengths</span>
+          <MarkdownEditor value={listMarkdown(option.strengths)} onChange={(value) => onChange({ ...option, strengths: lines(value) })} ariaLabel={`Option ${index + 1} strengths`} minHeight={88} />
         </label>
         <label className={styles.field}>
-          <span>Weaknesses <small>one per line</small></span>
-          <textarea value={option.weaknesses.join("\n")} onChange={(event) => onChange({ ...option, weaknesses: lines(event.target.value) })} />
+          <span>Weaknesses</span>
+          <MarkdownEditor value={listMarkdown(option.weaknesses)} onChange={(value) => onChange({ ...option, weaknesses: lines(value) })} ariaLabel={`Option ${index + 1} weaknesses`} minHeight={88} />
         </label>
       </div>
       <Button type="button" variant="ghost" onClick={onRemove}>Remove option</Button>

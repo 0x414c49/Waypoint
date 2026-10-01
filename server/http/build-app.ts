@@ -2,9 +2,14 @@ import fastify from "fastify";
 import staticFiles from "@fastify/static";
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import { Type } from "@sinclair/typebox";
+import QRCode from "qrcode";
 import { resolve } from "node:path";
 import {
   CurrentUserSchema,
+  AuthInviteCreateResponseSchema,
+  AuthInviteListSchema,
+  AuthSessionResponseSchema,
+  TotpSetupResponseSchema,
   ProblemDetailsSchema,
 } from "../../shared/contracts/index.js";
 import type { CurrentUserProvider } from "../adapters/local-current-user-provider.js";
@@ -21,6 +26,9 @@ import { registerDecisionRoutes } from "./decision-routes.js";
 import { registerQuarterRoutes } from "./quarter-routes.js";
 import { registerPlanRoutes } from "./plan-routes.js";
 import { registerSearchRoutes } from "./search-routes.js";
+import { registerMediaRoutes } from "./media-routes.js";
+import { AuthService, readCookie, sessionCookie } from "../auth/auth-service.js";
+import { AuthenticatedCurrentUserProvider } from "../adapters/authenticated-current-user-provider.js";
 
 interface BuildAppOptions {
   readonly store: JourneyStore;
@@ -31,7 +39,9 @@ interface BuildAppOptions {
   readonly allowedHosts: ReadonlySet<string>;
   readonly allowedMutationOrigins: ReadonlySet<string>;
   readonly serveFrontend?: boolean;
+  readonly mediaDirectory?: string;
   readonly registerTestRoutes?: boolean;
+  readonly authService?: AuthService;
 }
 
 const mutatingMethods = new Set(["POST", "PUT", "PATCH", "DELETE"]);
@@ -43,6 +53,18 @@ export async function buildApp(options: BuildAppOptions) {
     loggerInstance: options.logger,
     genReqId: () => `trace-${options.idGenerator.generate()}`,
   }).withTypeProvider<TypeBoxTypeProvider>();
+  const authEnabled = Boolean(options.authService);
+  const authProvider = options.currentUserProvider instanceof AuthenticatedCurrentUserProvider ? options.currentUserProvider : undefined;
+  const limiter = new Map<string, { count: number; resetAt: number }>();
+  const authPublic = (url: string) => ["/api/auth/session", "/api/auth/totp/setup", "/api/auth/login", "/api/auth/register", "/api/auth/logout"].includes(url.split("?")[0]!);
+  const limited = (kind: string, key: string): void => {
+    const now = Date.now();
+    if (limiter.size >= 10_000) for (const [staleKey, bucket] of limiter) { if (bucket.resetAt <= now) limiter.delete(staleKey); if (limiter.size < 9_000) break; }
+    const bucketKey = `${kind}:${key}`; const existing = limiter.get(bucketKey);
+    if (!existing || existing.resetAt <= now) { limiter.set(bucketKey, { count: 1, resetAt: now + 15 * 60_000 }); return; }
+    existing.count += 1;
+    if (existing.count > 10) throw new AppError(429, "RATE_LIMITED", "Too many attempts", "Try again later.", { retryAfterSeconds: Math.ceil((existing.resetAt - now) / 1000) });
+  };
 
   app.addHook("onRequest", async (request, reply) => {
     const host = request.headers.host;
@@ -64,9 +86,22 @@ export async function buildApp(options: BuildAppOptions) {
           ),
         );
     }
+    if (authEnabled && request.url.startsWith("/api/") && !authPublic(request.url)) {
+      const current = await options.authService!.authenticateToken(readCookie(request, options.authService!.cookieName));
+      if (!current) return reply.code(401).type("application/problem+json").send(problem(request.id, request.url, "AUTHENTICATION_REQUIRED", "Authentication required", 401, "Sign in to use this local resource."));
+      authProvider?.setRequestUser(request.id, current);
+    }
   });
 
-  app.addHook("onSend", async (_request, reply, payload) => {
+  app.addHook("onRequest", (request, _reply, done) => {
+    if (authEnabled && authProvider && request.url.startsWith("/api/") && !authPublic(request.url)) authProvider.runRequest(request.id, done);
+    else done();
+  });
+  app.addHook("onResponse", async (request) => {
+    if (authProvider) authProvider.setRequestUser(request.id, undefined);
+  });
+
+  app.addHook("onSend", async (request, reply, payload) => {
     reply
       .header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'")
       .header("X-Content-Type-Options", "nosniff")
@@ -74,6 +109,7 @@ export async function buildApp(options: BuildAppOptions) {
       .header("Referrer-Policy", "no-referrer")
       .header("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
       .header("Cross-Origin-Resource-Policy", "same-origin");
+    if (authEnabled && request.url.startsWith("/api/")) reply.header("Cache-Control", "no-store");
     return payload;
   });
 
@@ -88,6 +124,7 @@ export async function buildApp(options: BuildAppOptions) {
       },
     },
     async () => {
+      if (authProvider) return authProvider.getCurrentUser();
       const userId = await options.currentUserProvider.getCurrentUserId();
       return options.store.read((state) => {
         const user = state.records.users[userId];
@@ -96,6 +133,59 @@ export async function buildApp(options: BuildAppOptions) {
       });
     },
   );
+
+  if (authEnabled && authProvider) {
+    const TotpSetupBody = Type.Object({ inviteId: Type.String({ minLength: 1, maxLength: 256 }), email: Type.String({ minLength: 3, maxLength: 320 }) }, { additionalProperties: false });
+    const RegisterBody = Type.Object({ inviteId: Type.String({ minLength: 1, maxLength: 256 }), email: Type.String({ minLength: 3, maxLength: 320 }), name: Type.String({ minLength: 1, maxLength: 120 }), timeZone: Type.String({ minLength: 1, maxLength: 100 }), password: Type.String({ minLength: 1, maxLength: 256 }), totpSecret: Type.Optional(Type.String({ minLength: 32, maxLength: 32, pattern: "^[A-Z2-7]+$" })), totpCode: Type.Optional(Type.String({ minLength: 6, maxLength: 6, pattern: "^\\d{6}$" })) }, { additionalProperties: false });
+    const LoginBody = Type.Object({ email: Type.String({ minLength: 3, maxLength: 320 }), password: Type.String({ minLength: 1, maxLength: 256 }), totpCode: Type.Optional(Type.String({ minLength: 6, maxLength: 6, pattern: "^\\d{6}$" })) }, { additionalProperties: false });
+    const InviteBody = Type.Object({ email: Type.String({ minLength: 3, maxLength: 320 }) }, { additionalProperties: false });
+    const InviteParams = Type.Object({ id: Type.String({ minLength: 64, maxLength: 64, pattern: "^[a-f0-9]+$" }) }, { additionalProperties: false });
+    const secureCookie = options.authService!.cookieName.startsWith("__Host-");
+    app.get("/api/auth/session", { schema: { response: { 200: AuthSessionResponseSchema } } }, async (request) => {
+      const current = await options.authService!.authenticateToken(readCookie(request, options.authService!.cookieName));
+      return current ? { authenticated: true, user: current } : { authenticated: false };
+    });
+    app.post("/api/auth/totp/setup", { schema: { body: TotpSetupBody, response: { 200: TotpSetupResponseSchema } } }, async (request) => {
+      const input = request.body as { inviteId: string; email: string };
+      limited("totp-setup", `${input.email.trim().toLowerCase()}|${request.ip}`);
+      const enrollment = await options.authService!.prepareTotpEnrollment(input.inviteId, input.email);
+      const qrDataUrl = await QRCode.toDataURL(enrollment.uri, { errorCorrectionLevel: "M", margin: 2, width: 240, color: { dark: "#162127ff", light: "#ffffffff" } });
+      return { secret: enrollment.secret, qrDataUrl };
+    });
+    app.post("/api/auth/register", { schema: { body: RegisterBody, response: { 201: AuthSessionResponseSchema } } }, async (request, reply) => {
+      const input = request.body as { inviteId: string; email: string; name: string; timeZone: string; password: string; totpSecret?: string; totpCode?: string };
+      limited("register", `${input.email.trim().toLowerCase()}|${request.ip}`);
+      const result = await options.authService!.register(input);
+      return reply.header("Set-Cookie", sessionCookie(options.authService!.cookieName, result.token, secureCookie)).code(201).send({ authenticated: true, user: result.user });
+    });
+    app.post("/api/auth/login", { schema: { body: LoginBody, response: { 200: AuthSessionResponseSchema } } }, async (request, reply) => {
+      const input = request.body as { email: string; password: string; totpCode?: string };
+      limited("login", `${input.email.trim().toLowerCase()}|${request.ip}`);
+      const result = await options.authService!.login(input.email, input.password, input.totpCode);
+      return reply.header("Set-Cookie", sessionCookie(options.authService!.cookieName, result.token, secureCookie)).send({ authenticated: true, user: result.user });
+    });
+    app.post("/api/auth/logout", async (request, reply) => {
+      await options.authService!.logout(readCookie(request, options.authService!.cookieName));
+      return reply.header("Set-Cookie", sessionCookie(options.authService!.cookieName, null, secureCookie)).code(204).send();
+    });
+    app.get("/api/auth/invites", { schema: { response: { 200: AuthInviteListSchema } } }, async () => {
+      const current = await authProvider.getCurrentUser();
+      if (current.role !== "OWNER") throw new AppError(403, "FORBIDDEN", "Forbidden", "Owner access is required.");
+      return { items: await options.authService!.listInvites() };
+    });
+    app.post("/api/auth/invites", { schema: { body: InviteBody, response: { 201: AuthInviteCreateResponseSchema } } }, async (request, reply) => {
+      const current = await authProvider.getCurrentUser();
+      if (current.role !== "OWNER") throw new AppError(403, "FORBIDDEN", "Forbidden", "Owner access is required.");
+      const result = await options.authService!.createInvite(current, (request.body as { email: string }).email);
+      return reply.code(201).send({ inviteId: result.rawInviteId, invite: result.invite });
+    });
+    app.delete("/api/auth/invites/:id", { schema: { params: InviteParams } }, async (request, reply) => {
+      const current = await authProvider.getCurrentUser();
+      if (current.role !== "OWNER") throw new AppError(403, "FORBIDDEN", "Forbidden", "Owner access is required.");
+      await options.authService!.revokeInvite((request.params as { id: string }).id);
+      return reply.code(204).send();
+    });
+  }
 
   if (options.registerTestRoutes) {
     app.post(
@@ -162,6 +252,7 @@ export async function buildApp(options: BuildAppOptions) {
     }
 
     if (error instanceof AppError) {
+      if (error.status === 429 && typeof error.extensions.retryAfterSeconds === "number") reply.header("Retry-After", String(error.extensions.retryAfterSeconds));
       return reply
         .code(error.status)
         .type("application/problem+json")
@@ -245,6 +336,8 @@ export async function buildApp(options: BuildAppOptions) {
   registerQuarterRoutes(app, options);
   registerPlanRoutes(app, options);
   registerSearchRoutes(app, options);
+  const mediaDirectory = options.mediaDirectory ?? resolve(process.cwd(), "data/store/media");
+  registerMediaRoutes(app, { directory: mediaDirectory, idGenerator: options.idGenerator, store: options.store, currentUserProvider: options.currentUserProvider, clock: options.clock });
 
   return app;
 }
