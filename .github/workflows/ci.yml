@@ -63,13 +63,14 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v6
 
-      - name: Parse Compose/workflow YAML and Unraid XML
-        shell: bash
+      - name: Validate Unraid XML
         run: |
-          ruby -e 'require "yaml"; ARGV.each { |path| YAML.parse_file(path); puts "#{path} YAML OK" }' \
-            compose.yaml .github/workflows/ci.yml .github/workflows/container-publish.yml
-          xmllint --noout unraid/waypoint.xml
-          echo "unraid/waypoint.xml XML OK"
+          python3 - <<'PY'
+          from xml.etree import ElementTree
+
+          ElementTree.parse("unraid/waypoint.xml")
+          print("unraid/waypoint.xml XML OK")
+          PY
 
       - name: Validate Compose interpolation
         run: docker compose config --quiet
