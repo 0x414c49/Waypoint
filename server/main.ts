@@ -9,10 +9,10 @@ import { buildApp } from "./http/build-app.js";
 import { createStructuredLogger } from "./infrastructure/structured-logger.js";
 import { SystemClock, type Clock } from "./ports/clock.js";
 import { RandomIdGenerator } from "./ports/id-generator.js";
+import { parseRuntimeConfig } from "./runtime-config.js";
 
 async function start(): Promise<void> {
-  const development = process.env.JOURNEY_ENV === "development";
-  const port = development ? 4174 : 4173;
+  const config = parseRuntimeConfig();
   const fixedNow = process.env.JOURNEY_ENV === "test" ? process.env.JOURNEY_FIXED_NOW : undefined;
   let testInstant = fixedNow ? Date.parse(fixedNow) : 0;
   const clock: Clock = fixedNow
@@ -27,7 +27,7 @@ async function start(): Promise<void> {
   if (Number.isNaN(clock.now().valueOf())) throw new Error("JOURNEY_FIXED_NOW must be an ISO instant.");
   const idGenerator = new RandomIdGenerator();
   const logger = createStructuredLogger(process.env.LOG_LEVEL ?? "info");
-  const directory = resolve(process.cwd(), process.env.JOURNEY_STORE_DIR ?? "data/store");
+  const directory = config.storeDirectory;
   const store = new JsonJourneyStore({
     directory,
     clock,
@@ -48,27 +48,22 @@ async function start(): Promise<void> {
       "Local store ready",
     );
 
-    const hostPort = (value: string) => new Set([`127.0.0.1:${value}`, `localhost:${value}`]);
     const currentUserProvider = new AuthenticatedCurrentUserProvider(store);
     const totpEncryptionKey = await loadOrCreateTotpKey(resolve(directory, "auth.key"));
-    const authService = new AuthService({ store, clock, idGenerator, totpEncryptionKey });
+    const authService = new AuthService({ store, clock, idGenerator, totpEncryptionKey, secureCookies: config.secureCookies });
     const app = await buildApp({
       store,
       currentUserProvider,
       idGenerator,
       clock,
       logger,
-      allowedHosts: development
-        ? new Set([...hostPort("5173"), ...hostPort("4174")])
-        : hostPort("4173"),
-      allowedMutationOrigins: development
-        ? new Set(["http://127.0.0.1:5173", "http://localhost:5173"])
-        : new Set(["http://127.0.0.1:4173", "http://localhost:4173"]),
-      serveFrontend: !development,
-      mediaDirectory: resolve(directory, "media"),
+      allowedHosts: config.allowedHosts,
+      allowedMutationOrigins: config.allowedMutationOrigins,
+      serveFrontend: config.serveFrontend,
+      mediaDirectory: config.mediaDirectory,
       authService,
     });
-    await app.listen({ host: "127.0.0.1", port });
+    await app.listen({ host: config.host, port: config.port });
   } catch (error) {
     if (error instanceof StoreError) {
       logger.fatal(

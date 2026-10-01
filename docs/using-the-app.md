@@ -27,6 +27,33 @@ Then open `http://127.0.0.1:4173`.
 
 Your data stays on this machine in `data/store`. Preserve that directory—including `auth.key`—when backing up or moving the app; do not hand-edit its files while the server is running. Backups contain password verifiers, encrypted authenticator secrets, the key needed to decrypt them, and private activity, so keep them private.
 
+## Docker, Compose, and Unraid
+
+The production image is published for `linux/amd64` (x86-64) and `linux/arm64`. `linux/386` is intentionally not supported: Node.js 24 and the native runtime ecosystem do not provide a supported 32-bit target. The image binds to `0.0.0.0` inside the container, stores everything under `/app/data`, and runs as the non-root Node UID 1000.
+
+From the repository, copy `.env.example` to `.env` if desired, then start the Compose deployment and create the first owner invite explicitly:
+
+```sh
+docker compose pull
+docker compose up -d
+docker compose exec waypoint npm run auth:bootstrap:production -- --email you@example.com
+```
+
+Visit the exact `JOURNEY_PUBLIC_URL` in `compose.yaml` (default `http://localhost:4173`). For another LAN device, set `WAYPOINT_PUBLIC_URL` in `.env` to the exact address, such as `http://192.168.1.25:4173`, before `docker compose up -d`. Waypoint derives one exact trusted Host and Origin from that URL. Add only exact aliases through `WAYPOINT_TRUSTED_HOSTS` and `WAYPOINT_TRUSTED_ORIGINS`; do not use a wildcard. The bootstrap command is never run automatically and does not rotate an invite during restart.
+
+Leave `WAYPOINT_DATA_PATH` unset to use the named `waypoint-data` volume. To use a host bind path instead, set an absolute path such as `WAYPOINT_DATA_PATH=/srv/waypoint` in `.env`; back up or restore that path as one unit while Waypoint is stopped.
+
+For HTTPS, use a reverse proxy with `WAYPOINT_PUBLIC_URL=https://waypoint.example.com`; secure cookies are inferred from the HTTPS URL, or can be forced with `WAYPOINT_SECURE_COOKIES=true`. Preserve the public Host and Origin at the proxy and keep the service private or protected by the proxy. Waypoint is designed for a private installation, not direct public-internet exposure.
+
+On Unraid, import [`unraid/waypoint.xml`](../unraid/waypoint.xml), map `/mnt/user/appdata/waypoint` to `/app/data`, and fill the required `JOURNEY_PUBLIC_URL` field with the exact LAN address users will open (for example `http://192.168.1.25:4173`). The template adds Docker's non-root `--user=99:100` (`nobody:users`), so new appdata files use normal Unraid ownership. If an existing directory has different ownership, adjust it once before starting:
+
+```sh
+mkdir -p /mnt/user/appdata/waypoint
+chown -R 99:100 /mnt/user/appdata/waypoint
+```
+
+Run the same bootstrap command from the container console. Keep `/mnt/user/appdata/waypoint` as one backup unit, including `store/auth.key`, and stop Waypoint before copying or restoring it. A named Compose volume can be backed up with a temporary helper container (`docker run --rm -v <volume>:/source -v "$PWD/backups":/backup alpine tar -C /source -czf /backup/waypoint-data.tgz .`); restore the complete archive while Waypoint is stopped, then start it again. Never edit store JSON while the server is running.
+
 The owner can open **Access** to create one-time, email-bound member invites. Copy a new invite immediately: only its secure digest is stored, so the raw invite ID cannot be shown again. Members get their own private Quarter, Journey, Decisions, and media; they cannot see another person’s records or manage invites.
 
 ## The friendly daily loop

@@ -53,6 +53,26 @@ afterEach(async () => {
 });
 
 describe("local HTTP boundary", () => {
+  it("provides a host-validated health endpoint without requiring a session", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/healthz",
+      headers: { host: "127.0.0.1:4173" },
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ status: "ok" });
+  });
+
+  it("does not let the health endpoint bypass trusted Host validation", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/healthz",
+      headers: { host: "untrusted.example" },
+    });
+    expect(response.statusCode).toBe(403);
+    expect(response.json()).toMatchObject({ code: "UNTRUSTED_ORIGIN" });
+  });
+
   it("serves the validated current user with secure headers", async () => {
     const response = await app.inject({
       method: "GET",

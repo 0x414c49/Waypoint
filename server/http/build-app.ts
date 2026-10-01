@@ -134,6 +134,12 @@ export async function buildApp(options: BuildAppOptions) {
     },
   );
 
+  // The process only starts listening after the store has initialized, so a
+  // successful response is a useful liveness/readiness signal for containers.
+  // Host validation above still applies; this is not an unauthenticated data
+  // endpoint and does not bypass the trusted-host boundary.
+  app.get("/healthz", async (_request, reply) => reply.code(200).send({ status: "ok" }));
+
   if (authEnabled && authProvider) {
     const TotpSetupBody = Type.Object({ inviteId: Type.String({ minLength: 1, maxLength: 256 }), email: Type.String({ minLength: 3, maxLength: 320 }) }, { additionalProperties: false });
     const RegisterBody = Type.Object({ inviteId: Type.String({ minLength: 1, maxLength: 256 }), email: Type.String({ minLength: 3, maxLength: 320 }), name: Type.String({ minLength: 1, maxLength: 120 }), timeZone: Type.String({ minLength: 1, maxLength: 100 }), password: Type.String({ minLength: 1, maxLength: 256 }), totpSecret: Type.Optional(Type.String({ minLength: 32, maxLength: 32, pattern: "^[A-Z2-7]+$" })), totpCode: Type.Optional(Type.String({ minLength: 6, maxLength: 6, pattern: "^\\d{6}$" })) }, { additionalProperties: false });

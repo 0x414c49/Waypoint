@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Container version="2">
+  <Name>Waypoint</Name>
+  <Repository>ghcr.io/0x414c49/waypoint:latest</Repository>
+  <Registry>https://ghcr.io/0x414c49/waypoint</Registry>
+  <Network>bridge</Network>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/0x414c49/Waypoint/issues</Support>
+  <Project>https://github.com/0x414c49/Waypoint</Project>
+  <Overview>Waypoint is a private learning log for turning an engineering growth plan into a sustainable daily habit. It stores all JSON data, media, sessions, and the authentication encryption key under one persistent /app/data directory. The exact JOURNEY_PUBLIC_URL is mandatory: set it to the LAN URL users will open (for example http://192.168.1.25:4173) before starting. The template runs the image as Unraid's non-root nobody:users (UID 99, GID 100) through --user=99:100; keep the appdata directory writable by that user.</Overview>
+  <Category>Productivity:</Category>
+  <TemplateURL>https://raw.githubusercontent.com/0x414c49/Waypoint/main/unraid/waypoint.xml</TemplateURL>
+  <ReadMe>https://raw.githubusercontent.com/0x414c49/Waypoint/main/README.md</ReadMe>
+  <Requires>Set JOURNEY_PUBLIC_URL to the exact URL users will open before first start; the container refuses an all-interface bind without explicit Host/Origin trust configuration.</Requires>
+  <Changes>Initial container release</Changes>
+  <Date>2026-10-01</Date>
+  <License>Not specified; see the repository</License>
+  <ExtraSearchTerms>learning journal engineering productivity habit</ExtraSearchTerms>
+  <WebUI>http://[IP]:[PORT:4173]/</WebUI>
+  <Config Name="WebUI port" Target="4173" Default="4173" Mode="tcp" Description="Container port 4173. Pick an unused host port if needed." Type="Port" Display="always" Required="true" Mask="false">4173</Config>
+  <Config Name="Waypoint data" Target="/app/data" Default="/mnt/user/appdata/waypoint" Mode="rw" Description="Persistent data directory. It contains the store JSON, media, and auth.key. Keep this directory in backups." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/waypoint</Config>
+  <Config Name="JOURNEY_PUBLIC_URL (REQUIRED)" Target="JOURNEY_PUBLIC_URL" Default="" Mode="" Description="REQUIRED: exact URL users open, for example http://192.168.1.25:4173 or https://waypoint.example.com behind a reverse proxy. Do not leave blank; this controls trusted Host/Origin checks." Type="Variable" Display="always" Required="true" Mask="false"/>
+  <Config Name="JOURNEY_SECURE_COOKIES" Target="JOURNEY_SECURE_COOKIES" Default="" Mode="" Description="Optional true for HTTPS deployments. Leave empty to infer true from an https public URL and false for HTTP." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="JOURNEY_TRUSTED_HOSTS" Target="JOURNEY_TRUSTED_HOSTS" Default="" Mode="" Description="Optional comma-separated exact Host aliases, including ports when present." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="JOURNEY_TRUSTED_ORIGINS" Target="JOURNEY_TRUSTED_ORIGINS" Default="" Mode="" Description="Optional comma-separated exact http:// or https:// Origin aliases." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="LOG_LEVEL" Target="LOG_LEVEL" Default="info" Mode="" Description="Logging level: silent, fatal, error, warn, info, debug, or trace." Type="Variable" Display="advanced" Required="false" Mask="false">info</Config>
+  <ExtraParams>--user=99:100</ExtraParams>
+</Container>

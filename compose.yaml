@@ -1,0 +1,43 @@
+services:
+  waypoint:
+    image: ${WAYPOINT_IMAGE:-ghcr.io/0x414c49/waypoint:latest}
+    restart: unless-stopped
+    ports:
+      - "${WAYPOINT_PORT:-4173}:4173"
+    environment:
+      NODE_ENV: production
+      JOURNEY_ENV: production
+      JOURNEY_HOST: 0.0.0.0
+      JOURNEY_PORT: 4173
+      JOURNEY_STORE_DIR: /app/data/store
+      # Change this to the exact address (and scheme) that users will open.
+      JOURNEY_PUBLIC_URL: ${WAYPOINT_PUBLIC_URL:-http://localhost:4173}
+      # Empty means false for HTTP and true for an https JOURNEY_PUBLIC_URL.
+      JOURNEY_SECURE_COOKIES: ${WAYPOINT_SECURE_COOKIES:-}
+      # Optional comma-separated exact Host values and Origin values for aliases.
+      JOURNEY_TRUSTED_HOSTS: ${WAYPOINT_TRUSTED_HOSTS:-}
+      JOURNEY_TRUSTED_ORIGINS: ${WAYPOINT_TRUSTED_ORIGINS:-}
+      LOG_LEVEL: ${WAYPOINT_LOG_LEVEL:-info}
+    volumes:
+      # Leave WAYPOINT_DATA_PATH unset for the named waypoint-data volume.
+      # Set an absolute host path when a bind mount is preferred.
+      - "${WAYPOINT_DATA_PATH:-waypoint-data}:/app/data"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - >-
+          fetch('http://127.0.0.1:4173/healthz',{headers:{host:'localhost:4173'}})
+          .then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+volumes:
+  waypoint-data:

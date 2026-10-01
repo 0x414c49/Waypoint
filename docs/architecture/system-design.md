@@ -32,7 +32,13 @@ This is one deployable system with module boundaries, not distributed services. 
 - The browser never reads the JSON store directly.
 - The fixed port is the v1 single-instance authority; startup stops if it cannot bind.
 - No CORS is enabled. Production accepts `Host` only as `127.0.0.1:4173` or `localhost:4173`. `POST`, `PUT`, `PATCH`, and `DELETE` require `Origin` exactly `http://127.0.0.1:4173` or `http://localhost:4173`; missing, `null`, or other origins return `403 UNTRUSTED_ORIGIN`. Safe reads still require an allowed Host. Development explicitly adds only the configured Vite proxy origin.
-- V1 is responsive at mobile viewport sizes but is not exposed to a phone over LAN or the public internet. Remote-device use requires a later authenticated deployment design.
+- This remains the default local runtime. The supported container profile is the explicit private-LAN/reverse-proxy exception described below; it does not change these local defaults.
+
+### Container/private-LAN use
+
+- The image binds `0.0.0.0:4173` only because its runtime configuration explicitly sets that bind address. `JOURNEY_PUBLIC_URL` must name the exact URL users open; its host and origin are added to the same strict allowlists, with optional exact aliases in `JOURNEY_TRUSTED_HOSTS` and `JOURNEY_TRUSTED_ORIGINS`.
+- No wildcard Host or Origin mode is provided. Safe reads and every mutation continue to require an allowed Host, and mutations additionally require an exact allowed Origin. HTTPS deployments should enable secure cookies (inferred from an `https` public URL or set with `JOURNEY_SECURE_COOKIES=true`).
+- The image supports `linux/amd64` (x86-64) and `linux/arm64`; `linux/386` is not a supported Node.js 24 target. Private LAN or an authenticated reverse proxy is expected; direct public-internet exposure remains out of scope.
 
 ### Development
 
@@ -172,7 +178,7 @@ Global Search is a read-only query over the current user’s plan, Journey, and 
 
 Older stores may contain `records.aiReviews` written during the former Slice 5 implementation. The current app keeps those rows schema-valid for backward-compatible startup but exposes no AI review UI/API and never creates, displays, or sends them anywhere.
 
-This baseline is appropriate only for the documented local runtime. Exposing the process beyond loopback reopens authentication, authorization, transport security, CSRF, data protection, backup, and operational architecture.
+This baseline is appropriate for the documented local runtime and the explicitly configured private container profile. A container must not be exposed beyond a private LAN or authenticated HTTPS reverse proxy without a separate security review covering authentication, authorization, transport security, CSRF, data protection, backup, and operational architecture.
 
 ## Intentionally absent
 

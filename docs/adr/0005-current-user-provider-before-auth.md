@@ -18,6 +18,6 @@ This tiny seam keeps ownership explicit and later authentication replaceable wit
 
 - Ownership remains explicit in every use case.
 - A future authenticated adapter can change user resolution without rewriting domain policies.
-- V1 must remain loopback-only because this seam is not security by itself.
+- The default local runtime remains loopback-only because this seam is not security by itself. The supported container profile may bind on a private LAN only when its explicit Host/Origin allowlists, authentication, secure-cookie, and reverse-proxy settings are configured as documented.
 
 The seam remains, but the production adapter now resolves the authenticated request identity. `LocalCurrentUserProvider` remains an explicit test adapter only.

@@ -22,6 +22,35 @@ There is no default user or password. Your login is the email and password you r
 
 The daily workflow, Quarter plan preview/export, local-data location, Journey activity calendar, and Decisions flow are explained in [Using the app](docs/using-the-app.md).
 
+## Docker, Compose, and Unraid
+
+The published image is `ghcr.io/0x414c49/waypoint:latest`. Copy `.env.example` to `.env` when you want to make the deployment settings discoverable. With `WAYPOINT_DATA_PATH` unset, Docker Compose creates one named volume (`waypoint-data`) mounted at `/app/data`; set it to an absolute host path when a bind mount is preferred:
+
+```sh
+docker compose pull
+docker compose up -d
+docker compose exec waypoint npm run auth:bootstrap:production -- --email you@example.com
+```
+
+For a bind mount, set `WAYPOINT_DATA_PATH=/srv/waypoint` (or another host path) in `.env` before `docker compose up -d`. The named volume and bind path contain the same complete backup unit: store JSON, media, and `store/auth.key`.
+
+Open the `JOURNEY_PUBLIC_URL` configured in `compose.yaml` (the default is `http://localhost:4173`) and paste the one-time invite at `/register`. Bootstrap is an explicit operator command; it does not run or rotate an invite on container restarts. To use another LAN address, set `WAYPOINT_PUBLIC_URL` in a `.env` file, for example `WAYPOINT_PUBLIC_URL=http://192.168.1.25:4173`, before starting the service. The value must be the exact URL users open. Add exact comma-separated aliases with `WAYPOINT_TRUSTED_HOSTS` and `WAYPOINT_TRUSTED_ORIGINS` when needed; Waypoint never uses a wildcard Host or Origin rule.
+
+For HTTPS behind a reverse proxy, set `WAYPOINT_PUBLIC_URL=https://waypoint.example.com` and either leave `WAYPOINT_SECURE_COOKIES` empty (it is inferred from `https`) or set it to `true`. Terminate TLS at the proxy, preserve the public `Host` and `Origin`, and keep Waypoint private to your LAN or authenticated proxy; this is not a hosted multi-tenant service.
+
+The image supports `linux/amd64` (x86-64, the architecture usually called x86) and `linux/arm64`. True 32-bit `linux/386` is not supported or advertised because the Node.js 24 base image and native ecosystem are not a supported target.
+
+For Unraid, import [`unraid/waypoint.xml`](unraid/waypoint.xml) into Community Applications, keep the data mapping at `/mnt/user/appdata/waypoint:/app/data`, and set the required `JOURNEY_PUBLIC_URL` field to the exact address users will open (for example `http://192.168.1.25:4173`). The template supplies Docker's non-root `--user=99:100` (Unraid `nobody:users`) so new appdata files use the normal Unraid share ownership. If this directory already exists with different ownership, adjust it once before starting:
+
+```sh
+mkdir -p /mnt/user/appdata/waypoint
+chown -R 99:100 /mnt/user/appdata/waypoint
+```
+
+Open the container console after it starts and run `npm run auth:bootstrap:production -- --email you@example.com`. The template intentionally has no invented logo URL. Stop the container before backing up `/mnt/user/appdata/waypoint` (including `store/auth.key`) and restore the complete directory before starting it again. Treat backups as private: they contain password verifiers, encrypted authenticator secrets, the key needed to decrypt them, and all activity/media.
+
+The Compose file and the template expose only port 4173. The container health check is `/healthz`; it still enforces the configured Host boundary.
+
 ## Current stage
 
 The project has confirmed product, UX, visual, domain, API, and persistence behavior. The consolidated implementation review passed independent A/B verification and was explicitly approved on 2026-09-27. Slices 0–5 are complete: executable foundation, daily learning loop, lived Journey, simplified durable Decisions, history-safe plan lifecycle with Quarter navigation, and global Search. Generated AI review and provider connections were removed from the product.

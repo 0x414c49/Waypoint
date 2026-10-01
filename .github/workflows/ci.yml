@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: waypoint-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Check and browser tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Run the full check
+        run: npm run check
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser and accessibility tests
+        run: npm run test:browser
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: playwright-report
+          path: playwright-report/
+          if-no-files-found: ignore
+
+      - name: Upload browser test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: playwright-test-results
+          path: test-results/
+          if-no-files-found: ignore
+
+  container:
+    name: Validate container and deployment metadata
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Parse Compose/workflow YAML and Unraid XML
+        shell: bash
+        run: |
+          ruby -e 'require "yaml"; ARGV.each { |path| YAML.parse_file(path); puts "#{path} YAML OK" }' \
+            compose.yaml .github/workflows/ci.yml .github/workflows/container-publish.yml
+          xmllint --noout unraid/waypoint.xml
+          echo "unraid/waypoint.xml XML OK"
+
+      - name: Validate Compose interpolation
+        run: docker compose config --quiet
+
+      - name: Build the native container image
+        run: docker build --tag waypoint:ci --file Dockerfile .

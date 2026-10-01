@@ -13,6 +13,7 @@
     "build": "vite build && tsc -p tsconfig.server.json",
     "start": "node dist/runtime/server/main.js",
     "auth:bootstrap": "tsx server/bootstrap-auth.ts",
+    "auth:bootstrap:production": "node dist/runtime/server/bootstrap-auth.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings 0",
     "test": "vitest run",
