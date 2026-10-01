@@ -1,6 +1,6 @@
 import type { ReactNode, SVGProps } from "react";
 
-type IconName = "add" | "draft" | "review" | "accepted" | "history" | "open" | "today" | "quarter" | "journey" | "decisions" | "search" | "thought" | "sun" | "moon" | "back" | "bold" | "italic" | "underline" | "highlight" | "heading" | "bulletList" | "orderedList" | "table" | "image" | "rowAdd" | "rowRemove" | "columnAdd" | "columnRemove" | "tableRemove" | "remove";
+type IconName = "add" | "draft" | "review" | "accepted" | "history" | "open" | "today" | "quarter" | "journey" | "decisions" | "search" | "thought" | "sun" | "moon" | "back" | "clock" | "calendar" | "bold" | "italic" | "underline" | "highlight" | "heading" | "bulletList" | "orderedList" | "table" | "image" | "rowAdd" | "rowRemove" | "columnAdd" | "columnRemove" | "tableRemove" | "remove";
 
 const paths: Record<IconName, ReactNode> = {
   add: <path d="M12 5v14M5 12h14" />,
@@ -18,6 +18,8 @@ const paths: Record<IconName, ReactNode> = {
   sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" /></>,
   moon: <path d="M20.8 14.2A8.5 8.5 0 0 1 9.8 3.2 8.5 8.5 0 1 0 20.8 14.2Z" />,
   back: <><path d="M19 12H5M11 18l-6-6 6-6" /></>,
+  clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
+  calendar: <><rect x="3.5" y="5" width="17" height="16" rx="2" /><path d="M7.5 3v4M16.5 3v4M3.5 9.5h17" /></>,
   bold: <><path d="M7 5h6a3.5 3.5 0 0 1 0 7H7zM7 12h7a3.5 3.5 0 0 1 0 7H7z" /><path d="M7 5v14" /></>,
   italic: <><path d="M14 5h6M4 19h6M14 5 10 19" /></>,
   underline: <><path d="M7 4v6a5 5 0 0 0 10 0V4M5 20h14" /></>,

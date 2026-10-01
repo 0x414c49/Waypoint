@@ -14,11 +14,17 @@ import { Icon } from "../../ui/Icon.js";
 
 function duration(seconds: number): string {
   const minutes = Math.round(seconds / 60);
-  return minutes < 60 ? `${minutes} min` : `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+  if (minutes < 60) return `${minutes} min`;
+  const remainingMinutes = minutes % 60;
+  return `${Math.floor(minutes / 60)}h${remainingMinutes ? ` ${remainingMinutes}m` : ""}`;
 }
 
 function taskStatus(status: TaskDetail["task"]["status"]): string {
   return { NOT_STARTED: "Not started", IN_PROGRESS: "Running", PAUSED: "Paused", FINISHED: "Finished", SKIPPED: "Skipped" }[status];
+}
+
+function plannedDate(value: string): string {
+  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeZone: "UTC" }).format(new Date(`${value}T12:00:00.000Z`));
 }
 
 export function TaskDetailPage() {
@@ -48,33 +54,55 @@ export function TaskDetailPage() {
   const latestReview = detail.reviews.at(-1);
   return (
     <>
-    <div className={styles.page} id="task-detail-content">
-      <header className={styles.detailHeader}>
-        <Link className={styles.backLink} to="/journey"><Icon name="back" width={16} height={16} />Back to Journey</Link>
-        <div className={styles.entryMeta}><span>{taskStatus(task.status)}</span><span>{duration(task.timing.actualSecondsAtGeneratedAt)} recorded</span></div>
-        <h1>{plan.title}</h1>
-        <p>{plan.focusArea?.name ?? "Learning plan"} · planned {plan.plannedDate}</p>
-        {task.displayPlanSource === "HISTORICAL" ? <p className={styles.historyNotice}>Showing the plan text captured when this work began.</p> : null}
-        {plan.description ? <div className={styles.lead}><MarkdownContent>{plan.description}</MarkdownContent></div> : null}
-        <DecisionContextAction task={task} />
+    <div className={`${styles.page} ${styles.taskDetailPage}`} id="task-detail-content">
+      <Link className={styles.backLink} to="/journey"><Icon name="back" width={16} height={16} />Back to Journey</Link>
+
+      <header className={styles.taskBrief}>
+        <div className={styles.taskBriefBody}>
+          <div className={styles.taskMetaRow}>
+            <span className={styles.statusBadge} data-status={task.status}>{taskStatus(task.status)}</span>
+            <span className={styles.plannedDate}><Icon name="calendar" width={15} height={15} />Planned {plannedDate(plan.plannedDate)}</span>
+          </div>
+          <h1>{plan.title}</h1>
+          <p className={styles.taskFocus}>{plan.focusArea?.name ?? "Learning plan"}</p>
+          {task.displayPlanSource === "HISTORICAL" ? <p className={styles.historyNotice}>Showing the plan text captured when this work began.</p> : null}
+          {plan.description ? <div className={styles.lead}><MarkdownContent>{plan.description}</MarkdownContent></div> : null}
+          <DecisionContextAction task={task} />
+        </div>
+
+        <aside className={styles.timeSummary} aria-label={`${duration(task.timing.actualSecondsAtGeneratedAt)} recorded`}>
+          <span className={styles.timeIcon}><Icon name="clock" width={22} height={22} /></span>
+          <span className={styles.timeLabel}>Time recorded</span>
+          <strong>{duration(task.timing.actualSecondsAtGeneratedAt)}</strong>
+          <span className={styles.timeContext}>
+            {detail.sessions.length === 0
+              ? plan.plannedMinutes ? `${plan.plannedMinutes} min planned · no sessions yet` : "No sessions yet"
+              : `${detail.sessions.length} ${detail.sessions.length === 1 ? "session" : "sessions"}`}
+          </span>
+        </aside>
       </header>
 
       {latestReview ? (
-        <section className={styles.detailSection} aria-labelledby="outcome-title">
+        <section className={`${styles.detailSection} ${styles.detailCard} ${styles.outcomeCard}`} aria-labelledby="outcome-title">
           <h2 id="outcome-title">Outcome</h2>
           <p><strong>{latestReview.outcome === "PARTIAL" ? "Made progress" : latestReview.outcome.replace("_", " ").toLowerCase()}</strong></p>
           {latestReview.keyLearning ? <blockquote><MarkdownContent>{latestReview.keyLearning}</MarkdownContent></blockquote> : null}
         </section>
       ) : null}
 
-      <TaskSessions sessions={detail.sessions} onCorrect={setCorrecting} />
+      <div className={styles.detailGrid}>
+        <TaskSessions sessions={detail.sessions} onCorrect={setCorrecting} />
 
-      <section className={styles.detailSection} aria-labelledby="thoughts-title">
-        <h2 id="thoughts-title">Thoughts</h2>
-        {detail.thoughts.length === 0 ? <p className={styles.muted}>No related thoughts yet.</p> : (
-          <ul className={styles.thoughtList}>{detail.thoughts.map((thought) => <li key={thought.id}><div className={styles.entryMeta}><time dateTime={thought.occurredAt}>{new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(thought.occurredAt))}</time><FeelingNote value={thought.feeling} /></div><MarkdownContent>{thought.text}</MarkdownContent></li>)}</ul>
-        )}
-      </section>
+        <section className={`${styles.detailSection} ${styles.detailCard}`} aria-labelledby="thoughts-title">
+          <div className={styles.sectionTitleRow}>
+            <span className={styles.sectionIcon}><Icon name="thought" width={19} height={19} /></span>
+            <div><h2 id="thoughts-title">Thoughts</h2><p>{detail.thoughts.length === 0 ? "Notes connected to this task" : `${detail.thoughts.length} ${detail.thoughts.length === 1 ? "note" : "notes"}`}</p></div>
+          </div>
+          {detail.thoughts.length === 0 ? <div className={styles.sectionEmpty}><p>No related thoughts yet.</p><span>Capture one from Today whenever something clicks.</span></div> : (
+            <ul className={styles.thoughtList}>{detail.thoughts.map((thought) => <li key={thought.id}><div className={styles.entryMeta}><time dateTime={thought.occurredAt}>{new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(thought.occurredAt))}</time><FeelingNote value={thought.feeling} /></div><MarkdownContent>{thought.text}</MarkdownContent></li>)}</ul>
+          )}
+        </section>
+      </div>
 
       <CarryForwardForm detail={detail} />
 

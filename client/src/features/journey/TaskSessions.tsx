@@ -1,4 +1,5 @@
 import { Button } from "../../ui/Button.js";
+import { Icon } from "../../ui/Icon.js";
 import type { SessionDetail } from "./types.js";
 import styles from "./Journey.module.css";
 
@@ -9,9 +10,12 @@ function duration(seconds: number): string {
 
 export function TaskSessions({ sessions, onCorrect }: { sessions: SessionDetail[]; onCorrect: (session: SessionDetail) => void }) {
   return (
-    <section className={styles.detailSection} aria-labelledby="sessions-title">
-      <h2 id="sessions-title">Sessions</h2>
-      {sessions.length === 0 ? <p className={styles.muted}>No session time recorded yet.</p> : (
+    <section className={`${styles.detailSection} ${styles.detailCard}`} aria-labelledby="sessions-title">
+      <div className={styles.sectionTitleRow}>
+        <span className={styles.sectionIcon}><Icon name="clock" width={19} height={19} /></span>
+        <div><h2 id="sessions-title">Sessions</h2><p>{sessions.length === 0 ? "Your time log" : `${sessions.length} ${sessions.length === 1 ? "session" : "sessions"}`}</p></div>
+      </div>
+      {sessions.length === 0 ? <div className={styles.sectionEmpty}><p>No session time recorded yet.</p><span>Start this task from Today and your time will appear here.</span></div> : (
         <ul className={styles.sessionList}>
           {sessions.map((session) => (
             <li key={session.id}>

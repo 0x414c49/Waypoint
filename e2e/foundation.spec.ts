@@ -185,11 +185,21 @@ test("a decision keeps its original reasoning and appends hindsight", async ({ p
   await page.getByRole("button", { name: "Add review" }).click();
   await expect(page.getByText("The retry budget also belongs at the caller boundary.")).toBeVisible();
 
-  await page.getByRole("radio", { name: "Postpone review" }).check();
+  const adjustReview = page.getByRole("radio", { name: "I would adjust it" });
+  const addReview = page.getByRole("button", { name: "Add review" });
+  await expect(adjustReview).not.toBeChecked();
+  await expect(addReview).toBeDisabled();
+
+  const postponeReview = page.getByRole("radio", { name: "Postpone review" });
+  await postponeReview.check();
   await page.getByLabel("Review later").fill("2026-12-15");
-  await page.getByRole("button", { name: "Postpone review" }).click();
+  const postponeButton = page.getByRole("button", { name: "Postpone review" });
+  await expect(postponeButton).toBeEnabled();
+  await postponeButton.click();
   await expect(page.getByText("Review postponed")).toBeVisible();
 
+  await expect(postponeReview).not.toBeChecked();
+  await expect(addReview).toBeDisabled();
   await page.getByRole("radio", { name: "Replace it" }).check();
   await page.getByLabel("What changed or still holds?").fill("A new boundary now owns the retry policy.");
   await page.getByRole("button", { name: "Add review" }).click();
