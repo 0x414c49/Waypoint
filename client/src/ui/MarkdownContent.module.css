@@ -9,3 +9,5 @@
 .content img { display: block; max-width: 100%; max-height: 480px; object-fit: contain; }
 .content mark { background: var(--color-accent-soft); }
 .content blockquote { margin: 12px 0; padding-left: 14px; color: var(--color-text-secondary); border-left: 2px solid var(--color-accent); }
+.content a { color: var(--color-accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.content a:hover { text-decoration-thickness: 2px; }

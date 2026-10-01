@@ -55,7 +55,7 @@ export function TaskDetailPage() {
         <h1>{plan.title}</h1>
         <p>{plan.focusArea?.name ?? "Learning plan"} · planned {plan.plannedDate}</p>
         {task.displayPlanSource === "HISTORICAL" ? <p className={styles.historyNotice}>Showing the plan text captured when this work began.</p> : null}
-        {plan.description ? <p className={styles.lead}>{plan.description}</p> : null}
+        {plan.description ? <div className={styles.lead}><MarkdownContent>{plan.description}</MarkdownContent></div> : null}
         <DecisionContextAction task={task} />
       </header>
 
