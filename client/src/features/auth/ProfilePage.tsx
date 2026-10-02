@@ -50,10 +50,10 @@ function ProfileAccessSection() {
   }
 
   return (
-    <section className={styles.accessCard} aria-labelledby="profile-access-title">
+    <section className={`${styles.accessCard} ${styles.invitesCard}`} aria-labelledby="profile-access-title">
       <h2 id="profile-access-title">Member invites</h2>
       <p>Invites expire after seven days and can be used once.</p>
-      <form className={styles.form} onSubmit={create}>
+      <form className={`${styles.form} ${styles.inviteForm}`} onSubmit={create}>
         {error ? <p className={styles.error} role="alert">{error}</p> : null}
         <div className={styles.field}>
           <label htmlFor="invite-email">Member email</label>
@@ -138,32 +138,35 @@ export function ProfilePage() {
       <header className={styles.pageHeader}>
         <div><h1>Profile</h1><p>Manage your account and email preferences.</p></div>
       </header>
-      <div className={styles.accessGrid}>
-        <section className={styles.accessCard} aria-labelledby="account-title">
+      <div className={`${styles.accessGrid} ${user.role === "OWNER" ? styles.ownerGrid : ""}`}>
+        <section className={`${styles.accessCard} ${styles.accountCard}`} aria-labelledby="account-title">
           <h2 id="account-title">Account</h2>
-          <dl>
-            <div><dt>Name</dt><dd>{user.name}</dd></div>
-            <div><dt>Email</dt><dd>{user.email}</dd></div>
+          <div className={styles.profileIdentity}>
+            <span className={styles.profileAvatar} aria-hidden="true">{user.name.trim().charAt(0).toUpperCase()}</span>
+            <div><strong>{user.name}</strong><span>{user.email}</span></div>
+          </div>
+          <dl className={styles.accountDetails}>
             <div><dt>Role</dt><dd>{user.role === "OWNER" ? "Owner" : "Member"}</dd></div>
             <div><dt>Time zone</dt><dd>{user.timeZone}</dd></div>
-            <div><dt>Created</dt><dd>{new Date(user.createdAt).toLocaleDateString()}</dd></div>
+            <div><dt>Joined</dt><dd>{new Date(user.createdAt).toLocaleDateString()}</dd></div>
           </dl>
-          <Button type="button" variant="secondary" onClick={() => void handleSignOut()}>Sign out</Button>
+          <div className={styles.accountActions}><Button type="button" variant="secondary" onClick={() => void handleSignOut()}>Sign out</Button></div>
         </section>
         <section className={styles.accessCard} aria-labelledby="email-title">
           <h2 id="email-title">Weekly digest emails</h2>
-          <p className={styles.hint}>Sent when the digest ships; your choice is saved now.</p>
+          <p>Get a summary of your week in your inbox.</p>
           {prefsLoading ? <p role="status">Loading email preferences…</p> : (
-            <div className={styles.field}>
-              <label htmlFor="digest-subscribed">
+            <div className={styles.digestPreference}>
+              <label htmlFor="digest-subscribed" className={styles.digestLabel}>
                 <input
                   id="digest-subscribed"
+                  className={styles.digestCheckbox}
                   type="checkbox"
                   checked={subscribed}
                   disabled={prefsSaving}
                   onChange={(event) => void toggleDigest(event.target.checked)}
                 />
-                {" "}Send me weekly digest emails
+                <span>Send me weekly digest emails</span>
               </label>
             </div>
           )}
