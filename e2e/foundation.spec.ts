@@ -322,7 +322,14 @@ test("Quick Thought returns to Journey and both themes remain accessible", async
   await dialog.getByRole("button", { name: "Remove table" }).click();
   await expect(table).toHaveCount(0);
   const thoughtEditor = dialog.getByRole("textbox", { name: "What is worth keeping?" });
-  await thoughtEditor.fill(`${thought}\n\n![journey-map](https://example.com/journey-map.png)`);
+  await thoughtEditor.fill(thought);
+  await thoughtEditor.press("End");
+  await thoughtEditor.press("Enter");
+  await thoughtEditor.evaluate((element) => {
+    const clipboardData = new DataTransfer();
+    clipboardData.setData("text/plain", "![journey-map](https://example.com/journey-map.png)");
+    element.dispatchEvent(new ClipboardEvent("paste", { bubbles: true, cancelable: true, clipboardData }));
+  });
   await expect(thoughtEditor.getByRole("img", { name: "journey-map" })).toBeVisible();
   expect(await thoughtEditor.getByRole("img", { name: "journey-map" }).getAttribute("src")).toBe("https://example.com/journey-map.png");
   await dialog.getByRole("button", { name: "Curious" }).click();

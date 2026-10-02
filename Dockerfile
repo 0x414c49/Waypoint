@@ -38,9 +38,6 @@ RUN apt-get update \
 COPY --from=production-dependencies /app/node_modules ./node_modules
 COPY package.json package-lock.json ./
 COPY --from=build /app/dist ./dist
-# schema.sql is loaded at runtime via import.meta.url (sqlite-journey-store.ts);
-# tsc never emits .sql files, so ship it alongside the compiled output.
-COPY --from=build /app/server/adapters/sqlite-store/schema.sql ./dist/runtime/server/adapters/sqlite-store/schema.sql
 # The production seed is intentionally kept as a file-backed fixture.
 COPY --from=build /app/planning/fixtures ./planning/fixtures
 

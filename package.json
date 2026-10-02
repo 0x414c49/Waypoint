@@ -10,7 +10,7 @@
     "dev": "concurrently -k -n server,client -c blue,green \"npm:dev:server\" \"npm:dev:client\"",
     "dev:server": "JOURNEY_ENV=development tsx watch server/main.ts",
     "dev:client": "vite --host 127.0.0.1 --port 5173",
-    "build": "vite build && tsc -p tsconfig.server.json",
+    "build": "vite build && tsc -p tsconfig.server.json && node scripts/copy-runtime-assets.mjs",
     "start": "node dist/runtime/server/main.js",
     "auth:bootstrap": "tsx server/bootstrap-auth.ts",
     "auth:bootstrap:production": "node dist/runtime/server/bootstrap-auth.js",

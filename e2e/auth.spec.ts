@@ -33,7 +33,7 @@ test("an owner can invite a private member and member access stays scoped", asyn
   await memberPage.goto("/profile");
   await expect(memberPage).toHaveURL(/\/profile$/);
   await memberPage.getByRole("button", { name: /Invited Member/ }).click();
-  await expect(memberPage.getByText("Member", { exact: true })).toBeVisible();
+  await expect(memberPage.locator("#main-content").getByText("Member", { exact: true })).toBeVisible();
   await memberContext.close();
 });
 

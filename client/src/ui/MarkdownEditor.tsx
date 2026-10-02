@@ -6,6 +6,7 @@ import Highlight from "@tiptap/extension-highlight";
 import Image from "@tiptap/extension-image";
 import { Table, TableCell, TableHeader, TableRow } from "@tiptap/extension-table";
 import { mergeAttributes } from "@tiptap/core";
+import type { Editor } from "@tiptap/core";
 import { Markdown } from "@tiptap/markdown";
 import type { MarkdownToken } from "@tiptap/core";
 import { Icon } from "./Icon.js";
@@ -65,6 +66,7 @@ const SafeTable = Table.extend({
 export function MarkdownEditor({ value, onChange, ariaLabel, minHeight = 112 }: Props) {
   const onChangeRef = useRef(onChange);
   const previousValueRef = useRef(value);
+  const editorRef = useRef<Editor | null>(null);
   useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
 
   const editor = useEditor({
@@ -89,9 +91,15 @@ export function MarkdownEditor({ value, onChange, ariaLabel, minHeight = 112 }: 
         "aria-multiline": "true",
         spellcheck: "true",
       },
+      handlePaste: (_view, event) => {
+        const markdown = event.clipboardData?.getData("text/plain").trim();
+        if (!markdown || !/^!\[[^\]\n]*\]\(https:\/\/[^\s)]+\)$/.test(markdown)) return false;
+        return editorRef.current?.commands.insertContent(markdown, { contentType: "markdown" }) ?? false;
+      },
     },
     onUpdate: ({ editor: activeEditor }) => onChangeRef.current(activeEditor.getMarkdown()),
   }, []);
+  useEffect(() => { editorRef.current = editor; }, [editor]);
 
   const contextualSelection = useEditorState({
     editor,

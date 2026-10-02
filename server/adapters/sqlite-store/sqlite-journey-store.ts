@@ -83,8 +83,8 @@ const MARKER_FILENAME = ".journey-store";
 
 // schema.sql is the canonical DDL. It ships next to this module; the loader
 // resolves it relative to import.meta.url so tests and tsx agree. The Docker
-// image only copies dist/, so Phase 2 must also copy this .sql next to the
-// compiled output (or inline it) before the SQLite store can boot in prod.
+// image only copies dist/, so the build copies this file next to the compiled
+// output before the SQLite store boots.
 const SCHEMA_SQL: string = readFileSync(new URL("./schema.sql", import.meta.url), "utf8");
 
 export type SqliteFailpoint = "before-commit" | "after-commit";
