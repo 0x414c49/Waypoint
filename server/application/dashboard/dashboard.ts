@@ -91,6 +91,15 @@ export function projectDashboard(state: JourneyState, userId: string, now: Date)
   const optional = todayTasks.find(
     (task) => task.status === "NOT_STARTED" && task.recommendationMode === "OPTIONAL",
   );
+  const leftoverTasks = currentQuarter
+    ? tasks.filter((task) =>
+        task.quarterId === currentQuarter.id &&
+        task.plannedDate < today &&
+        task.status === "NOT_STARTED" &&
+        task.recommendationMode === "DEFAULT" &&
+        task.id !== heroTask?.id,
+      ).sort((left, right) => right.plannedDate.localeCompare(left.plannedDate) || left.position - right.position)
+    : [];
 
   const ownedTaskIds = new Set(ownedTasks.map((task) => task.id));
   const closedSegmentsBySession = Object.values(state.records.sessions)
@@ -190,6 +199,7 @@ export function projectDashboard(state: JourneyState, userId: string, now: Date)
         }
       : null,
     optionalToday: optional ? { label: "Only if useful", task: projectTask(state, optional, generatedAt) } : null,
+    leftovers: { totalCount: leftoverTasks.length, items: leftoverTasks.slice(0, 5).map((task) => projectTask(state, task, generatedAt)) },
     activityPreview: {
       startDate: activityDays[0]!.date,
       endDate: activityDays[13]!.date,

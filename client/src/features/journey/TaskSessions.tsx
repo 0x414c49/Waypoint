@@ -15,7 +15,7 @@ export function TaskSessions({ sessions, onCorrect }: { sessions: SessionDetail[
         <span className={styles.sectionIcon}><Icon name="clock" width={19} height={19} /></span>
         <div><h2 id="sessions-title">Sessions</h2><p>{sessions.length === 0 ? "Your time log" : `${sessions.length} ${sessions.length === 1 ? "session" : "sessions"}`}</p></div>
       </div>
-      {sessions.length === 0 ? <div className={styles.sectionEmpty}><p>No session time recorded yet.</p><span>Start this task from Today and your time will appear here.</span></div> : (
+      {sessions.length === 0 ? <div className={styles.sectionEmpty}><p>No session time recorded yet.</p><span>Start a session and your time will appear here.</span></div> : (
         <ul className={styles.sessionList}>
           {sessions.map((session) => (
             <li key={session.id}>

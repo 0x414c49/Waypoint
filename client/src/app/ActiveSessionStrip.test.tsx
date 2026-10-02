@@ -17,7 +17,7 @@ function runningDashboard(status: "IN_PROGRESS" | "PAUSED"): Dashboard {
     dataRevision: 1, generatedAt: new Date().toISOString(), today: "2026-11-03", timeZone: "Europe/Amsterdam",
     quarter: { id: "q4", title: "Q4", planRevision: 1 }, state: status === "IN_PROGRESS" ? "RUNNING" : "PAUSED",
     hero: { state: status === "IN_PROGRESS" ? "RUNNING" : "PAUSED", reason: "ACTIVE", task, timing: task.timing, primaryAction: null, secondaryActions: [] },
-    activeSession: null, upNext: null, optionalToday: null,
+    activeSession: null, upNext: null, optionalToday: null, leftovers: { totalCount: 0, items: [] },
     activityPreview: { startDate: "2026-10-20", endDate: "2026-11-03", days: [] }, milestoneSummary: null,
     decisionReviewsDue: { count: 0, items: [] },
   };

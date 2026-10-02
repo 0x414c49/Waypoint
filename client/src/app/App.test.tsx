@@ -16,6 +16,7 @@ const lightDashboard = {
   activeSession: null,
   upNext: null,
   optionalToday: null,
+  leftovers: { totalCount: 0, items: [] },
   activityPreview: { startDate: "2026-09-14", endDate: "2026-09-27", days: [] },
   milestoneSummary: null,
   decisionReviewsDue: { count: 0, items: [] },

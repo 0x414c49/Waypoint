@@ -6,7 +6,7 @@ import { App } from "../../app/App.js";
 
 const dashboard = {
   dataRevision: 1, generatedAt: "2026-09-27T08:00:00.000Z", today: "2026-09-27", timeZone: "UTC",
-  quarter: { id: "q4", title: "Q4", planRevision: 1 }, state: "LIGHT", hero: { state: "LIGHT", reason: "NO_PLANNED_ITEM", task: null, timing: null, primaryAction: null, secondaryActions: [] }, activeSession: null, upNext: null, optionalToday: null, activityPreview: { startDate: "2026-09-14", endDate: "2026-09-27", days: [] }, milestoneSummary: null, decisionReviewsDue: { count: 0, items: [] },
+  quarter: { id: "q4", title: "Q4", planRevision: 1 }, state: "LIGHT", hero: { state: "LIGHT", reason: "NO_PLANNED_ITEM", task: null, timing: null, primaryAction: null, secondaryActions: [] }, activeSession: null, upNext: null, optionalToday: null, leftovers: { totalCount: 0, items: [] }, activityPreview: { startDate: "2026-09-14", endDate: "2026-09-27", days: [] }, milestoneSummary: null, decisionReviewsDue: { count: 0, items: [] },
 };
 const owner = { id: "owner", name: "Ari Owner", email: "owner@example.test", timeZone: "UTC", role: "OWNER" as const, createdAt: "2026-09-27T08:00:00.000Z" };
 const member = { ...owner, id: "member", name: "Mina Member", email: "member@example.test", role: "MEMBER" as const };

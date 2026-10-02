@@ -250,6 +250,7 @@ export function TodayPage() {
         <TodayContext
           upNext={dashboard.upNext}
           optionalToday={dashboard.optionalToday}
+          leftovers={dashboard.leftovers}
           busy={busy}
           onOpen={openContextTask}
         />

@@ -66,6 +66,8 @@ The owner can open **Access** to create one-time, email-bound member invites. Co
 
 A small example plan is loaded on a fresh installation. Today follows the real calendar, so outside that example's dates it truthfully says no current work is scheduled. You can still capture Thoughts and Decisions.
 
+If you leave a planned item untouched, it stays on its original date. On a later day, open **Leftover items** on Today and choose **Start instead**. You can also find it in **Quarter** and choose **Start session** from its item page. Today's scheduled item stays available as **Up next** while you work on the earlier one.
+
 ## Quarter and plan updates
 
 Open **Quarter** to see current plan intent, success criteria, Focus Areas, Milestones, and planned work. Focus Area and Milestone links keep you in plan context; a Milestone can also open its generated Journey summary. Between quarters is shown as a normal pause in the plan, not a backlog or a missed target.

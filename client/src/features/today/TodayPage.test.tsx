@@ -61,6 +61,7 @@ function dashboard(state: Dashboard["state"], heroTask: TaskProjection | null): 
     } : null,
     upNext: null,
     optionalToday: null,
+    leftovers: { totalCount: 0, items: [] },
     activityPreview: { startDate: "2026-09-14", endDate: "2026-09-27", days: [] },
     milestoneSummary: null,
     decisionReviewsDue: { count: 0, items: [] },
@@ -76,6 +77,30 @@ function json(value: unknown, status = 200): Response {
 
 describe("Today", () => {
   beforeEach(() => vi.restoreAllMocks());
+
+  it("shows an earlier untouched item in Leftover items and can start it", async () => {
+    const todayTask = task("NOT_STARTED");
+    const earlierTask = {
+      ...task("NOT_STARTED", "etag-earlier"), id: "earlier-item",
+      displayPlan: { ...todayTask.displayPlan, title: "Earlier learning", plannedDate: "2026-09-26" },
+    };
+    const ready = { ...dashboard("READY", todayTask), leftovers: { totalCount: 1, items: [earlierTask] } };
+    const runningTask = { ...earlierTask, status: "IN_PROGRESS" as const, etag: "etag-running-earlier" };
+    const running = { ...dashboard("RUNNING", runningTask), dataRevision: 2 };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(json(ready))
+      .mockResolvedValueOnce(json({ task: runningTask, activeSession: running.activeSession, affectedTasks: [], dashboard: running }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const user = userEvent.setup();
+    render(<TodayPage />);
+    await user.click(await screen.findByText(/Leftover items/));
+    expect(screen.getByText("Earlier learning")).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Start instead" }));
+
+    await waitFor(() => expect(fetchMock.mock.calls[1]?.[0]).toBe("/api/tasks/earlier-item/start"));
+    expect(await screen.findByRole("heading", { name: "Earlier learning" })).toBeTruthy();
+  });
 
   it("starts the recommendation with concurrency and idempotency headers", async () => {
     const readyTask = task("NOT_STARTED");

@@ -29,6 +29,8 @@ describe("Today dashboard projection", () => {
     expect(dashboard.hero.task?.id).toBe("2026-11-03-partial-failure");
     expect(dashboard.activityPreview.days).toHaveLength(14);
     expect(dashboard.activityPreview.days.every((day) => day.sessionSeconds === 0)).toBe(true);
+    expect(dashboard.leftovers.items[0]?.id).toBe("2026-11-02-rust-foundations");
+    expect(dashboard.leftovers.items.some((item) => item.id === dashboard.hero.task?.id)).toBe(false);
   });
 
   it("recovers removed paused work and prefers a Default item for Up next", () => {

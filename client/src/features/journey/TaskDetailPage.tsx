@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button } from "../../ui/Button.js";
 import { DecisionContextAction } from "../decisions/DecisionContextAction.js";
 import { getTaskDetail } from "./api.js";
@@ -11,6 +11,9 @@ import styles from "./Journey.module.css";
 import { MarkdownContent } from "../../ui/MarkdownContent.js";
 import { FeelingNote } from "./FeelingPicker.js";
 import { Icon } from "../../ui/Icon.js";
+import { actOnTask, ApiError, createIdempotencyKey } from "../today/api.js";
+import { ActiveSessionConflictDialog } from "../today/ActiveSessionConflictDialog.js";
+import type { ActiveSessionResolution, ConflictSession } from "../today/types.js";
 
 function duration(seconds: number): string {
   const minutes = Math.round(seconds / 60);
@@ -29,9 +32,13 @@ function plannedDate(value: string): string {
 
 export function TaskDetailPage() {
   const { taskId = "" } = useParams();
+  const navigate = useNavigate();
   const [detail, setDetail] = useState<TaskDetail | null>(null);
   const [correcting, setCorrecting] = useState<SessionDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [startError, setStartError] = useState<string | null>(null);
+  const [starting, setStarting] = useState(false);
+  const [conflictingSession, setConflictingSession] = useState<ConflictSession | null>(null);
 
   const load = useCallback((signal?: AbortSignal) => {
     void getTaskDetail(taskId, signal).then(setDetail).catch((caught: unknown) => {
@@ -45,6 +52,31 @@ export function TaskDetailPage() {
     load(controller.signal);
     return () => controller.abort();
   }, [load]);
+
+  const startOrResume = useCallback(async (resolution?: ActiveSessionResolution) => {
+    if (!detail || starting) return;
+    const action = detail.task.status === "PAUSED" ? "resume" : "start";
+    setStarting(true);
+    setStartError(null);
+    try {
+      const response = await actOnTask(detail.task.id, action, detail.task.etag, createIdempotencyKey(),
+        resolution ? { activeSessionResolution: resolution } : {});
+      window.dispatchEvent(new CustomEvent("journey:dashboard-changed", { detail: response.dashboard }));
+      navigate("/");
+    } catch (caught) {
+      if (caught instanceof ApiError && caught.problem.code === "ACTIVE_SESSION_CONFLICT") {
+        const active = caught.problem.current?.activeSession;
+        if (active) setConflictingSession(active);
+        else setStartError(caught.problem.detail);
+      } else {
+        setConflictingSession(null);
+        setStartError(caught instanceof Error ? caught.message : "This item could not be started. Try again.");
+        if (caught instanceof ApiError && caught.problem.code === "STALE_WRITE") load();
+      }
+    } finally {
+      setStarting(false);
+    }
+  }, [detail, load, navigate, starting]);
 
   if (error && !detail) return <section className={styles.errorPanel}><h1>Task could not open.</h1><p>{error}</p><Button onClick={() => { setError(null); load(); }}>Try again</Button></section>;
   if (!detail) return <p role="status" className={styles.muted}>Opening task history…</p>;
@@ -67,6 +99,14 @@ export function TaskDetailPage() {
           <p className={styles.taskFocus}>{plan.focusArea?.name ?? "Learning plan"}</p>
           {task.displayPlanSource === "HISTORICAL" ? <p className={styles.historyNotice}>Showing the plan text captured when this work began.</p> : null}
           {plan.description ? <div className={styles.lead}><MarkdownContent>{plan.description}</MarkdownContent></div> : null}
+          {(task.status === "NOT_STARTED" || task.status === "PAUSED") ? (
+            <div>
+              <Button variant="primary" disabled={starting} onClick={() => void startOrResume()}>
+                {starting ? "Opening…" : task.status === "PAUSED" ? "Resume item" : "Start session"}
+              </Button>
+              {startError ? <p role="alert">{startError}</p> : null}
+            </div>
+          ) : null}
           <DecisionContextAction task={task} />
         </div>
 
@@ -107,6 +147,17 @@ export function TaskDetailPage() {
       <CarryForwardForm detail={detail} />
 
     </div>
+    {conflictingSession ? <ActiveSessionConflictDialog
+      target={task}
+      activeSession={conflictingSession}
+      busy={starting}
+      onCancel={() => setConflictingSession(null)}
+      onSwitch={() => void startOrResume({
+        kind: "PAUSE_AND_SWITCH",
+        activeSessionId: conflictingSession.id,
+        activeTaskEtag: conflictingSession.task.etag,
+      })}
+    /> : null}
     {correcting ? <SessionCorrectionDialog session={correcting} onClose={() => setCorrecting(null)} onCorrected={() => { setCorrecting(null); load(); }} /> : null}
     </>
   );

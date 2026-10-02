@@ -203,6 +203,10 @@ When Running/Paused, today’s Default item is preferred as Up next. `remainingT
 
 `optionalToday` is quiet plan context for an untouched `OPTIONAL` item scheduled today. It contains the Task projection and the label **Only if useful**. It never changes Dashboard to Ready, never displaces Running/Paused/Finished, and never creates overdue/catch-up debt. The learner can open or start it deliberately; ignoring it creates no lifecycle event and needs no dismissal.
 
+## Leftover items
+
+`leftovers` contains the total count and up to five most recent untouched `DEFAULT` Tasks from earlier dates in the current Quarter. It excludes the hero Task. Today shows them in a collapsed secondary section; choosing one starts it without changing its planned date. Older items remain available through Quarter. The section never changes the recommended hero or creates an overdue status.
+
 ## Milestone summary
 
 The Dashboard embeds only compact generated facts needed by Today. Full rows and optional weekly reflection come from the milestone-summary endpoint.

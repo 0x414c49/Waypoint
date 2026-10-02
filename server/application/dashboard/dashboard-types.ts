@@ -44,6 +44,7 @@ export interface Dashboard {
   activeSession: null | { id: string; etag: string; task: { id: string; title: string; etag: string }; startedAt: string; timeZoneAtStart: string; intentionMinutes?: 10; sessionElapsedSecondsAtGeneratedAt: number; taskActualSecondsAtGeneratedAt: number };
   upNext: null | { reason: string; task: TaskProjection; remainingTodayCount: number };
   optionalToday: null | { label: "Only if useful"; task: TaskProjection };
+  leftovers: { totalCount: number; items: TaskProjection[] };
   activityPreview: { startDate: string; endDate: string; days: Array<{ date: string; sessionSeconds: number; level: number }> };
   milestoneSummary: null | { id: string; title: string; startDate: string; endDate: string; mode: MilestoneRecord["mode"]; sessionSeconds: number; sessionCount: number; plannedItemCount: number; touchedItemCount: number; finishedItemCount: number; skippedItemCount: number; openItemCount: number; thoughtCount: number; changedMyMindCount: number; href: string };
   decisionReviewsDue: { count: number; items: Array<{ decisionId: string; title: string; dueDate: string }> };

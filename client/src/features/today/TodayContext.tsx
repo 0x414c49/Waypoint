@@ -1,10 +1,12 @@
 import { Button } from "../../ui/Button.js";
+import { Link } from "react-router-dom";
 import type { Dashboard, TaskProjection } from "./types.js";
 import styles from "./Today.module.css";
 
 interface TodayContextProps {
   upNext: Dashboard["upNext"];
   optionalToday: Dashboard["optionalToday"];
+  leftovers: Dashboard["leftovers"];
   busy: boolean;
   onOpen: (task: TaskProjection) => void;
 }
@@ -36,8 +38,8 @@ function ContextRow({
   );
 }
 
-export function TodayContext({ upNext, optionalToday, busy, onOpen }: TodayContextProps) {
-  if (!upNext && !optionalToday) return null;
+export function TodayContext({ upNext, optionalToday, leftovers, busy, onOpen }: TodayContextProps) {
+  if (!upNext && !optionalToday && leftovers.totalCount === 0) return null;
   return (
     <section className={styles.context} aria-label="Today context">
       {upNext ? (
@@ -59,6 +61,19 @@ export function TodayContext({ upNext, optionalToday, busy, onOpen }: TodayConte
           onOpen={onOpen}
         />
       ) : null}
+      {leftovers.totalCount > 0 ? <details className={styles.leftovers}>
+        <summary>Leftover items <span>({leftovers.totalCount})</span></summary>
+        <p>Choose one if useful. These remain on their original planned dates.</p>
+        {leftovers.items.map((task) => <ContextRow
+          key={task.id}
+          label="Earlier plan"
+          task={task}
+          detail={`Planned ${new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", timeZone: "UTC" }).format(new Date(`${task.displayPlan.plannedDate}T12:00:00.000Z`))}`}
+          busy={busy}
+          onOpen={onOpen}
+        />)}
+        {leftovers.totalCount > leftovers.items.length ? <Link to="/quarter">See all in Quarter</Link> : null}
+      </details> : null}
     </section>
   );
 }

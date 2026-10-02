@@ -63,6 +63,7 @@ export const DashboardSchema = Type.Object({
   activeSession: Type.Union([ActiveSessionSchema, Type.Null()]),
   upNext: Type.Union([Type.Object({ reason: Type.String(), task: TaskProjectionSchema, remainingTodayCount: Type.Integer({ minimum: 0 }) }, { additionalProperties: false }), Type.Null()]),
   optionalToday: Type.Union([Type.Object({ label: Type.Literal("Only if useful"), task: TaskProjectionSchema }, { additionalProperties: false }), Type.Null()]),
+  leftovers: Type.Object({ totalCount: Type.Integer({ minimum: 0 }), items: Type.Array(TaskProjectionSchema) }, { additionalProperties: false }),
   activityPreview: Type.Object({
     startDate: Type.String(), endDate: Type.String(),
     days: Type.Array(Type.Object({ date: Type.String(), sessionSeconds: Type.Integer({ minimum: 0 }), level: Type.Integer({ minimum: 0, maximum: 4 }) }, { additionalProperties: false })),
