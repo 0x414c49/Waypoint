@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { JsonJourneyStore } from "../adapters/json-store/index.js";
+import { SqliteJourneyStore } from "../adapters/sqlite-store/index.js";
 import { LocalCurrentUserProvider } from "../adapters/local-current-user-provider.js";
 import { createProductionSeed } from "../domain/production-seed.js";
 import { createStructuredLogger } from "../infrastructure/structured-logger.js";
@@ -24,7 +24,7 @@ beforeEach(async () => {
   roots.push(root);
   const clock = new FixedClock(new Date("2026-11-03T17:00:00.000Z"));
   const ids = new RandomIdGenerator();
-  const store = new JsonJourneyStore({
+  const store = new SqliteJourneyStore({
     directory: join(root, "store"),
     clock,
     idGenerator: ids,

@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { JsonJourneyStore } from "../../adapters/json-store/index.js";
+import { SqliteJourneyStore } from "../../adapters/sqlite-store/index.js";
 import { LocalCurrentUserProvider } from "../../adapters/local-current-user-provider.js";
 import { createProductionSeed } from "../../domain/production-seed.js";
 import type { Clock } from "../../ports/clock.js";
@@ -26,7 +26,7 @@ describe("CarryForwardService", () => {
     const root = await mkdtemp(join(tmpdir(), "journey-carry-")); roots.push(root);
     const clock = new MutableClock("2026-11-03T17:00:00.000Z");
     const directory = join(root, "store");
-    const store = new JsonJourneyStore({ directory, clock, idGenerator: new SequenceIdGenerator(["init", "store", "commit-start", "commit-carry", "commit-noop"]), seed: createProductionSeed });
+    const store = new SqliteJourneyStore({ directory, clock, idGenerator: new SequenceIdGenerator(["init", "store", "commit-start", "commit-carry", "commit-noop"]), seed: createProductionSeed });
     await store.initialize();
     const user = new LocalCurrentUserProvider(store);
     const taskId = "2026-11-03-partial-failure";
@@ -51,7 +51,7 @@ describe("CarryForwardService", () => {
       continuationPrompt: undefined,
     });
 
-    const restarted = new JsonJourneyStore({ directory, clock, idGenerator: new SequenceIdGenerator(["restart-commit"]), seed: createProductionSeed });
+    const restarted = new SqliteJourneyStore({ directory, clock, idGenerator: new SequenceIdGenerator(["restart-commit"]), seed: createProductionSeed });
     await restarted.initialize();
     const restartedService = new CarryForwardService(restarted, new LocalCurrentUserProvider(restarted), clock, new SequenceIdGenerator([]));
     const replay = await restartedService.execute(taskId, request, openEtag, "carry-command-0001", `/api/tasks/${taskId}/carry-forward`);

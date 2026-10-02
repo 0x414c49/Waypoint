@@ -4,7 +4,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { JsonJourneyStore } from "../../adapters/json-store/index.js";
+import { SqliteJourneyStore } from "../../adapters/sqlite-store/index.js";
 import { LocalCurrentUserProvider } from "../../adapters/local-current-user-provider.js";
 import { createNoHistorySeed } from "../../domain/journey-state.js";
 import { createProductionSeed } from "../../domain/production-seed.js";
@@ -31,7 +31,7 @@ async function context(seed: (writtenAt: string) => ReturnType<typeof createNoHi
   const root = await mkdtemp(join(tmpdir(), "journey-plan-service-")); roots.push(root);
   const storeIds = new SequenceIdGenerator(["init", "store", ...Array.from({ length: 30 }, (_, index) => `store-commit-${index}`)]);
   const clock = new FixedClock(now);
-  const store = new JsonJourneyStore({ directory: join(root, "store"), clock, idGenerator: storeIds, seed });
+  const store = new SqliteJourneyStore({ directory: join(root, "store"), clock, idGenerator: storeIds, seed });
   await store.initialize();
   const ids = new SequenceIdGenerator(Array.from({ length: 30 }, (_, index) => `preview-token-${index}`));
   return { store, service: new PlanCommandService(store, new LocalCurrentUserProvider(store), clock, ids) };

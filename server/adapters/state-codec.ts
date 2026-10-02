@@ -1,8 +1,8 @@
 import {
   type JourneyState,
   validateJourneyState,
-} from "../../domain/journey-state.js";
-import { StoreError } from "./errors.js";
+} from "../domain/journey-state.js";
+import { StoreError } from "./store-errors.js";
 
 export function clone<T>(value: T): T {
   return structuredClone(value);

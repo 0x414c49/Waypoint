@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { JsonJourneyStore } from "../adapters/json-store/index.js";
+import { SqliteJourneyStore } from "../adapters/sqlite-store/index.js";
 import { AuthenticatedCurrentUserProvider } from "../adapters/authenticated-current-user-provider.js";
 import { createNoHistorySeed } from "../domain/journey-state.js";
 import { createStructuredLogger } from "../infrastructure/structured-logger.js";
@@ -27,7 +27,7 @@ describe("authenticated HTTP boundary", () => {
     const root = await mkdtemp(join(tmpdir(), "auth-http-test-")); roots.push(root);
     const clock = new FixedClock(new Date("2026-09-30T10:00:00.000Z"));
     const ids = new SequenceIdGenerator(Array.from({ length: 200 }, (_, index) => `id-${index}`));
-    const store = new JsonJourneyStore({ directory: join(root, "store"), clock, idGenerator: ids, seed: createNoHistorySeed }); await store.initialize();
+    const store = new SqliteJourneyStore({ directory: join(root, "store"), clock, idGenerator: ids, seed: createNoHistorySeed }); await store.initialize();
     const provider = new AuthenticatedCurrentUserProvider(store);
     const auth = new AuthService({ store, clock, idGenerator: ids, totpEncryptionKey: Buffer.alloc(32, 1), passwordHasher: new FastHasher() });
     const app = await buildApp({ store, currentUserProvider: provider, idGenerator: ids, clock, logger: createStructuredLogger("silent"), allowedHosts: new Set(["127.0.0.1:4173"]), allowedMutationOrigins: new Set(["http://127.0.0.1:4173"]), authService: auth });

@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { serializeJourneyState } from "../adapters/json-store/index.js";
+import { serializeJourneyState } from "../adapters/state-codec.js";
 import { createProductionSeed } from "../domain/production-seed.js";
 import type { JourneyState } from "../domain/journey-state.js";
 import { taskEtag } from "./task-etag.js";

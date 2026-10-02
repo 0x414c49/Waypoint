@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { JsonJourneyStore } from "../../adapters/json-store/index.js";
+import { SqliteJourneyStore } from "../../adapters/sqlite-store/index.js";
 import { LocalCurrentUserProvider } from "../../adapters/local-current-user-provider.js";
 import { createProductionSeed } from "../../domain/production-seed.js";
 import type { Clock } from "../../ports/clock.js";
@@ -32,7 +32,7 @@ describe("TaskCommandService", () => {
     const root = await mkdtemp(join(tmpdir(), "journey-task-service-"));
     roots.push(root);
     const clock = new MutableClock("2026-11-03T17:00:00.000Z");
-    const store = new JsonJourneyStore({
+    const store = new SqliteJourneyStore({
       directory: join(root, "store"),
       clock,
       idGenerator: new SequenceIdGenerator([
@@ -111,7 +111,7 @@ describe("TaskCommandService", () => {
       reviewId: "review-1",
       outcome: "PARTIAL",
     });
-    const reopenedStore = new JsonJourneyStore({
+    const reopenedStore = new SqliteJourneyStore({
       directory: join(root, "store"),
       clock,
       idGenerator: new SequenceIdGenerator(["restart-commit"]),
@@ -159,7 +159,7 @@ describe("TaskCommandService", () => {
     const root = await mkdtemp(join(tmpdir(), "journey-task-switch-"));
     roots.push(root);
     const clock = new MutableClock("2026-11-03T17:00:00.000Z");
-    const store = new JsonJourneyStore({
+    const store = new SqliteJourneyStore({
       directory: join(root, "store"),
       clock,
       idGenerator: new SequenceIdGenerator([

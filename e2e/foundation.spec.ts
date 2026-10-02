@@ -322,14 +322,9 @@ test("Quick Thought returns to Journey and both themes remain accessible", async
   await dialog.getByRole("button", { name: "Remove table" }).click();
   await expect(table).toHaveCount(0);
   const thoughtEditor = dialog.getByRole("textbox", { name: "What is worth keeping?" });
-  await thoughtEditor.fill(thought);
-  await dialog.getByLabel("Choose an image").setInputFiles({
-    name: "journey-map.png",
-    mimeType: "image/png",
-    buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/9WQAAAAASUVORK5CYII=", "base64"),
-  });
+  await thoughtEditor.fill(`${thought}\n\n![journey-map](https://example.com/journey-map.png)`);
   await expect(thoughtEditor.getByRole("img", { name: "journey-map" })).toBeVisible();
-  expect(await thoughtEditor.getByRole("img", { name: "journey-map" }).getAttribute("src")).toMatch(/^\/api\/media\/image-/);
+  expect(await thoughtEditor.getByRole("img", { name: "journey-map" }).getAttribute("src")).toBe("https://example.com/journey-map.png");
   await dialog.getByRole("button", { name: "Curious" }).click();
   await dialog.getByRole("button", { name: "Save thought" }).click();
   await expect(dialog).toBeHidden();

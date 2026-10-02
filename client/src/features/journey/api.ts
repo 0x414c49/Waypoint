@@ -118,25 +118,6 @@ export async function updateJourneyEntry(
   return read<JourneyEntry>(response);
 }
 
-export async function uploadJourneyImage(file: File): Promise<{ src: string; filename: string }> {
-  if (!file.type.startsWith("image/")) throw new Error("Choose an image file.");
-  if (file.size > 2 * 1024 * 1024) throw new Error("Choose an image smaller than 2 MB.");
-  const dataUrl = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("The image could not be read."));
-    reader.onerror = () => reject(new Error("The image could not be read."));
-    reader.readAsDataURL(file);
-  });
-  const response = await fetch("/api/media", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ dataUrl }),
-  });
-  const value = await response.json() as { src?: string; filename?: string; error?: string };
-  if (!response.ok || !value.src || !value.filename) throw new Error(value.error ?? "The image could not be saved.");
-  return { src: value.src, filename: value.filename };
-}
-
 export async function deleteJourneyEntry(entry: JourneyEntry): Promise<void> {
   const response = await fetch(`/api/journey/${encodeURIComponent(entry.id)}`, {
     method: "DELETE",

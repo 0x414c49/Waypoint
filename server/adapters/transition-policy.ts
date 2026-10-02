@@ -1,6 +1,6 @@
-import type { JourneyState } from "../../domain/journey-state.js";
-import type { TransactionIntent } from "../../ports/journey-store.js";
-import { StoreError } from "./errors.js";
+import type { JourneyState } from "../domain/journey-state.js";
+import type { TransactionIntent } from "../ports/journey-store.js";
+import { StoreError } from "./store-errors.js";
 import { equalJson } from "./state-codec.js";
 
 const executionCollections = new Set<keyof JourneyState["records"]>([
@@ -13,7 +13,7 @@ const executionCollections = new Set<keyof JourneyState["records"]>([
   "aiReviews",
 ]);
 const authCollections = new Set<keyof JourneyState["records"]>([
-  "users", "accounts", "authInvites", "authSessions", "mediaRecords",
+  "users", "accounts", "authInvites", "authSessions",
 ]);
 
 function fields(record: Record<string, unknown>, names: readonly string[]): Record<string, unknown> {

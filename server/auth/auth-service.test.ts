@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it, afterEach } from "vitest";
-import { JsonJourneyStore } from "../adapters/json-store/index.js";
+import { SqliteJourneyStore } from "../adapters/sqlite-store/index.js";
 import { createNoHistorySeed } from "../domain/journey-state.js";
 import { FixedClock } from "../ports/clock.js";
 import { SequenceIdGenerator } from "../ports/id-generator.js";
@@ -24,7 +24,7 @@ describe("invite-gated authentication", () => {
     const root = await mkdtemp(join(tmpdir(), "auth-test-")); roots.push(root);
     const clock = new FixedClock(new Date("2026-09-30T10:00:00.000Z"));
     const ids = new SequenceIdGenerator(Array.from({ length: 30 }, (_, index) => `id-${index}`));
-    const store = new JsonJourneyStore({ directory: join(root, "store"), clock, idGenerator: ids, seed: createNoHistorySeed });
+    const store = new SqliteJourneyStore({ directory: join(root, "store"), clock, idGenerator: ids, seed: createNoHistorySeed });
     await store.initialize();
     const auth = new AuthService({ store, clock, idGenerator: ids, totpEncryptionKey: Buffer.alloc(32, 1), passwordHasher: new FastHasher() });
     const bootstrap = await auth.createBootstrapInvite("Owner@example.com");
@@ -41,7 +41,7 @@ describe("invite-gated authentication", () => {
     const root = await mkdtemp(join(tmpdir(), "auth-test-")); roots.push(root);
     const clock = new FixedClock(new Date("2026-09-30T10:00:00.000Z"));
     const ids = new SequenceIdGenerator(Array.from({ length: 30 }, (_, index) => `id-${index}`));
-    const store = new JsonJourneyStore({ directory: join(root, "store"), clock, idGenerator: ids, seed: createNoHistorySeed }); await store.initialize();
+    const store = new SqliteJourneyStore({ directory: join(root, "store"), clock, idGenerator: ids, seed: createNoHistorySeed }); await store.initialize();
     const auth = new AuthService({ store, clock, idGenerator: ids, totpEncryptionKey: Buffer.alloc(32, 1), passwordHasher: new FastHasher() });
     const invite = await auth.createBootstrapInvite("member@example.com", "MEMBER");
     const enrollment = await auth.prepareTotpEnrollment(invite.rawInviteId, "member@example.com");
@@ -56,7 +56,7 @@ describe("invite-gated authentication", () => {
     let instant = new Date("2026-09-30T10:00:00.000Z");
     const clock = { now: () => new Date(instant) };
     const ids = new SequenceIdGenerator(Array.from({ length: 30 }, (_, index) => `id-${index}`));
-    const store = new JsonJourneyStore({ directory: join(root, "store"), clock, idGenerator: ids, seed: createNoHistorySeed }); await store.initialize();
+    const store = new SqliteJourneyStore({ directory: join(root, "store"), clock, idGenerator: ids, seed: createNoHistorySeed }); await store.initialize();
     const auth = new AuthService({ store, clock, idGenerator: ids, totpEncryptionKey: Buffer.alloc(32, 2), passwordHasher: new FastHasher() });
     const invite = await auth.createBootstrapInvite("owner@example.com");
     const enrollment = await auth.prepareTotpEnrollment(invite.rawInviteId, "owner@example.com");
@@ -74,7 +74,7 @@ describe("invite-gated authentication", () => {
     const root = await mkdtemp(join(tmpdir(), "auth-test-")); roots.push(root);
     const clock = new FixedClock(new Date("2026-09-30T10:00:00.000Z"));
     const ids = new SequenceIdGenerator(Array.from({ length: 30 }, (_, index) => `id-${index}`));
-    const store = new JsonJourneyStore({ directory: join(root, "store"), clock, idGenerator: ids, seed: createNoHistorySeed }); await store.initialize();
+    const store = new SqliteJourneyStore({ directory: join(root, "store"), clock, idGenerator: ids, seed: createNoHistorySeed }); await store.initialize();
     const auth = new AuthService({ store, clock, idGenerator: ids, totpEncryptionKey: Buffer.alloc(32, 3), passwordHasher: new FastHasher() });
     const invite = await auth.createBootstrapInvite("owner@example.com");
     await auth.register({ inviteId: invite.rawInviteId, email: "owner@example.com", name: "Owner", timeZone: "UTC", password: "a sufficiently long passphrase" });
@@ -87,7 +87,7 @@ describe("invite-gated authentication", () => {
     const root = await mkdtemp(join(tmpdir(), "auth-test-")); roots.push(root);
     const clock = new FixedClock(new Date("2026-09-30T10:00:00.000Z"));
     const ids = new SequenceIdGenerator(Array.from({ length: 30 }, (_, index) => `id-${index}`));
-    const store = new JsonJourneyStore({ directory: join(root, "store"), clock, idGenerator: ids, seed: createNoHistorySeed }); await store.initialize();
+    const store = new SqliteJourneyStore({ directory: join(root, "store"), clock, idGenerator: ids, seed: createNoHistorySeed }); await store.initialize();
     const auth = new AuthService({ store, clock, idGenerator: ids, totpEncryptionKey: Buffer.alloc(32, 1), passwordHasher: new FastHasher() });
     const invite = await auth.createBootstrapInvite("owner@example.com");
     const enrollment = await auth.prepareTotpEnrollment(invite.rawInviteId, "owner@example.com");

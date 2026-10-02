@@ -45,7 +45,6 @@ describe("runtime configuration", () => {
     ]));
     expect(config.secureCookies).toBe(true);
     expect(config.storeDirectory).toBe("/app/data/store");
-    expect(config.mediaDirectory).toBe("/app/data/store/media");
   });
 
   it("retains development's Vite proxy trust defaults", () => {

@@ -5,7 +5,6 @@ export interface RuntimeConfig {
   readonly host: string;
   readonly port: number;
   readonly storeDirectory: string;
-  readonly mediaDirectory: string;
   readonly allowedHosts: ReadonlySet<string>;
   readonly allowedMutationOrigins: ReadonlySet<string>;
   readonly publicUrl: string | undefined;
@@ -122,7 +121,6 @@ export function parseRuntimeConfig(env: NodeJS.ProcessEnv = process.env): Runtim
     host,
     port,
     storeDirectory,
-    mediaDirectory: resolve(storeDirectory, "media"),
     allowedHosts,
     allowedMutationOrigins,
     publicUrl: publicUrl?.origin,

@@ -17,7 +17,7 @@ import type { JourneyStore } from "../ports/journey-store.js";
 import type { IdGenerator } from "../ports/id-generator.js";
 import type { Clock } from "../ports/clock.js";
 import type { Logger } from "pino";
-import { StoreError } from "../adapters/json-store/index.js";
+import { StoreError } from "../adapters/store-errors.js";
 import { AppError } from "../application/app-error.js";
 import { problem } from "./problem.js";
 import { registerTodayRoutes } from "./today-routes.js";
@@ -26,7 +26,6 @@ import { registerDecisionRoutes } from "./decision-routes.js";
 import { registerQuarterRoutes } from "./quarter-routes.js";
 import { registerPlanRoutes } from "./plan-routes.js";
 import { registerSearchRoutes } from "./search-routes.js";
-import { registerMediaRoutes } from "./media-routes.js";
 import { registerEmailRoutes } from "./email-routes.js";
 import { AuthService, readCookie, sessionCookie } from "../auth/auth-service.js";
 import { AuthenticatedCurrentUserProvider } from "../adapters/authenticated-current-user-provider.js";
@@ -42,7 +41,6 @@ interface BuildAppOptions {
   readonly allowedHosts: ReadonlySet<string>;
   readonly allowedMutationOrigins: ReadonlySet<string>;
   readonly serveFrontend?: boolean;
-  readonly mediaDirectory?: string;
   readonly registerTestRoutes?: boolean;
   readonly authService?: AuthService;
   readonly mailer?: Mailer | undefined;
@@ -376,8 +374,6 @@ export async function buildApp(options: BuildAppOptions) {
   registerQuarterRoutes(app, options);
   registerPlanRoutes(app, options);
   registerSearchRoutes(app, options);
-  const mediaDirectory = options.mediaDirectory ?? resolve(process.cwd(), "data/store/media");
-  registerMediaRoutes(app, { directory: mediaDirectory, idGenerator: options.idGenerator, store: options.store, currentUserProvider: options.currentUserProvider, clock: options.clock });
   if (options.emailPreferences) {
     registerEmailRoutes(app, { preferences: options.emailPreferences, limited: (kind, key) => limited(kind, key) });
   }

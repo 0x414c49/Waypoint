@@ -1,4 +1,4 @@
-import { StoreError } from "./errors.js";
+import { StoreError } from "./store-errors.js";
 
 export class AsyncMutex {
   private locked = false;

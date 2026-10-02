@@ -25,7 +25,7 @@ npm start
 
 Then open `http://127.0.0.1:4173`.
 
-Your data stays on this machine in `data/store`. Preserve that directory—including `auth.key`—when backing up or moving the app; do not hand-edit its files while the server is running. Backups contain password verifiers, encrypted authenticator secrets, the key needed to decrypt them, and private activity, so keep them private.
+Your data stays on this machine in `data/store`. The backup unit is `waypoint.db + auth.key` (plus `journey-state.pre-sqlite-*.json` until you have verified the SQLite migration). Preserve those files when backing up or moving the app; do not hand-edit them while the server is running. Backups contain password verifiers, encrypted authenticator secrets, the key needed to decrypt them, and private activity, so keep them private.
 
 ## Docker, Compose, and Unraid
 
@@ -52,9 +52,9 @@ mkdir -p /mnt/user/appdata/waypoint
 chown -R 99:100 /mnt/user/appdata/waypoint
 ```
 
-Run the same bootstrap command from the container console. Keep `/mnt/user/appdata/waypoint` as one backup unit, including `store/auth.key`, and stop Waypoint before copying or restoring it. A named Compose volume can be backed up with a temporary helper container (`docker run --rm -v <volume>:/source -v "$PWD/backups":/backup alpine tar -C /source -czf /backup/waypoint-data.tgz .`); restore the complete archive while Waypoint is stopped, then start it again. Never edit store JSON while the server is running.
+Run the same bootstrap command from the container console. Keep `/mnt/user/appdata/waypoint` as one backup unit (`store/waypoint.db` including `store/auth.key`), and stop Waypoint before copying or restoring it. A named Compose volume can be backed up with a temporary helper container (`docker run --rm -v <volume>:/source -v "$PWD/backups":/backup alpine tar -C /source -czf /backup/waypoint-data.tgz .`); restore the complete archive while Waypoint is stopped, then start it again. Never edit store JSON while the server is running.
 
-The owner can open **Access** to create one-time, email-bound member invites. Copy a new invite immediately: only its secure digest is stored, so the raw invite ID cannot be shown again. Members get their own private Quarter, Journey, Decisions, and media; they cannot see another person’s records or manage invites.
+The owner can open **Access** to create one-time, email-bound member invites. Copy a new invite immediately: only its secure digest is stored, so the raw invite ID cannot be shown again. Members get their own private Quarter, Journey, and Decisions; they cannot see another person’s records or manage invites.
 
 ## The friendly daily loop
 
@@ -84,6 +84,7 @@ Open **Journey** to see sessions, outcomes, thoughts, changed thinking, and Deci
 - Filters narrow the history by date, Task, Milestone, or entry type.
 - **Learning activity** shows the last year as a weekly calendar. Darker cells mean more closed-session time for that local date. Hover a cell for the exact duration.
 - The calendar is context, not a score: there is no streak, target, ranking, or penalty for an empty day.
+- To add an image, upload it to your preferred image host and paste the link as `![](https://…)`. Waypoint stores the link text only and never uploads or fetches image files.
 
 ## Decisions
 

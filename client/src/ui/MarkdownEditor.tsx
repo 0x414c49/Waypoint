@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import { StarterKit } from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -9,7 +9,6 @@ import { mergeAttributes } from "@tiptap/core";
 import { Markdown } from "@tiptap/markdown";
 import type { MarkdownToken } from "@tiptap/core";
 import { Icon } from "./Icon.js";
-import { uploadJourneyImage } from "../features/journey/api.js";
 import styles from "./MarkdownEditor.module.css";
 
 interface Props {
@@ -64,11 +63,8 @@ const SafeTable = Table.extend({
 });
 
 export function MarkdownEditor({ value, onChange, ariaLabel, minHeight = 112 }: Props) {
-  const fileRef = useRef<HTMLInputElement>(null);
   const onChangeRef = useRef(onChange);
   const previousValueRef = useRef(value);
-  const [imageError, setImageError] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
   useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
 
   const editor = useEditor({
@@ -130,21 +126,6 @@ export function MarkdownEditor({ value, onChange, ariaLabel, minHeight = 112 }: 
     </button>
   );
 
-  const chooseImage = async (file?: File) => {
-    if (!file || !editor) return;
-    setUploading(true);
-    setImageError(null);
-    try {
-      const { src } = await uploadJourneyImage(file);
-      editor.chain().focus().setImage({ src, alt: file.name.replace(/\.[^.]+$/, "") }).run();
-    } catch (caught) {
-      setImageError(caught instanceof Error ? caught.message : "The image could not be saved.");
-    } finally {
-      setUploading(false);
-      if (fileRef.current) fileRef.current.value = "";
-    }
-  };
-
   return (
     <div className={`${styles.editor} ${minHeight < 100 ? styles.editorCompact : ""}`}>
       {editor ? <div className={styles.toolbar} role="group" aria-label="Text formatting">
@@ -158,7 +139,6 @@ export function MarkdownEditor({ value, onChange, ariaLabel, minHeight = 112 }: 
         {formatButton("Numbered list", "orderedList", editor.isActive("orderedList"), () => editor.chain().focus().toggleOrderedList().run(), "numbered")}
         <span className={styles.separator} aria-hidden="true" />
         <button className={styles.tool} type="button" aria-label="Insert table" title="Insert a 3 by 3 table" onMouseDown={(event) => event.preventDefault()} onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}><Icon name="table" /></button>
-        <button className={styles.tool} type="button" disabled={uploading} aria-label={uploading ? "Saving image" : "Add image"} title={uploading ? "Saving image" : "Add image"} onMouseDown={(event) => event.preventDefault()} onClick={() => fileRef.current?.click()}><Icon name="image" /></button>
         {contextualSelection?.table ? <>
           <span className={styles.separator} aria-hidden="true" />
           <span className={styles.contextLabel}>Table</span>
@@ -169,10 +149,8 @@ export function MarkdownEditor({ value, onChange, ariaLabel, minHeight = 112 }: 
           <button className={`${styles.tool} ${styles.contextTool} ${styles.destructiveTool}`} type="button" aria-label="Remove table" title="Remove table" onMouseDown={(event) => event.preventDefault()} onClick={() => editor.chain().focus().deleteTable().run()}><Icon name="tableRemove" /><span>Remove table</span></button>
         </> : null}
         {contextualSelection?.image ? <button className={`${styles.tool} ${styles.destructiveTool}`} type="button" aria-label="Remove image" title="Remove selected image" onMouseDown={(event) => event.preventDefault()} onClick={() => editor.chain().focus().deleteSelection().run()}><Icon name="remove" /></button> : null}
-        <input ref={fileRef} className={styles.fileInput} type="file" accept="image/png,image/jpeg,image/gif,image/webp" aria-label="Choose an image" onChange={(event) => void chooseImage(event.currentTarget.files?.[0])} />
       </div> : null}
       <EditorContent editor={editor} className={styles.content} />
-      {imageError ? <p className={styles.error} role="alert">{imageError}</p> : null}
     </div>
   );
 }

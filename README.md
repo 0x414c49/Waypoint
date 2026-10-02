@@ -32,7 +32,7 @@ docker compose up -d
 docker compose exec waypoint npm run auth:bootstrap:production -- --email you@example.com
 ```
 
-For a bind mount, set `WAYPOINT_DATA_PATH=/srv/waypoint` (or another host path) in `.env` before `docker compose up -d`. The named volume and bind path contain the same complete backup unit: store JSON, media, and `store/auth.key`.
+For a bind mount, set `WAYPOINT_DATA_PATH=/srv/waypoint` (or another host path) in `.env` before `docker compose up -d`. The named volume and bind path contain the same complete backup unit: `store/waypoint.db` and `store/auth.key` (plus the pre-sqlite backup until the migration is verified).
 
 Open the `JOURNEY_PUBLIC_URL` configured in `compose.yaml` (the default is `http://localhost:4173`) and paste the one-time invite at `/register`. Bootstrap is an explicit operator command; it does not run or rotate an invite on container restarts. To use another LAN address, set `WAYPOINT_PUBLIC_URL` in a `.env` file, for example `WAYPOINT_PUBLIC_URL=http://192.168.1.25:4173`, before starting the service. The value must be the exact URL users open. Add exact comma-separated aliases with `WAYPOINT_TRUSTED_HOSTS` and `WAYPOINT_TRUSTED_ORIGINS` when needed; Waypoint never uses a wildcard Host or Origin rule.
 
@@ -49,7 +49,7 @@ mkdir -p /mnt/user/appdata/waypoint
 chown -R 99:100 /mnt/user/appdata/waypoint
 ```
 
-Open the container console after it starts and run `npm run auth:bootstrap:production -- --email you@example.com`. The template intentionally has no invented logo URL. Stop the container before backing up `/mnt/user/appdata/waypoint` (including `store/auth.key`) and restore the complete directory before starting it again. Treat backups as private: they contain password verifiers, encrypted authenticator secrets, the key needed to decrypt them, and all activity/media.
+Open the container console after it starts and run `npm run auth:bootstrap:production -- --email you@example.com`. The template intentionally has no invented logo URL. Stop the container before backing up `/mnt/user/appdata/waypoint` (including `store/waypoint.db` and `store/auth.key`) and restore the complete directory before starting it again. Treat backups as private: they contain password verifiers, encrypted authenticator secrets, the key needed to decrypt them, and all activity.
 
 The Compose file and the template expose only port 4173. The container health check is `/healthz`; it still enforces the configured Host boundary.
 

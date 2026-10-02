@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { JsonJourneyStore } from "../adapters/json-store/index.js";
+import { SqliteJourneyStore } from "../adapters/sqlite-store/index.js";
 import { createNoHistorySeed } from "../domain/journey-state.js";
 import { createStructuredLogger } from "../infrastructure/structured-logger.js";
 import { FixedClock } from "../ports/clock.js";
@@ -28,7 +28,7 @@ async function setup() {
   const root = await mkdtemp(join(tmpdir(), "email-routes-test-")); roots.push(root);
   const clock = new FixedClock(new Date("2026-10-02T10:00:00.000Z"));
   const ids = new SequenceIdGenerator(Array.from({ length: 100 }, (_, index) => `id-${index}`));
-  const store = new JsonJourneyStore({ directory: join(root, "store"), clock, idGenerator: ids, seed: createNoHistorySeed });
+  const store = new SqliteJourneyStore({ directory: join(root, "store"), clock, idGenerator: ids, seed: createNoHistorySeed });
   await store.initialize();
   const preferences = new EmailPreferenceService({ store, clock, key: KEY });
   const { AuthenticatedCurrentUserProvider } = await import("../adapters/authenticated-current-user-provider.js");
@@ -77,7 +77,7 @@ describe("authenticated email preferences", () => {
     const root = await mkdtemp(join(tmpdir(), "email-prefs-test-")); roots.push(root);
     const clock = new FixedClock(new Date("2026-10-02T10:00:00.000Z"));
     const ids = new SequenceIdGenerator(Array.from({ length: 200 }, (_, index) => `pref-${index}`));
-    const store = new JsonJourneyStore({ directory: join(root, "store"), clock, idGenerator: ids, seed: createNoHistorySeed });
+    const store = new SqliteJourneyStore({ directory: join(root, "store"), clock, idGenerator: ids, seed: createNoHistorySeed });
     await store.initialize();
     const { AuthenticatedCurrentUserProvider } = await import("../adapters/authenticated-current-user-provider.js");
     const provider = new AuthenticatedCurrentUserProvider(store);

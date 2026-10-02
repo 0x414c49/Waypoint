@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { JsonJourneyStore } from "../adapters/json-store/index.js";
+import { SqliteJourneyStore } from "../adapters/sqlite-store/index.js";
 import { LocalCurrentUserProvider } from "../adapters/local-current-user-provider.js";
 import { createProductionSeed } from "../domain/production-seed.js";
 import { createStructuredLogger } from "../infrastructure/structured-logger.js";
@@ -20,16 +20,16 @@ class MutableClock implements Clock {
 const roots: string[] = [];
 const trusted = { host: "127.0.0.1:4173", origin: "http://127.0.0.1:4173", "content-type": "application/json" };
 let app: Awaited<ReturnType<typeof buildApp>>;
-let store: JsonJourneyStore;
+let store: SqliteJourneyStore;
 let clock: MutableClock;
 
 beforeEach(async () => {
   const root = await mkdtemp(join(tmpdir(), "journey-slice-two-")); roots.push(root);
   clock = new MutableClock("2026-11-03T17:00:00.000Z");
   const ids = new RandomIdGenerator();
-  store = new JsonJourneyStore({ directory: join(root, "store"), clock, idGenerator: ids, seed: createProductionSeed });
+  store = new SqliteJourneyStore({ directory: join(root, "store"), clock, idGenerator: ids, seed: createProductionSeed });
   await store.initialize();
-  app = await buildApp({ store, currentUserProvider: new LocalCurrentUserProvider(store), clock, idGenerator: ids, logger: createStructuredLogger("silent"), allowedHosts: new Set([trusted.host]), allowedMutationOrigins: new Set([trusted.origin]), mediaDirectory: join(root, "store", "media") });
+  app = await buildApp({ store, currentUserProvider: new LocalCurrentUserProvider(store), clock, idGenerator: ids, logger: createStructuredLogger("silent"), allowedHosts: new Set([trusted.host]), allowedMutationOrigins: new Set([trusted.origin]) });
 });
 
 afterEach(async () => { await app.close(); await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true }))); });
@@ -125,22 +125,16 @@ describe("Slice 2 Journey HTTP", () => {
     expect(updated.json()).not.toHaveProperty("feeling");
   });
 
-  it("keeps uploaded journal images in local media storage and serves only verified image types", async () => {
-    const image = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/9WQAAAAASUVORK5CYII=";
+  it("no longer serves binary media: upload and fetch routes are gone (ADR-0015)", async () => {
     const uploaded = await app.inject({
       method: "POST", url: "/api/media", headers: trusted,
-      payload: { dataUrl: `data:image/png;base64,${image}` },
+      payload: { dataUrl: "data:image/png;base64,iVBORw0KGgo=" },
     });
-    expect(uploaded.statusCode, uploaded.body).toBe(201);
-    const imageResponse = await app.inject({ method: "GET", url: uploaded.json().src, headers: { host: trusted.host } });
-    expect(imageResponse.statusCode).toBe(200);
-    expect(imageResponse.headers["content-type"]).toContain("image/png");
-    expect(imageResponse.body).toContain("PNG");
-    const rejected = await app.inject({
-      method: "POST", url: "/api/media", headers: trusted,
-      payload: { dataUrl: "data:image/png;base64,AAAA" },
-    });
-    expect(rejected.statusCode).toBe(415);
+    expect(uploaded.statusCode).toBe(404);
+    expect(uploaded.json().code).toBe("RESOURCE_NOT_FOUND");
+    const fetched = await app.inject({ method: "GET", url: "/api/media/image-abc.png", headers: { host: trusted.host } });
+    expect(fetched.statusCode).toBe(404);
+    expect(fetched.json().code).toBe("RESOURCE_NOT_FOUND");
   });
 
   it("does not duplicate Journey rows when a newer entry arrives between pages", async () => {

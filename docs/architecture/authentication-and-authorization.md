@@ -11,7 +11,7 @@ The backward-compatible Journey state gains optional maps. The implementation ma
 - `accounts`: normalized unique email, `userId`, `OWNER | MEMBER`, password verifier version/parameters/salt/key, encrypted TOTP secret, last accepted TOTP time step, and lifecycle timestamps.
 - `authInvites`: SHA-256 digest identity, intended normalized email, role, creator or bootstrap marker, expiry, consumed/revoked facts, and optional legacy user to claim.
 - `authSessions`: SHA-256 token digest identity, account/user identity, created/last-seen/absolute-expiry/revoked timestamps.
-- `mediaRecords`: filename, owner `userId`, verified media type, byte length, and created timestamp.
+- `mediaRecords` (legacy, ADR-0015): filename, owner `userId`, verified media type, byte length, and created timestamp. Migrated rows are preserved in storage for forensic completeness but no API serves them and no transaction intent writes them.
 
 Raw passwords, raw TOTP secrets, one-time codes, raw invite IDs, and raw session tokens are never persisted or logged. Auth collections participate in state validation and the existing atomic replace/backup path. Registration and invite administration use closed transaction intents; ordinary learning commands may not mutate authentication records.
 
@@ -82,7 +82,7 @@ The visual direction stays inside Waypoint's existing blue-gray workbench system
 - Session cookie attributes, rotation, expiry, revocation, logout, and no raw token persistence/logging.
 - Unauthenticated denial for every private route family.
 - Member denial for invite administration.
-- Two users cannot read or mutate each other's Quarter, Task, Journey, Decision, search, plan, or media resources.
+- Two users cannot read or mutate each other's Quarter, Task, Journey, Decision, search, or plan resources.
 - Two users can import the same source plan IDs without collision.
 - Existing single-user stores migrate/claim without losing history.
 - Browser coverage for bootstrap registration, sign-in, refresh persistence, sign-out, owner invite creation, invited-member registration, and mobile accessibility.

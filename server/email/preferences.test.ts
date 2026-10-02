@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { JsonJourneyStore } from "../adapters/json-store/index.js";
+import { SqliteJourneyStore } from "../adapters/sqlite-store/index.js";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -22,7 +22,7 @@ afterEach(async () => { await Promise.all(roots.splice(0).map((root) => rm(root,
 async function service() {
   const root = await mkdtemp(join(tmpdir(), "email-prefs-test-")); roots.push(root);
   const clock = new FixedClock(new Date("2026-10-02T10:00:00.000Z"));
-  const store = new JsonJourneyStore({ directory: join(root, "store"), clock, idGenerator: new SequenceIdGenerator(Array.from({ length: 50 }, (_, index) => `id-${index}`)), seed: createNoHistorySeed });
+  const store = new SqliteJourneyStore({ directory: join(root, "store"), clock, idGenerator: new SequenceIdGenerator(Array.from({ length: 50 }, (_, index) => `id-${index}`)), seed: createNoHistorySeed });
   await store.initialize();
   return new EmailPreferenceService({ store, clock, key: KEY });
 }

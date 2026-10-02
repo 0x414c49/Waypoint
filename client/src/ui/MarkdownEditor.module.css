@@ -48,7 +48,6 @@
 .contextTool { flex: none; gap: 4px; padding-right: 6px; padding-left: 6px; font-size: 12px; }
 .contextTool svg { width: 15px; height: 15px; }
 .separator { width: 1px; height: 20px; margin: 0 4px; background: var(--color-border-strong); }
-.fileInput { display: none; }
 .content { min-height: 112px; overflow-x: auto; }
 .content :global(.tiptap) { min-height: 112px; padding: 10px 12px; outline: none; }
 .editorCompact .content,
@@ -69,7 +68,6 @@
 .content :global(.tiptap th),
 .content :global(.tiptap td) { min-width: 80px; padding: 6px 8px; border: 1px solid var(--color-border-strong); vertical-align: top; }
 .content :global(.tiptap th) { background: var(--color-surface-subtle); text-align: left; }
-.error { margin: 0; padding: 6px 12px; color: var(--color-error); font-size: var(--text-small); }
 
 @media (max-width: 520px) {
   .toolbar { gap: 2px; flex-wrap: nowrap; overflow-x: auto; padding: 4px 6px; scrollbar-width: thin; }

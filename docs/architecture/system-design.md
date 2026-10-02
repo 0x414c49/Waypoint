@@ -4,7 +4,7 @@ Status: Accepted for implementation on 2026-09-27
 
 ## Architectural shape
 
-Build a local-first modular monolith: one TypeScript server process owns domain behavior and JSON persistence, serves one React single-page application, and exposes the confirmed REST API at `/api`.
+Build a local-first modular monolith: one TypeScript server process owns domain behavior and SQLite persistence, serves one React single-page application, and exposes the confirmed REST API at `/api`.
 
 ```text
 Browser
@@ -14,7 +14,7 @@ Browser
                     └── application use cases + queries
                            ├── pure domain policies/projections
                            └── ports
-                                 ├── JourneyStore → JsonJourneyStore
+                                  ├── JourneyStore → SqliteJourneyStore
                                  └── CurrentUserProvider → LocalCurrentUserProvider
 
 Cross-cutting injected utilities: Clock, IdGenerator, Logger
@@ -27,9 +27,9 @@ This is one deployable system with module boundaries, not distributed services. 
 ### Production/local use
 
 - One Node.js process binds `127.0.0.1:4173`; it never falls back to another address or port.
-- Before binding/listening, startup initializes or validates the default `data/store` and resolves the canonical stored local user; recovery-required state stops startup with terminal guidance.
+- Before binding/listening, startup initializes or validates the default `data/store` and resolves the canonical stored local user; recovery-required state stops startup with terminal guidance. SQLite is authoritative: an existing `waypoint.db` is opened and verified, a lone `journey-state.json` triggers the one-time import (timestamped backup + verification) before listening, and a partial database is discarded and re-imported from the untouched JSON (ADR-0014).
 - Fastify serves the built frontend and `/api` from the same origin.
-- The browser never reads the JSON store directly.
+- The browser never reads the SQLite store directly.
 - The fixed port is the v1 single-instance authority; startup stops if it cannot bind.
 - No CORS is enabled. Production accepts `Host` only as `127.0.0.1:4173` or `localhost:4173`. `POST`, `PUT`, `PATCH`, and `DELETE` require `Origin` exactly `http://127.0.0.1:4173` or `http://localhost:4173`; missing, `null`, or other origins return `403 UNTRUSTED_ORIGIN`. Safe reads still require an allowed Host. Development explicitly adds only the configured Vite proxy origin.
 - This remains the default local runtime. The supported container profile is the explicit private-LAN/reverse-proxy exception described below; it does not change these local defaults.
@@ -38,7 +38,7 @@ This is one deployable system with module boundaries, not distributed services. 
 
 - The image binds `0.0.0.0:4173` only because its runtime configuration explicitly sets that bind address. `JOURNEY_PUBLIC_URL` must name the exact URL users open; its host and origin are added to the same strict allowlists, with optional exact aliases in `JOURNEY_TRUSTED_HOSTS` and `JOURNEY_TRUSTED_ORIGINS`.
 - No wildcard Host or Origin mode is provided. Safe reads and every mutation continue to require an allowed Host, and mutations additionally require an exact allowed Origin. HTTPS deployments should enable secure cookies (inferred from an `https` public URL or set with `JOURNEY_SECURE_COOKIES=true`).
-- The image supports `linux/amd64` (x86-64) and `linux/arm64`; `linux/386` is not a supported Node.js 24 target. Private LAN or an authenticated reverse proxy is expected; direct public-internet exposure remains out of scope.
+- The image supports `linux/amd64` (x86-64) and `linux/arm64`; `linux/386` is not a supported Node.js 24 target. Private LAN or an authenticated reverse proxy is expected; direct public-internet exposure remains out of scope. A Tunnel-public Pi deployment is the documented exception — see ADR-0016.
 
 ### Development
 
@@ -109,7 +109,7 @@ Rules:
 
 ### JourneyStore
 
-The confirmed whole-state port has two operations: project from one immutable validated snapshot, and transact once against a private mutable draft. Transactions carry the persistence contract's closed intent capability so exceptional plan changes, one explicit Journey deletion, and schema migration can be validated without inferring caller authority. A transaction returns only an immutable committed result/snapshot. JsonJourneyStore implements the safe-write and recovery contract.
+The confirmed whole-state port has two operations: project from one immutable validated snapshot, and transact once against a private mutable draft. Transactions carry the persistence contract's closed intent capability so exceptional plan changes, one explicit Journey deletion, and schema migration can be validated without inferring caller authority. A transaction returns only an immutable committed result/snapshot. SqliteJourneyStore implements the safe-write and recovery contract.
 
 ### CurrentUserProvider
 
@@ -174,7 +174,7 @@ Global Search is a read-only query over the current user’s plan, Journey, and 
 - Private filesystem permissions where supported.
 - CSP and standard secure response headers despite local deployment.
 - Strict bounded JSON/YAML bodies and escaped text rendering; user-authored text is never treated as HTML.
-- No telemetry, cloud synchronization, accounts, or third-party calls in v1.
+- No telemetry, cloud synchronization, accounts, or third-party calls — none unless email is configured (Resend invite delivery only, ADR-0017).
 
 Older stores may contain `records.aiReviews` written during the former Slice 5 implementation. The current app keeps those rows schema-valid for backward-compatible startup but exposes no AI review UI/API and never creates, displays, or sends them anywhere.
 
@@ -187,6 +187,7 @@ This baseline is appropriate for the documented local runtime and the explicitly
 - ORM, per-entity repositories, database migrations
 - global client state library
 - authentication placeholder UI or fake cloud sync
+- binary media upload/storage — images are pasted `https://` URLs only (ADR-0015)
 - generic plugin/integration architecture
 
 ## Architecture acceptance checks
@@ -197,4 +198,4 @@ This baseline is appropriate for the documented local runtime and the explicitly
 - Current plan and historical display context cannot be accidentally interchanged by the client.
 - Local no-auth operation cannot silently become network-accessible.
 - The initial slice can be built without implementing every planned endpoint.
-- Replacing JSON or local-user adapters does not require rewriting domain policies.
+- Replacing SQLite or local-user adapters does not require rewriting domain policies.

@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { JsonJourneyStore } from "../../adapters/json-store/index.js";
+import { SqliteJourneyStore } from "../../adapters/sqlite-store/index.js";
 import { LocalCurrentUserProvider } from "../../adapters/local-current-user-provider.js";
 import { createProductionSeed } from "../../domain/production-seed.js";
 import type { Clock } from "../../ports/clock.js";
@@ -20,7 +20,7 @@ describe("JourneyCommandService", () => {
     const root = await mkdtemp(join(tmpdir(), "journey-thought-replay-"));
     roots.push(root);
     const directory = join(root, "store");
-    const store = new JsonJourneyStore({
+    const store = new SqliteJourneyStore({
       directory,
       clock,
       idGenerator: new SequenceIdGenerator(["init", "store", "commit-create"]),
@@ -31,7 +31,7 @@ describe("JourneyCommandService", () => {
     const body = { text: "Retries need one owner.", relatedTaskId: null };
     const created = await service.create(body, "thought-restart-0001");
 
-    const restarted = new JsonJourneyStore({
+    const restarted = new SqliteJourneyStore({
       directory,
       clock,
       idGenerator: new SequenceIdGenerator(["restart-commit"]),

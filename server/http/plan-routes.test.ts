@@ -4,7 +4,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { JsonJourneyStore } from "../adapters/json-store/index.js";
+import { SqliteJourneyStore } from "../adapters/sqlite-store/index.js";
 import { LocalCurrentUserProvider } from "../adapters/local-current-user-provider.js";
 import { createNoHistorySeed } from "../domain/journey-state.js";
 import { createProductionSeed } from "../domain/production-seed.js";
@@ -16,7 +16,7 @@ const roots: string[] = [];
 const trusted = { host: "127.0.0.1:4173", origin: "http://127.0.0.1:4173", "content-type": "application/json" };
 const fixture = readFileSync(resolve(process.cwd(), "planning/fixtures/example-quarter.yaml"), "utf8");
 let app: Awaited<ReturnType<typeof buildApp>>;
-let store: JsonJourneyStore;
+let store: SqliteJourneyStore;
 let setTime: (value: string) => void;
 
 async function start(seed = createNoHistorySeed) {
@@ -25,7 +25,7 @@ async function start(seed = createNoHistorySeed) {
   setTime = (value) => { instant = new Date(value); };
   const clock = { now: () => new Date(instant) };
   const ids = new RandomIdGenerator();
-  store = new JsonJourneyStore({ directory: join(root, "store"), clock, idGenerator: ids, seed });
+  store = new SqliteJourneyStore({ directory: join(root, "store"), clock, idGenerator: ids, seed });
   await store.initialize();
   app = await buildApp({
     store, currentUserProvider: new LocalCurrentUserProvider(store), clock, idGenerator: ids,

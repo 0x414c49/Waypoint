@@ -8,12 +8,10 @@ Use one small storage port so application/domain behavior does not know that v1 
 
 ```text
 JourneyStore
-  └── JsonJourneyStore (v1)
+  └── SqliteJourneyStore (v2, authoritative since Phase 2)
 
-Future, only when needed:
-  ├── SqliteJourneyStore
-  ├── PostgresJourneyStore
-  └── MongoJourneyStore
+Superseded, deleted after one verified SQLite release:
+  └── JsonJourneyStore (v1)
 ```
 
 ## JourneyStore port
@@ -64,6 +62,27 @@ Responsibilities deliberately outside the store:
 - HTTP mapping
 
 The callback performs no network/filesystem side effects and cannot leak its mutable draft. A later SQL adapter may initially implement the same user-scale unit-of-work contract; do not create one repository per entity now.
+
+## SQLite store (v2, authoritative)
+
+`SqliteJourneyStore` implements the same whole-state port on Node 24 built-in `node:sqlite` (ADR-0014). No ORM, no per-entity repositories, no triggers, no dual-write.
+
+- Storage: normalized tables with `TEXT PRIMARY KEY` (existing stable IDs), `FOREIGN KEY … ON DELETE RESTRICT` (except `auth_sessions → accounts CASCADE`), and `JSON TEXT CHECK(json_valid(...))` columns for snapshots/arrays never queried relationally. `sessions.owner_user_id` is the one deliberate denormalization, populated from `tasks ⋈ quarters` at insert and never updated.
+- Indexes: quarters `(user_id, start_date, end_date)`; tasks `(quarter_id, planned_date)`, `(milestone_id)`, `(focus_area_id)`, `(status)`; sessions `(task_id, started_at)`, `(owner_user_id, started_at)` plus partial `UNIQUE(owner_user_id) WHERE ended_at IS NULL`; lifecycle `(task_id, sequence)` unique; `daily_reviews(finish_event_id)` unique; journey `(user_id, occurred_at)`; decisions `(user_id)`, `(quarter_id)`; reviews `(decision_id, sequence)` unique + `(next_review_date)`; auth/receipt lookup indexes.
+- Pragmas: `journal_mode=WAL; synchronous=FULL; foreign_keys=ON; busy_timeout=5000`. File `data/store/waypoint.db` mode `0600`. The in-process mutex is kept; SQLite `BUSY` maps to `STORE_BUSY`.
+- Validation stays monolithic: the whole `JourneyState` is materialized and `assertValidState` + `assertJourneyStateTransition` run unchanged. Indexed queries serve reads/prefilter; integrity logic is not rewritten as triggers.
+- FTS5 ships as prefilter only (`search_docs`, app-maintained inside the same `BEGIN IMMEDIATE` transaction: delete + reinsert per touched doc). Final ranking/excerpts/cursor stay in `searchRecords`.
+- The `media_records` table is retained for forensic import completeness only (ADR-0015): migrated rows are never served by any API and no transition intent writes them. The `media/` directory no longer exists.
+- Backup unit: `waypoint.db + auth.key` (plus the frozen `journey-state.pre-sqlite-<timestamp>.json` until the migration is verified).
+
+### Boot auto-migration
+
+Migration is automatic on boot, not a manual script (`server/boot-store.ts` + `server/adapters/sqlite-store/import-json.ts`):
+
+- `waypoint.db` exists → open SQLite, verify, serve. A leftover `journey-state.json` is ignored; SQLite is authoritative.
+- `waypoint.db` missing + `journey-state.json` exists → one-time `v1 → v2` import before listening: validate source fail-closed, copy to `journey-state.pre-sqlite-<timestamp>.json`, bulk-load in FK order in one transaction under `SCHEMA_MIGRATION` authority, rebuild FTS, then verify row counts per collection, `storeRevision`, receipts, zero double-active-timers, `foreign_key_check`, and search parity (6 sample queries, same ID sets). Log counts + backup path, then serve. The source JSON is never deleted or overwritten.
+- Neither exists → fresh SQLite init with the production seed (same semantics as the v1 first run).
+- Partial `waypoint.db` (integrity/meta check fails) with the JSON still present → delete the partial database files and re-import from the untouched JSON in the same boot. Corrupt JSON or failed verification → fatal `STORE_CORRUPT`/`RECOVERY_REQUIRED`, no listening, everything preserved.
 
 ## Human-readable JSON document
 

@@ -63,12 +63,11 @@ export function assertTimeZone(value: string): string {
 
 function digest(raw: string): string { return createHash("sha256").update(raw).digest("hex"); }
 function safeId(value: string): string { return value.toLowerCase().replace(/[^a-z0-9._-]/g, "-").slice(0, 120); }
-function maps(state: JourneyState): { accounts: NonNullable<JourneyState["records"]["accounts"]>; invites: NonNullable<JourneyState["records"]["authInvites"]>; sessions: NonNullable<JourneyState["records"]["authSessions"]>; media: NonNullable<JourneyState["records"]["mediaRecords"]> } {
+function maps(state: JourneyState): { accounts: NonNullable<JourneyState["records"]["accounts"]>; invites: NonNullable<JourneyState["records"]["authInvites"]>; sessions: NonNullable<JourneyState["records"]["authSessions"]> } {
   state.records.accounts ??= {};
   state.records.authInvites ??= {};
   state.records.authSessions ??= {};
-  state.records.mediaRecords ??= {};
-  return { accounts: state.records.accounts, invites: state.records.authInvites, sessions: state.records.authSessions, media: state.records.mediaRecords };
+  return { accounts: state.records.accounts, invites: state.records.authInvites, sessions: state.records.authSessions };
 }
 
 function projection(state: JourneyState, account: AccountRecord): AuthenticatedCurrentUser {

@@ -1,11 +1,11 @@
 import { resolve } from "node:path";
-import { JsonJourneyStore, StoreError } from "./adapters/json-store/index.js";
+import { StoreError } from "./adapters/store-errors.js";
 import { AuthenticatedCurrentUserProvider } from "./adapters/authenticated-current-user-provider.js";
 import { AuthService } from "./auth/auth-service.js";
 import { loadOrCreateTotpKey } from "./auth/totp.js";
 import { createMailer } from "./email/mailer.js";
 import { EmailPreferenceService } from "./email/preferences.js";
-import { reconcileLegacyMedia } from "./http/media-routes.js";
+import { bootJourneyStore } from "./boot-store.js";
 import { createProductionSeed } from "./domain/production-seed.js";
 import { buildApp } from "./http/build-app.js";
 import { createStructuredLogger } from "./infrastructure/structured-logger.js";
@@ -30,22 +30,27 @@ async function start(): Promise<void> {
   const idGenerator = new RandomIdGenerator();
   const logger = createStructuredLogger(process.env.LOG_LEVEL ?? "info");
   const directory = config.storeDirectory;
-  const store = new JsonJourneyStore({
-    directory,
-    clock,
-    idGenerator,
-    seed: createProductionSeed,
-  });
 
   try {
-    const diagnostics = await store.initialize();
-    await reconcileLegacyMedia(resolve(directory, "media"), store, clock.now().toISOString());
+    // ADR-0014 boot selection: existing SQLite is authoritative, a lone
+    // journey-state.json triggers the one-time import (with timestamped
+    // backup + verification) before listening, otherwise fresh seed.
+    const boot = await bootJourneyStore({
+      directory,
+      clock,
+      idGenerator,
+      seed: createProductionSeed,
+      log: (message, fields) => logger.info(fields ?? {}, message),
+    });
+    const store = boot.store;
     logger.info(
       {
-        storeId: diagnostics.storeId,
-        initialized: diagnostics.initialized,
-        durability: diagnostics.durability,
-        cleanedAbandonedTempCount: diagnostics.cleanedAbandonedTemps.length,
+        storeId: boot.diagnostics.storeId,
+        initialized: boot.diagnostics.initialized,
+        mode: boot.mode,
+        durability: boot.diagnostics.durability,
+        backupPath: boot.backupPath,
+        orphansPath: boot.orphansPath,
       },
       "Local store ready",
     );
@@ -67,7 +72,6 @@ async function start(): Promise<void> {
       allowedHosts: config.allowedHosts,
       allowedMutationOrigins: config.allowedMutationOrigins,
       serveFrontend: config.serveFrontend,
-      mediaDirectory: config.mediaDirectory,
       authService,
       mailer,
       publicUrl: config.publicUrl,
