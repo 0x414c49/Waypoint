@@ -13,7 +13,7 @@ export const AuthInviteViewSchema = Type.Object({
   status: Type.Union([Type.Literal("pending"), Type.Literal("consumed"), Type.Literal("revoked"), Type.Literal("expired")]),
 }, { additionalProperties: false });
 export const AuthInviteListSchema = Type.Object({ items: Type.Array(AuthInviteViewSchema) }, { additionalProperties: false });
-export const AuthInviteCreateResponseSchema = Type.Object({ inviteId: Type.String({ minLength: 1 }), invite: AuthInviteViewSchema }, { additionalProperties: false });
+export const AuthInviteCreateResponseSchema = Type.Object({ inviteId: Type.String({ minLength: 1 }), invite: AuthInviteViewSchema, emailSent: Type.Boolean() }, { additionalProperties: false });
 export const TotpSetupResponseSchema = Type.Object({
   secret: Type.String({ minLength: 32, maxLength: 32, pattern: "^[A-Z2-7]+$" }),
   qrDataUrl: Type.String({ minLength: 100, maxLength: 100_000, pattern: "^data:image/png;base64," }),

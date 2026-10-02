@@ -1,6 +1,6 @@
 import type { ReactNode, SVGProps } from "react";
 
-type IconName = "add" | "draft" | "review" | "accepted" | "history" | "open" | "today" | "quarter" | "journey" | "decisions" | "search" | "thought" | "sun" | "moon" | "back" | "clock" | "calendar" | "bold" | "italic" | "underline" | "highlight" | "heading" | "bulletList" | "orderedList" | "table" | "image" | "rowAdd" | "rowRemove" | "columnAdd" | "columnRemove" | "tableRemove" | "remove";
+type IconName = "add" | "draft" | "review" | "accepted" | "history" | "open" | "today" | "quarter" | "journey" | "decisions" | "search" | "thought" | "sun" | "moon" | "back" | "clock" | "calendar" | "user" | "bold" | "italic" | "underline" | "highlight" | "heading" | "bulletList" | "orderedList" | "table" | "image" | "rowAdd" | "rowRemove" | "columnAdd" | "columnRemove" | "tableRemove" | "remove";
 
 const paths: Record<IconName, ReactNode> = {
   add: <path d="M12 5v14M5 12h14" />,
@@ -20,6 +20,7 @@ const paths: Record<IconName, ReactNode> = {
   back: <><path d="M19 12H5M11 18l-6-6 6-6" /></>,
   clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
   calendar: <><rect x="3.5" y="5" width="17" height="16" rx="2" /><path d="M7.5 3v4M16.5 3v4M3.5 9.5h17" /></>,
+  user: <><circle cx="12" cy="8" r="4" /><path d="M4 20c1.5-4 5-5.5 8-5.5s6.5 1.5 8 5.5" /></>,
   bold: <><path d="M7 5h6a3.5 3.5 0 0 1 0 7H7zM7 12h7a3.5 3.5 0 0 1 0 7H7z" /><path d="M7 5v14" /></>,
   italic: <><path d="M14 5h6M4 19h6M14 5 10 19" /></>,
   underline: <><path d="M7 4v6a5 5 0 0 0 10 0V4M5 20h14" /></>,

@@ -6,8 +6,8 @@ import { totpCodeAt } from "../server/auth/totp.js";
 test("an owner can invite a private member and member access stays scoped", async ({ page, browser }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "This flow creates one invited member in the shared test store.");
 
-  await page.goto("/access");
-  await expect(page.getByRole("heading", { name: "Access" })).toBeVisible();
+  await page.goto("/profile");
+  await expect(page.getByRole("heading", { name: "Profile" })).toBeVisible();
   const memberEmail = "invited-member@example.test";
   await page.getByLabel("Member email").fill(memberEmail);
   await page.getByRole("button", { name: "Create invite" }).click();
@@ -28,9 +28,10 @@ test("an owner can invite a private member and member access stays scoped", asyn
   await memberPage.getByLabel("Confirm password").fill("invited-member-passphrase");
   await memberPage.getByRole("button", { name: "Create account" }).click();
   await expect(memberPage.getByRole("heading", { name: "Today", exact: true })).toBeVisible();
-  await expect(memberPage.getByRole("link", { name: "Access", exact: true })).toHaveCount(0);
-  await memberPage.goto("/access");
-  await expect(memberPage).toHaveURL(/\/$/);
+  await expect(memberPage.getByRole("link", { name: "Profile", exact: true })).toHaveCount(1);
+  await expect(memberPage.getByRole("heading", { name: "Member invites" })).toHaveCount(0);
+  await memberPage.goto("/profile");
+  await expect(memberPage).toHaveURL(/\/profile$/);
   await memberPage.getByRole("button", { name: /Invited Member/ }).click();
   await expect(memberPage.getByText("Member", { exact: true })).toBeVisible();
   await memberContext.close();

@@ -27,8 +27,11 @@ import { registerQuarterRoutes } from "./quarter-routes.js";
 import { registerPlanRoutes } from "./plan-routes.js";
 import { registerSearchRoutes } from "./search-routes.js";
 import { registerMediaRoutes } from "./media-routes.js";
+import { registerEmailRoutes } from "./email-routes.js";
 import { AuthService, readCookie, sessionCookie } from "../auth/auth-service.js";
 import { AuthenticatedCurrentUserProvider } from "../adapters/authenticated-current-user-provider.js";
+import { buildInviteEmail, type Mailer } from "../email/mailer.js";
+import type { EmailPreferenceService } from "../email/preferences.js";
 
 interface BuildAppOptions {
   readonly store: JourneyStore;
@@ -42,6 +45,9 @@ interface BuildAppOptions {
   readonly mediaDirectory?: string;
   readonly registerTestRoutes?: boolean;
   readonly authService?: AuthService;
+  readonly mailer?: Mailer | undefined;
+  readonly publicUrl?: string | undefined;
+  readonly emailPreferences?: EmailPreferenceService | undefined;
 }
 
 const mutatingMethods = new Set(["POST", "PUT", "PATCH", "DELETE"]);
@@ -56,7 +62,7 @@ export async function buildApp(options: BuildAppOptions) {
   const authEnabled = Boolean(options.authService);
   const authProvider = options.currentUserProvider instanceof AuthenticatedCurrentUserProvider ? options.currentUserProvider : undefined;
   const limiter = new Map<string, { count: number; resetAt: number }>();
-  const authPublic = (url: string) => ["/api/auth/session", "/api/auth/totp/setup", "/api/auth/login", "/api/auth/register", "/api/auth/logout"].includes(url.split("?")[0]!);
+  const authPublic = (url: string) => ["/api/auth/session", "/api/auth/totp/setup", "/api/auth/login", "/api/auth/register", "/api/auth/logout", "/api/email/unsubscribe", "/api/email/resubscribe"].includes(url.split("?")[0]!);
   const limited = (kind: string, key: string): void => {
     const now = Date.now();
     if (limiter.size >= 10_000) for (const [staleKey, bucket] of limiter) { if (bucket.resetAt <= now) limiter.delete(staleKey); if (limiter.size < 9_000) break; }
@@ -146,6 +152,8 @@ export async function buildApp(options: BuildAppOptions) {
     const LoginBody = Type.Object({ email: Type.String({ minLength: 3, maxLength: 320 }), password: Type.String({ minLength: 1, maxLength: 256 }), totpCode: Type.Optional(Type.String({ minLength: 6, maxLength: 6, pattern: "^\\d{6}$" })) }, { additionalProperties: false });
     const InviteBody = Type.Object({ email: Type.String({ minLength: 3, maxLength: 320 }) }, { additionalProperties: false });
     const InviteParams = Type.Object({ id: Type.String({ minLength: 64, maxLength: 64, pattern: "^[a-f0-9]+$" }) }, { additionalProperties: false });
+    const EmailPreferencesBody = Type.Object({ digestUnsubscribed: Type.Boolean() }, { additionalProperties: false });
+    const EmailPreferencesResponse = Type.Object({ digestUnsubscribed: Type.Boolean() }, { additionalProperties: false });
     const secureCookie = options.authService!.cookieName.startsWith("__Host-");
     app.get("/api/auth/session", { schema: { response: { 200: AuthSessionResponseSchema } } }, async (request) => {
       const current = await options.authService!.authenticateToken(readCookie(request, options.authService!.cookieName));
@@ -183,7 +191,20 @@ export async function buildApp(options: BuildAppOptions) {
       const current = await authProvider.getCurrentUser();
       if (current.role !== "OWNER") throw new AppError(403, "FORBIDDEN", "Forbidden", "Owner access is required.");
       const result = await options.authService!.createInvite(current, (request.body as { email: string }).email);
-      return reply.code(201).send({ inviteId: result.rawInviteId, invite: result.invite });
+      // Best-effort invite email: a delivery failure must never lose the
+      // invite itself, so the raw ID is still returned and the failure is logged.
+      let emailSent = false;
+      if (options.mailer?.configured) {
+        const registerUrl = options.publicUrl ? `${options.publicUrl}/register` : "/register";
+        const content = buildInviteEmail({ registerUrl, inviteId: result.rawInviteId, inviterName: current.name, expiresAt: result.invite.expiresAt });
+        try {
+          const sent = await options.mailer.send({ to: result.invite.intendedEmail, subject: content.subject, text: content.text, html: content.html });
+          emailSent = sent.sent;
+        } catch (error) {
+          request.log.warn({ err: error, inviteId: result.invite.id }, "Invite email could not be delivered; the invite remains valid for manual sharing.");
+        }
+      }
+      return reply.code(201).send({ inviteId: result.rawInviteId, invite: result.invite, emailSent });
     });
     app.delete("/api/auth/invites/:id", { schema: { params: InviteParams } }, async (request, reply) => {
       const current = await authProvider.getCurrentUser();
@@ -191,6 +212,19 @@ export async function buildApp(options: BuildAppOptions) {
       await options.authService!.revokeInvite((request.params as { id: string }).id);
       return reply.code(204).send();
     });
+    if (options.emailPreferences) {
+      const preferences = options.emailPreferences;
+      app.get("/api/email/preferences", { schema: { response: { 200: EmailPreferencesResponse } } }, async () => {
+        const current = await authProvider.getCurrentUser();
+        return { digestUnsubscribed: await preferences.isDigestUnsubscribed(current.id) };
+      });
+      app.post("/api/email/preferences", { schema: { body: EmailPreferencesBody, response: { 200: EmailPreferencesResponse } } }, async (request) => {
+        const current = await authProvider.getCurrentUser();
+        const input = request.body as { digestUnsubscribed: boolean };
+        await preferences.setDigestUnsubscribedByUser(current.id, input.digestUnsubscribed);
+        return { digestUnsubscribed: await preferences.isDigestUnsubscribed(current.id) };
+      });
+    }
   }
 
   if (options.registerTestRoutes) {
@@ -344,6 +378,9 @@ export async function buildApp(options: BuildAppOptions) {
   registerSearchRoutes(app, options);
   const mediaDirectory = options.mediaDirectory ?? resolve(process.cwd(), "data/store/media");
   registerMediaRoutes(app, { directory: mediaDirectory, idGenerator: options.idGenerator, store: options.store, currentUserProvider: options.currentUserProvider, clock: options.clock });
+  if (options.emailPreferences) {
+    registerEmailRoutes(app, { preferences: options.emailPreferences, limited: (kind, key) => limited(kind, key) });
+  }
 
   return app;
 }

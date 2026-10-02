@@ -65,3 +65,13 @@ export async function createInvite(email: string): Promise<AuthInviteCreateRespo
 export async function revokeInvite(id: string): Promise<void> {
   await request<void>(`/api/auth/invites/${encodeURIComponent(id)}`, { method: "DELETE" });
 }
+
+export type EmailPreferences = { digestUnsubscribed: boolean };
+
+export async function getEmailPreferences(signal?: AbortSignal): Promise<EmailPreferences> {
+  return request<EmailPreferences>("/api/email/preferences", signal ? { signal } : undefined);
+}
+
+export async function setEmailPreferences(digestUnsubscribed: boolean): Promise<EmailPreferences> {
+  return request<EmailPreferences>("/api/email/preferences", { method: "POST", body: JSON.stringify({ digestUnsubscribed }) });
+}

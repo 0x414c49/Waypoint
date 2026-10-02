@@ -18,6 +18,9 @@ services:
       JOURNEY_TRUSTED_HOSTS: ${WAYPOINT_TRUSTED_HOSTS:-}
       JOURNEY_TRUSTED_ORIGINS: ${WAYPOINT_TRUSTED_ORIGINS:-}
       LOG_LEVEL: ${WAYPOINT_LOG_LEVEL:-info}
+      # Optional email via Resend (invite emails). Leave both empty to disable.
+      JOURNEY_RESEND_API_KEY: ${WAYPOINT_RESEND_API_KEY:-}
+      JOURNEY_EMAIL_FROM: ${WAYPOINT_EMAIL_FROM:-}
     volumes:
       # Leave WAYPOINT_DATA_PATH unset for the named waypoint-data volume.
       # Set an absolute host path when a bind mount is preferred.

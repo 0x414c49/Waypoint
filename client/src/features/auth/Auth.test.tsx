@@ -100,36 +100,67 @@ describe("authentication checkpoint", () => {
 });
 
 describe("owner and member authorization UI", () => {
-  it("lets owners create, copy once, list, and revoke invites", async () => {
+  it("lets owners manage invites from the profile page", async () => {
     const user = userEvent.setup();
     const created = { ...invite, id: "b".repeat(64), intendedEmail: "created@example.test" };
     vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText: vi.fn(async () => undefined) } });
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       if (url.includes("/api/auth/session")) return response({ authenticated: true, user: owner });
-      if (url === "/api/auth/invites" && init?.method === "POST") return response({ inviteId: "wp_inv_secret", invite: created }, 201);
+      if (url === "/api/auth/invites" && init?.method === "POST") return response({ inviteId: "wp_inv_secret", invite: created, emailSent: true }, 201);
       if (url.includes("/api/auth/invites/") && init?.method === "DELETE") return response({}, 204);
       if (url === "/api/auth/invites") return response({ items: [invite] });
+      if (url.includes("/api/email/preferences")) return response({ digestUnsubscribed: false });
       return response(dashboard);
     }));
-    renderApp("/access");
-    await screen.findByRole("heading", { name: "Access" });
+    renderApp("/profile");
+    await screen.findByRole("heading", { name: "Profile" });
+    expect(screen.getByRole("heading", { name: "Member invites" })).toBeTruthy();
     await user.type(screen.getByLabelText("Member email"), "created@example.test");
     await user.click(screen.getByRole("button", { name: "Create invite" }));
     expect(await screen.findByText("wp_inv_secret")).toBeTruthy();
+    expect(screen.getByText(/also emailed to the member/)).toBeTruthy();
     await user.click(screen.getByRole("button", { name: "Copy invite ID" }));
     expect(await screen.findByRole("button", { name: "Copied" })).toBeTruthy();
     await user.click(screen.getAllByRole("button", { name: "Revoke" })[0]!);
     expect(await screen.findByText("Revoked")).toBeTruthy();
   });
 
-  it("hides access from members and protects the route", async () => {
+  it("shows members their profile without the invite manager", async () => {
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
       if (String(input).includes("/api/auth/session")) return response({ authenticated: true, user: member });
+      if (String(input).includes("/api/email/preferences")) return response({ digestUnsubscribed: false });
       return response(dashboard);
     }));
-    renderApp("/access");
-    expect(await screen.findByRole("heading", { name: "Today" })).toBeTruthy();
-    expect(screen.queryByRole("link", { name: "Access" })).toBeNull();
+    renderApp("/profile");
+    expect(await screen.findByRole("heading", { name: "Profile" })).toBeTruthy();
+    expect(screen.getAllByText("Mina Member").length).toBeGreaterThan(0);
+    expect(screen.getByRole("link", { name: "Profile" })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Member invites" })).toBeNull();
+    expect(screen.queryByLabelText("Member email")).toBeNull();
+  });
+
+  it("lets any user toggle the weekly digest preference", async () => {
+    const user = userEvent.setup();
+    let unsubscribed = false;
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes("/api/auth/session")) return response({ authenticated: true, user: member });
+      if (url.includes("/api/email/preferences") && init?.method === "POST") {
+        unsubscribed = (JSON.parse(String(init?.body)) as { digestUnsubscribed: boolean }).digestUnsubscribed;
+        return response({ digestUnsubscribed: unsubscribed });
+      }
+      if (url.includes("/api/email/preferences")) return response({ digestUnsubscribed: unsubscribed });
+      return response(dashboard);
+    }));
+    renderApp("/profile");
+    const checkbox = await screen.findByLabelText("Send me weekly digest emails");
+    expect((checkbox as HTMLInputElement).checked).toBe(true);
+    await user.click(checkbox);
+    expect(await screen.findByText("You are unsubscribed from weekly digest emails.")).toBeTruthy();
+    expect(unsubscribed).toBe(true);
+    await user.click(checkbox);
+    expect(await screen.findByText("You are subscribed to weekly digest emails.")).toBeTruthy();
+    expect(unsubscribed).toBe(false);
   });
 });

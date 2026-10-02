@@ -1,9 +1,9 @@
 import { lazy, Suspense, type ReactNode } from "react";
 import { Route, Routes } from "react-router-dom";
 import { AppShell } from "./AppShell.js";
-import { AuthGate, AuthProvider, RequireOwner } from "../features/auth/AuthContext.js";
+import { AuthGate, AuthProvider } from "../features/auth/AuthContext.js";
 import { SignInPage, RegisterPage } from "../features/auth/SignInPage.js";
-import { AccessPage } from "../features/auth/AccessPage.js";
+import { ProfilePage } from "../features/auth/ProfilePage.js";
 
 const TodayPage = lazy(() => import("../features/today/TodayPage.js").then((module) => ({ default: module.TodayPage })));
 const QuarterPage = lazy(() => import("../features/quarter/QuarterPage.js").then((module) => ({ default: module.QuarterPage })));
@@ -40,7 +40,7 @@ export function App() {
             <Route path="decisions/:decisionId" element={loadPage(<DecisionDetailPage />)} />
             <Route path="tasks/:taskId" element={loadPage(<TaskDetailPage />)} />
             <Route path="quarters/:quarterId/milestones/:milestoneId/summary" element={loadPage(<MilestoneSummaryPage />)} />
-            <Route path="access" element={<RequireOwner>{loadPage(<AccessPage />)}</RequireOwner>} />
+            <Route path="profile" element={loadPage(<ProfilePage />)} />
           </Route>
         </Routes>
       </AuthGate>

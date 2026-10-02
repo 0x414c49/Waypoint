@@ -40,6 +40,7 @@ export {
   AuthInviteRecordSchema,
   AuthSessionRecordSchema,
   MediaRecordSchema,
+  EmailPreferenceRecordSchema,
   type AuthRole,
   type PasswordVerifier,
   type TotpSecretCipher,
@@ -47,6 +48,7 @@ export {
   type AuthInviteRecord,
   type AuthSessionRecord,
   type MediaRecord,
+  type EmailPreferenceRecord,
 } from "./journey-records.js";
 export { JourneyStateSchema, type JourneyState } from "./journey-state-schema.js";
 export { projectTaskStatus, validateJourneyState } from "./journey-state-validation.js";

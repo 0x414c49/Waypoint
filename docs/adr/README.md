@@ -15,5 +15,9 @@ ADRs preserve decisions that materially constrain implementation. `Accepted` rec
 11. [ADR-0011 — Role checks plus owner-scoped private records](0011-role-and-owner-scoped-authorization.md)
 12. [ADR-0012 — Mandatory TOTP two-factor authentication (superseded)](0012-mandatory-totp-two-factor-authentication.md)
 13. [ADR-0013 — Optional TOTP two-factor authentication](0013-optional-totp-two-factor-authentication.md)
+14. [ADR-0014 — Plain SQLite store with FTS5 (supersedes ADR-0001)](0014-sqlite-store-with-fts.md)
+15. [ADR-0015 — URL-only images, no binary upload](0015-url-only-images.md)
+16. [ADR-0016 — Raspberry Pi + Cloudflare Tunnel deployment (extends ADR-0008)](0016-pi-tunnel-deployment.md)
+17. [ADR-0017 — Email foundation via Resend (opt-in, invites first)](0017-email-via-resend.md)
 
 Superseded ADRs remain in this folder and link to their replacements. Product and UX decisions remain in `planning/decision-log.md`.

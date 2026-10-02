@@ -76,6 +76,11 @@ export const MediaRecordSchema = Type.Object({
   byteLength: Type.Integer({ minimum: 1 }), createdAt: UtcInstantSchema,
 }, { additionalProperties: false });
 export type MediaRecord = Static<typeof MediaRecordSchema>;
+export const EmailPreferenceRecordSchema = Type.Object({
+  id: RecordIdSchema, userId: RecordIdSchema,
+  digestUnsubscribedAt: Type.Optional(UtcInstantSchema), updatedAt: UtcInstantSchema,
+}, { additionalProperties: false });
+export type EmailPreferenceRecord = Static<typeof EmailPreferenceRecordSchema>;
 
 export const QuarterIntentSnapshotSchema = Type.Object({
   capturedAt: UtcInstantSchema,

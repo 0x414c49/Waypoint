@@ -104,7 +104,7 @@ export function AppShell() {
             <NavLink to="/quarter"><Icon name="quarter" />Quarter</NavLink>
             <NavLink to="/journey"><Icon name="journey" />Journey</NavLink>
             <NavLink to="/decisions"><Icon name="decisions" />Tech choices</NavLink>
-            {user?.role === "OWNER" ? <NavLink to="/access"><Icon name="accepted" />Access</NavLink> : null}
+            <NavLink to="/profile"><Icon name="user" />Profile</NavLink>
           </nav>
           <div className={styles.utilities}>
             <Button variant="ghost" className={styles.utilityButton} onClick={() => setThoughtOpen(true)}><Icon name="thought" /><span>Thought</span></Button>
@@ -130,7 +130,7 @@ export function AppShell() {
                     <span>{user?.email}</span>
                     <span>{user?.role === "OWNER" ? "Owner" : "Member"}</span>
                   </div>
-                  {user?.role === "OWNER" ? <NavLink role="menuitem" to="/access" onClick={() => setAccountOpen(false)}>Manage access</NavLink> : null}
+                  <NavLink role="menuitem" to="/profile" onClick={() => setAccountOpen(false)}>Profile & settings</NavLink>
                   <button role="menuitem" type="button" onClick={() => { void (async () => { try { await signOut(); } finally { setAccountOpen(false); navigate("/sign-in", { replace: true }); } })(); }}>Sign out</button>
                 </div>
               ) : null}

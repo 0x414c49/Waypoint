@@ -22,3 +22,6 @@ test-results/
 data/*
 data/.journey-store
 !data/.gitkeep
+
+# Scratch previews (never commit)
+tmp/

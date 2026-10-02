@@ -3,6 +3,8 @@ import { JsonJourneyStore, StoreError } from "./adapters/json-store/index.js";
 import { AuthenticatedCurrentUserProvider } from "./adapters/authenticated-current-user-provider.js";
 import { AuthService } from "./auth/auth-service.js";
 import { loadOrCreateTotpKey } from "./auth/totp.js";
+import { createMailer } from "./email/mailer.js";
+import { EmailPreferenceService } from "./email/preferences.js";
 import { reconcileLegacyMedia } from "./http/media-routes.js";
 import { createProductionSeed } from "./domain/production-seed.js";
 import { buildApp } from "./http/build-app.js";
@@ -51,6 +53,11 @@ async function start(): Promise<void> {
     const currentUserProvider = new AuthenticatedCurrentUserProvider(store);
     const totpEncryptionKey = await loadOrCreateTotpKey(resolve(directory, "auth.key"));
     const authService = new AuthService({ store, clock, idGenerator, totpEncryptionKey, secureCookies: config.secureCookies });
+    const mailer = createMailer({ apiKey: config.resendApiKey, from: config.emailFrom });
+    if ((config.resendApiKey && !config.emailFrom) || (!config.resendApiKey && config.emailFrom)) {
+      logger.warn("Email is half-configured: set both JOURNEY_RESEND_API_KEY and JOURNEY_EMAIL_FROM to enable invite emails.");
+    }
+    const emailPreferences = new EmailPreferenceService({ store, clock, key: totpEncryptionKey });
     const app = await buildApp({
       store,
       currentUserProvider,
@@ -62,6 +69,9 @@ async function start(): Promise<void> {
       serveFrontend: config.serveFrontend,
       mediaDirectory: config.mediaDirectory,
       authService,
+      mailer,
+      publicUrl: config.publicUrl,
+      emailPreferences,
     });
     await app.listen({ host: config.host, port: config.port });
   } catch (error) {

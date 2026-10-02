@@ -11,6 +11,8 @@ export interface RuntimeConfig {
   readonly publicUrl: string | undefined;
   readonly secureCookies: boolean;
   readonly serveFrontend: boolean;
+  readonly resendApiKey: string | undefined;
+  readonly emailFrom: string | undefined;
 }
 
 const localProductionHosts = (port: number): string[] => [`127.0.0.1:${port}`, `localhost:${port}`];
@@ -110,6 +112,11 @@ export function parseRuntimeConfig(env: NodeJS.ProcessEnv = process.env): Runtim
   for (const trustedOrigin of configuredTrustedOrigins) allowedMutationOrigins.add(trustedOrigin);
 
   const storeDirectory = resolve(process.cwd(), env.JOURNEY_STORE_DIR?.trim() || "data/store");
+  const resendApiKey = env.JOURNEY_RESEND_API_KEY?.trim() || undefined;
+  const emailFrom = env.JOURNEY_EMAIL_FROM?.trim() || undefined;
+  if (emailFrom !== undefined && (!emailFrom.includes("@") || emailFrom.length > 320)) {
+    throw new Error("JOURNEY_EMAIL_FROM must be a sender address containing '@' (e.g. 'Waypoint <noreply@example.com>').");
+  }
   return {
     environment,
     host,
@@ -121,5 +128,7 @@ export function parseRuntimeConfig(env: NodeJS.ProcessEnv = process.env): Runtim
     publicUrl: publicUrl?.origin,
     secureCookies: parseBoolean(env.JOURNEY_SECURE_COOKIES, "JOURNEY_SECURE_COOKIES", publicUrl?.protocol === "https:"),
     serveFrontend: !development,
+    resendApiKey,
+    emailFrom,
   };
 }

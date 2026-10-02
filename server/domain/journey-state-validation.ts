@@ -638,5 +638,11 @@ export function validateJourneyState(value: unknown): string[] {
     instant(errors, `/commandReceipts/${key}/createdAt`, receipt.createdAt);
     if (receipt.committedStoreRevision > state.storeRevision) errors.push(`/commandReceipts/${key}: committed revision is in the future`);
   }
+  for (const [key, preference] of Object.entries(state.records.emailPreferences ?? {})) {
+    if (key !== preference.id || key !== preference.userId) errors.push(`/records/emailPreferences/${key}: map key must equal id and userId`);
+    if (!state.records.users[preference.userId]) errors.push(`/records/emailPreferences/${key}/userId: referenced user does not exist`);
+    instant(errors, `/records/emailPreferences/${key}/updatedAt`, preference.updatedAt);
+    if (preference.digestUnsubscribedAt !== undefined) instant(errors, `/records/emailPreferences/${key}/digestUnsubscribedAt`, preference.digestUnsubscribedAt);
+  }
   return errors;
 }
