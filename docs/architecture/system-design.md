@@ -27,7 +27,7 @@ This is one deployable system with module boundaries, not distributed services. 
 ### Production/local use
 
 - One Node.js process binds `127.0.0.1:4173`; it never falls back to another address or port.
-- Before binding/listening, startup initializes or validates the default `data/store` and resolves the canonical stored local user; recovery-required state stops startup with terminal guidance. SQLite is authoritative: an existing `waypoint.db` is opened and verified, a lone `journey-state.json` triggers the one-time import (timestamped backup + verification) before listening, and a partial database is discarded and re-imported from the untouched JSON (ADR-0014).
+- Before binding/listening, startup initializes or validates the default `data/store` and resolves the canonical stored local user; recovery-required state stops startup with terminal guidance. SQLite is authoritative: an existing `waypoint.db` is opened and verified, a lone `journey-state.json` triggers the one-time import (timestamped backup + verification) before listening, and any existing database that fails verification is preserved for explicit recovery (ADR-0014).
 - Fastify serves the built frontend and `/api` from the same origin.
 - The browser never reads the SQLite store directly.
 - The fixed port is the v1 single-instance authority; startup stops if it cannot bind.

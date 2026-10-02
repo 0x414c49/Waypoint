@@ -42,19 +42,25 @@ async function setup() {
 }
 
 describe("public unsubscribe endpoints", () => {
-  it("unsubscribes and resubscribes through one-click links without a session", async () => {
+  it("requires an explicit confirmation before changing either preference", async () => {
     const { app, preferences } = await setup();
     const token = issueDigestUnsubscribeToken("local-user", KEY);
     const unsub = await app.inject({ method: "GET", url: `/api/email/unsubscribe?token=${encodeURIComponent(token)}`, headers: { host: HOST } });
     expect(unsub.statusCode).toBe(200);
     expect(unsub.headers["content-type"]).toMatch(/text\/html/);
-    expect(unsub.body).toMatch(/unsubscribed/i);
+    expect(unsub.body).toMatch(/Confirm unsubscribe/i);
+    await expect(preferences.isDigestUnsubscribed("local-user")).resolves.toBe(false);
+    const confirmed = await app.inject({ method: "POST", url: `/api/email/unsubscribe?token=${encodeURIComponent(token)}`, headers: { host: HOST, origin: ORIGIN } });
+    expect(confirmed.statusCode).toBe(200);
+    expect(confirmed.body).toMatch(/You're unsubscribed/i);
     await expect(preferences.isDigestUnsubscribed("local-user")).resolves.toBe(true);
-    const replay = await app.inject({ method: "GET", url: `/api/email/unsubscribe?token=${encodeURIComponent(token)}`, headers: { host: HOST } });
-    expect(replay.statusCode).toBe(200);
     const resub = await app.inject({ method: "GET", url: `/api/email/resubscribe?token=${encodeURIComponent(token)}`, headers: { host: HOST } });
     expect(resub.statusCode).toBe(200);
-    expect(resub.body).toMatch(/subscribed again/i);
+    expect(resub.body).toMatch(/Confirm resubscribe/i);
+    await expect(preferences.isDigestUnsubscribed("local-user")).resolves.toBe(true);
+    const confirmedResub = await app.inject({ method: "POST", url: `/api/email/resubscribe?token=${encodeURIComponent(token)}`, headers: { host: HOST, origin: ORIGIN } });
+    expect(confirmedResub.statusCode).toBe(200);
+    expect(confirmedResub.body).toMatch(/subscribed again/i);
     await expect(preferences.isDigestUnsubscribed("local-user")).resolves.toBe(false);
     await app.close();
   });

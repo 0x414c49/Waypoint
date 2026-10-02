@@ -130,7 +130,7 @@ export interface WeeklyDigestVars {
   readonly tasksCarried: number;
   readonly focusSummary: string;
   readonly dashboardUrl: string;
-  /** One-click opt-out for this recipient (issueDigestUnsubscribeUrl). Required so every digest carries its way out. */
+  /** Opt-out confirmation link for this recipient (issueDigestUnsubscribeUrl). Required so every digest carries its way out. */
   readonly unsubscribeUrl: string;
 }
 

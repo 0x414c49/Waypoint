@@ -285,6 +285,14 @@ CREATE VIRTUAL TABLE IF NOT EXISTS search_docs USING fts5(
   tokenize='unicode61 remove_diacritics 1'
 );
 
+-- Normalized trigram index preserves searchRecords' substring and accent
+-- matching. It is derived from search_docs and rebuilt for older databases.
+CREATE VIRTUAL TABLE IF NOT EXISTS search_substrings USING fts5(
+  doc_id UNINDEXED,
+  body,
+  tokenize='trigram'
+);
+
 CREATE INDEX IF NOT EXISTS idx_quarters_user_dates ON quarters(user_id, start_date, end_date);
 CREATE INDEX IF NOT EXISTS idx_tasks_quarter_planned ON tasks(quarter_id, planned_date);
 CREATE INDEX IF NOT EXISTS idx_tasks_milestone ON tasks(milestone_id);

@@ -1,11 +1,15 @@
 // @vitest-environment node
 // Phase-2 boot migration tests (ADR-0014 auto-migration, ADR-0015 orphans).
 import { mkdtemp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { DatabaseSync } from "node:sqlite";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { bootJourneyStore } from "../../boot-store.js";
 import { captureTaskPlanContext } from "../../application/history/capture-plan-context.js";
+import { searchRecords } from "../../application/search/search.js";
 import { createNoHistorySeed, type JourneyState } from "../../domain/journey-state.js";
 import { createProductionSeed } from "../../domain/production-seed.js";
 import { FixedClock } from "../../ports/clock.js";
@@ -25,6 +29,7 @@ const roots: string[] = [];
 const instant = new Date("2026-09-27T10:00:00.000Z");
 const at = instant.toISOString();
 const later = new Date("2026-09-27T10:30:00.000Z").toISOString();
+const execFileAsync = promisify(execFile);
 
 afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
@@ -254,6 +259,28 @@ describe("selectBootMode", () => {
 });
 
 describe("JSON → SQLite importer", () => {
+  it("imports a valid supersession whose replacement ID sorts before its original", async () => {
+    const source = createNoHistorySeed(at);
+    source.records.decisionRecords["z-original"] = {
+      id: "z-original", userId: "local-user", title: "Original", decisionDate: "2026-09-27", status: "SUPERSEDED",
+      context: "Initial context", constraints: [], options: [], decision: "Initial choice", assumptions: [], createdAt: at, updatedAt: at,
+    };
+    source.records.decisionRecords["a-replacement"] = {
+      id: "a-replacement", userId: "local-user", supersedesDecisionId: "z-original", title: "Replacement",
+      status: "DRAFT", constraints: [], options: [], assumptions: [], createdAt: at, updatedAt: at,
+    };
+    source.records.decisionReviews["review-supersede"] = {
+      id: "review-supersede", decisionId: "z-original", sequence: 1, reviewedAt: at,
+      timeZoneAtReview: "Europe/Amsterdam", outcome: "SUPERSEDE", replacementDecisionId: "a-replacement", createdAt: at,
+    };
+    const root = await tempRoot();
+    const directory = join(root, "store");
+    await writeJsonSource(directory, serializeJourneyState(source));
+    const summary = await importJsonDirectory({ directory, clock: new FixedClock(instant), idGenerator: new RandomIdGenerator() });
+    expect(await summary.store.read((state) => state.records.decisionRecords["a-replacement"]?.supersedesDecisionId)).toBe("z-original");
+    summary.store.close();
+  });
+
   it("round-trips a rich state, freezes a timestamped backup, and reports orphans", async () => {
     expect(SEARCH_PARITY_QUERIES.length).toBeGreaterThanOrEqual(5);
     const { source, raw } = await buildRichSource();
@@ -282,6 +309,9 @@ describe("JSON → SQLite importer", () => {
     expect(summary.counts.perCollection["emailPreferences"]).toBe(1);
     expect(summary.counts.perCollection["aiReviews"]).toBe(1);
     expect(summary.searchParityQueries).toBeGreaterThanOrEqual(5);
+    expect(await summary.store.search("local-user", { query: "earn", limit: 100 })).toEqual(
+      searchRecords(source, "local-user", { query: "earn", limit: 100 }),
+    );
     summary.store.close();
 
     // Orphans report names the migrated file + the referencing entry.
@@ -372,6 +402,21 @@ describe("bootJourneyStore", () => {
     };
   }
 
+  it("lets the auth bootstrap command import a JSON-only store", async () => {
+    const root = await tempRoot();
+    const directory = join(root, "store");
+    await writeJsonSource(directory, serializeJourneyState(createNoHistorySeed(at)));
+    const result = await execFileAsync(process.execPath, ["--import", "tsx", "server/bootstrap-auth.ts", "--email", "owner@example.com"], {
+      cwd: process.cwd(),
+      env: { ...process.env, JOURNEY_STORE_DIR: directory, JOURNEY_FIXED_NOW: at },
+    });
+    expect(result.stdout).toContain("Bootstrap invite for owner@example.com");
+    expect(await readdir(directory)).toContain("waypoint.db");
+    const opened = await bootJourneyStore(deps(directory));
+    expect(await opened.store.read((state) => Object.keys(state.records.authInvites ?? {}).length)).toBe(1);
+    opened.store.close();
+  });
+
   it("opens an existing SQLite database and ignores leftover JSON", async () => {
     const root = await tempRoot();
     const directory = join(root, "store");
@@ -415,7 +460,7 @@ describe("bootJourneyStore", () => {
     expect(await readdir(directory)).not.toContain("media");
   });
 
-  it("recovers from a truncated database by re-importing the untouched JSON", async () => {
+  it("preserves a truncated database and stale JSON for explicit recovery", async () => {
     const { raw } = await buildRichSource();
     const root = await tempRoot();
     const directory = join(root, "store");
@@ -425,11 +470,30 @@ describe("bootJourneyStore", () => {
     await writeFile(join(directory, ".journey-store"), JSON.stringify({ storeId: "json-era", createdAt: at }));
     await writeFile(join(directory, "waypoint.db"), "truncated-partial-bytes");
 
-    const boot = await bootJourneyStore(deps(directory));
-    expect(boot.mode).toBe("migrate");
-    expect(await boot.store.read((state) => state.storeRevision)).toBe(3);
+    await expect(bootJourneyStore(deps(directory))).rejects.toMatchObject({ code: "STORE_CORRUPT" });
+    expect(await readFile(join(directory, "waypoint.db"), "utf8")).toBe("truncated-partial-bytes");
     expect(await readFile(join(directory, "journey-state.json"), "utf8")).toBe(raw);
-    boot.store.close();
+  });
+
+  it("does not replace a newer SQLite store when its schema is unsupported", async () => {
+    const root = await tempRoot();
+    const directory = join(root, "store");
+    const store = new SqliteJourneyStore({ ...deps(directory), seed: createNoHistorySeed });
+    await store.initialize();
+    await store.transact(STANDARD_INTENT, (draft) => {
+      draft.records.journeyEntries["new-thought"] = { id: "new-thought", userId: "local-user", occurredAt: at, timeZoneAtOccurrence: "Europe/Amsterdam", text: "New authoritative thought", tags: [], changedMyMind: false, createdAt: at };
+      return { kind: "changed", value: undefined };
+    });
+    store.close();
+    await writeJsonSource(directory, serializeJourneyState(createNoHistorySeed(at)));
+    const db = new DatabaseSync(join(directory, "waypoint.db"));
+    db.exec("PRAGMA journal_mode=DELETE");
+    db.prepare("UPDATE meta SET value = '2' WHERE key = 'schema_version'").run();
+    db.close();
+    await expect(bootJourneyStore(deps(directory))).rejects.toMatchObject({ code: "STORE_SCHEMA_UNSUPPORTED" });
+    const reader = new DatabaseSync(join(directory, "waypoint.db"), { readOnly: true });
+    expect(reader.prepare("SELECT id FROM journey_entries WHERE id = 'new-thought'").get()).toBeDefined();
+    reader.close();
   });
 
   it("fails closed on a truncated database with no JSON to recover from", async () => {

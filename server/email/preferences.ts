@@ -1,4 +1,4 @@
-// Per-user email preferences: digest opt-out behind unguessable one-click links.
+// Per-user email preferences: digest opt-out behind unguessable confirmation links.
 // Tokens are HMAC-SHA256(userId) under the 32-byte installation key (the same
 // file as the TOTP key, domain-separated by a fixed context string so the two
 // uses never collide). No session or login is needed to open the link, which is
@@ -47,6 +47,11 @@ export class EmailPreferenceService {
   issueDigestUnsubscribeUrl(userId: string, baseUrl: string): string {
     const token = issueDigestUnsubscribeToken(userId, this.options.key);
     return `${baseUrl.replace(/\/$/, "")}/api/email/unsubscribe?token=${encodeURIComponent(token)}`;
+  }
+
+  async validateDigestLink(token: string): Promise<void> {
+    const userId = verifyDigestUnsubscribeToken(token, this.options.key);
+    if (!userId || !(await this.options.store.read((state) => Boolean(state.records.users[userId])))) throw invalidLink();
   }
 
   async setDigestUnsubscribed(token: string, unsubscribed: boolean): Promise<void> {

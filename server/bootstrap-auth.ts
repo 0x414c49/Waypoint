@@ -1,5 +1,5 @@
 import { resolve } from "node:path";
-import { SqliteJourneyStore } from "./adapters/sqlite-store/index.js";
+import { bootJourneyStore } from "./boot-store.js";
 import { createProductionSeed } from "./domain/production-seed.js";
 import { AuthService, normalizeEmail } from "./auth/auth-service.js";
 import { loadOrCreateTotpKey } from "./auth/totp.js";
@@ -17,8 +17,7 @@ if (fixedInstant && Number.isNaN(fixedInstant.valueOf())) throw new Error("JOURN
 const clock: Clock = fixedInstant ? { now: () => new Date(fixedInstant) } : new SystemClock();
 const idGenerator = new RandomIdGenerator();
 const directory = resolve(process.cwd(), process.env.JOURNEY_STORE_DIR ?? "data/store");
-const store = new SqliteJourneyStore({ directory, clock, idGenerator, seed: createProductionSeed });
-await store.initialize();
+const { store } = await bootJourneyStore({ directory, clock, idGenerator, seed: createProductionSeed });
 const totpEncryptionKey = await loadOrCreateTotpKey(resolve(directory, "auth.key"));
 const auth = new AuthService({ store, clock, idGenerator, totpEncryptionKey });
 if (revokeInviteId) {

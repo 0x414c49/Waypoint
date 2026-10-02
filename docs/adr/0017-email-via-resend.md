@@ -43,7 +43,8 @@ Bulk mail needs a way out; one-to-one mail (invites, recovery) does not.
 `digestUnsubscribedAt` timestamp. Links are HMAC-SHA256(userId) tokens
 under the 32-byte installation key (domain-separated from TOTP use), so
 `GET /api/email/unsubscribe?token=` and `GET /api/email/resubscribe?token=`
-need no session — the token is the credential. Both are public, IP
+show confirmation forms without changing state; the matching `POST` routes
+apply the change. They need no session — the token is the credential. All are public, IP
 rate-limited, and return identical invalid-link responses for forged
 tokens and removed accounts. The digest template carries a required
 `unsubscribeUrl` variable; the future digest sender must skip opted-out

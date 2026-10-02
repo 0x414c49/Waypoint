@@ -10,6 +10,7 @@ import { readFileSync } from "node:fs";
 import { chmod, mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { basename, dirname, join, resolve } from "node:path";
 import type { JourneyState } from "../../domain/journey-state.js";
+import { normalizeSearchText, searchRecords, type SearchInput } from "../../application/search/search.js";
 import type { Clock } from "../../ports/clock.js";
 import type { IdGenerator } from "../../ports/id-generator.js";
 import type {
@@ -296,6 +297,7 @@ export class SqliteJourneyStore implements JourneyStore {
       try {
         this.open();
         this.verifyAndLoad(marker);
+        this.ensureSubstringIndex();
       } catch (error) {
         this.closeQuietly();
         if (error instanceof StoreError) throw error;
@@ -356,6 +358,7 @@ export class SqliteJourneyStore implements JourneyStore {
       try {
         db.exec(SCHEMA_SQL);
         db.exec("BEGIN IMMEDIATE");
+        db.exec("PRAGMA defer_foreign_keys=ON");
         try {
           this.insertFullState(db, source, marker.storeId);
           db.exec("COMMIT");
@@ -418,6 +421,32 @@ export class SqliteJourneyStore implements JourneyStore {
     }
   }
 
+  async search(userId: string, input: SearchInput): Promise<ReturnType<typeof searchRecords>> {
+    this.assertInitialized();
+    const db = this.requireDb();
+    db.exec("BEGIN");
+    try {
+      const query = normalizeSearchText(input.query.trim());
+      const filters = ["user_id = :user_id"];
+      const params: Record<string, string> = { user_id: userId };
+      if (input.type) { filters.push("group_type = :group_type"); params.group_type = input.type; }
+      if (input.quarterId) { filters.push("quarter_id = :quarter_id"); params.quarter_id = input.quarterId; }
+      // FTS5 trigram needs at least three Unicode characters. Short queries
+      // use the filtered search_docs rows so substring parity is retained.
+      const indexed = Array.from(query).length >= 3;
+      const rows = indexed
+        ? db.prepare(`SELECT search_docs.doc_id AS doc_id FROM search_substrings JOIN search_docs ON search_docs.doc_id = search_substrings.doc_id WHERE search_substrings MATCH :term AND ${filters.map((filter) => `search_docs.${filter}`).join(" AND ")}`).all({ ...params, term: `"${query.replaceAll('"', '""')}"` })
+        : db.prepare(`SELECT doc_id FROM search_docs WHERE ${filters.join(" AND ")}`).all(params);
+      const candidateIds = new Set((rows as Array<{ doc_id: string }>).map((row) => row.doc_id));
+      const result = searchRecords(this.materialize(db), userId, { ...input, candidateIds });
+      db.exec("COMMIT");
+      return result;
+    } catch (error) {
+      try { db.exec("ROLLBACK"); } catch { /* Preserve the original error. */ }
+      throw error;
+    }
+  }
+
   async transact<T>(
     intent: TransactionIntent,
     mutate: (draft: JourneyState) => Mutation<T>,
@@ -439,6 +468,7 @@ export class SqliteJourneyStore implements JourneyStore {
   ): TransactionResult<T> {
     try {
       db.exec("BEGIN IMMEDIATE");
+      db.exec("PRAGMA defer_foreign_keys=ON");
     } catch (error) {
       if (isBusyError(error)) throw new StoreError("STORE_BUSY", "The local store is busy. Try again.", error);
       throw error;
@@ -577,6 +607,24 @@ export class SqliteJourneyStore implements JourneyStore {
       );
     }
     assertValidState(this.materialize(db));
+  }
+
+  private ensureSubstringIndex(): void {
+    const db = this.requireDb();
+    const exists = db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'search_substrings'").get();
+    if (exists) return;
+    db.exec("BEGIN IMMEDIATE");
+    try {
+      db.exec("CREATE VIRTUAL TABLE search_substrings USING fts5(doc_id UNINDEXED, body, tokenize='trigram')");
+      const insert = db.prepare("INSERT INTO search_substrings (doc_id, body) VALUES (?, ?)");
+      for (const row of db.prepare("SELECT doc_id, body FROM search_docs").all() as Array<{ doc_id: string; body: string }>) {
+        insert.run(row.doc_id, normalizeSearchText(row.body));
+      }
+      db.exec("COMMIT");
+    } catch (error) {
+      try { db.exec("ROLLBACK"); } catch { /* Preserve the original error. */ }
+      throw error;
+    }
   }
 
   private readMeta(db: DatabaseSync): Map<string, string> {
@@ -928,12 +976,15 @@ export class SqliteJourneyStore implements JourneyStore {
   ): void {
     if (changed.size === 0) return;
     const remove = this.prepare(db, "DELETE FROM search_docs WHERE doc_id = :doc_id");
+    const removeSubstring = this.prepare(db, "DELETE FROM search_substrings WHERE doc_id = :doc_id");
+    const insertSubstring = this.prepare(db, "INSERT INTO search_substrings (doc_id, body) VALUES (:doc_id, :body)");
     const insert = this.prepare(
       db,
       "INSERT INTO search_docs (doc_id, user_id, quarter_id, group_type, content_type, occurred_at, title, body) VALUES (:doc_id, :user_id, :quarter_id, :group_type, :content_type, :occurred_at, :title, :body)",
     );
     for (const docId of collectAffectedFtsDocIds(before, after, changed)) {
       remove.run({ doc_id: docId });
+      removeSubstring.run({ doc_id: docId });
       const parsed = parseFtsDocId(docId);
       if (!parsed) continue;
       const doc = composeFtsDocForRecord(after, parsed.collection, parsed.id);
@@ -948,6 +999,7 @@ export class SqliteJourneyStore implements JourneyStore {
         title: doc.title,
         body: doc.body,
       });
+      insertSubstring.run({ doc_id: doc.docId, body: normalizeSearchText(doc.body) });
     }
   }
 

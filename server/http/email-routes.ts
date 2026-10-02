@@ -1,4 +1,4 @@
-// Public one-click email preference endpoints. No session is required: the
+// Public email preference endpoints. No session is required: the
 // signed token in the link is the credential (see preferences.ts). Both
 // endpoints are rate-limited by IP and return the same invalid-link shape for
 // forged tokens and removed accounts so the endpoint is not a user oracle.
@@ -35,7 +35,7 @@ export function registerEmailRoutes<TLogger extends FastifyBaseLogger>(
     const query = request.query as { token: string };
     options.limited("email-unsub", request.ip);
     try {
-      await options.preferences.setDigestUnsubscribed(query.token, true);
+      await options.preferences.validateDigestLink(query.token);
     } catch (error) {
       if (error instanceof AppError && error.status === 404) {
         return reply.code(404).type("application/problem+json").send({ error: "That link is not valid." });
@@ -43,17 +43,30 @@ export function registerEmailRoutes<TLogger extends FastifyBaseLogger>(
       throw error;
     }
     return reply.type("text/html").send(page(
-      "Unsubscribed from the weekly digest",
-      "You're unsubscribed",
-      `<p>You will no longer receive the Waypoint weekly digest at this address. Your learning log is unchanged.</p><p><a href="/api/email/resubscribe?token=${escapeHtml(encodeURIComponent(query.token))}">Resubscribe</a></p>`,
+      "Unsubscribe from the weekly digest",
+      "Confirm unsubscribe",
+      `<p>Stop receiving the Waypoint weekly digest at this address?</p><form method="post" action="/api/email/unsubscribe?token=${escapeHtml(encodeURIComponent(query.token))}"><button type="submit">Unsubscribe</button></form>`,
     ));
+  });
+
+  app.post("/api/email/unsubscribe", { schema: { querystring: TokenQuery } }, async (request, reply) => {
+    const query = request.query as { token: string };
+    options.limited("email-unsub", request.ip);
+    try {
+      await options.preferences.setDigestUnsubscribed(query.token, true);
+    } catch (error) {
+      if (error instanceof AppError && error.status === 404) return reply.code(404).type("application/problem+json").send({ error: "That link is not valid." });
+      throw error;
+    }
+    return reply.type("text/html").send(page("Unsubscribed from the weekly digest", "You're unsubscribed",
+      `<p>You will no longer receive the Waypoint weekly digest at this address. Your learning log is unchanged.</p><p><a href="/api/email/resubscribe?token=${escapeHtml(encodeURIComponent(query.token))}">Resubscribe</a></p>`));
   });
 
   app.get("/api/email/resubscribe", { schema: { querystring: TokenQuery } }, async (request, reply) => {
     const query = request.query as { token: string };
     options.limited("email-unsub", request.ip);
     try {
-      await options.preferences.setDigestUnsubscribed(query.token, false);
+      await options.preferences.validateDigestLink(query.token);
     } catch (error) {
       if (error instanceof AppError && error.status === 404) {
         return reply.code(404).type("application/problem+json").send({ error: "That link is not valid." });
@@ -61,9 +74,22 @@ export function registerEmailRoutes<TLogger extends FastifyBaseLogger>(
       throw error;
     }
     return reply.type("text/html").send(page(
-      "Subscribed to the weekly digest",
-      "You're subscribed again",
-      "<p>You will receive the Waypoint weekly digest again.</p>",
+      "Resubscribe to the weekly digest",
+      "Confirm resubscribe",
+      `<p>Start receiving the Waypoint weekly digest again?</p><form method="post" action="/api/email/resubscribe?token=${escapeHtml(encodeURIComponent(query.token))}"><button type="submit">Resubscribe</button></form>`,
     ));
+  });
+
+  app.post("/api/email/resubscribe", { schema: { querystring: TokenQuery } }, async (request, reply) => {
+    const query = request.query as { token: string };
+    options.limited("email-unsub", request.ip);
+    try {
+      await options.preferences.setDigestUnsubscribed(query.token, false);
+    } catch (error) {
+      if (error instanceof AppError && error.status === 404) return reply.code(404).type("application/problem+json").send({ error: "That link is not valid." });
+      throw error;
+    }
+    return reply.type("text/html").send(page("Subscribed to the weekly digest", "You're subscribed again",
+      "<p>You will receive the Waypoint weekly digest again.</p>"));
   });
 }

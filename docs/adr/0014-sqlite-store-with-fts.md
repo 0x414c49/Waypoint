@@ -17,7 +17,7 @@ Implement one `SqliteJourneyStore` behind the unchanged `JourneyStore` port (`re
 - `sessions.owner_user_id` is the one deliberate denormalization (per-user active/overlap scope); populated from `tasks ⋈ quarters` at insert, never updated.
 - Pragmas: `journal_mode=WAL; synchronous=FULL; foreign_keys=ON; busy_timeout=5000`. File `data/store/waypoint.db` mode `0600`. Keep existing in-process mutex; map SQLite `BUSY` to `STORE_BUSY`.
 - Validation stays monolithic: materialize whole `JourneyState`, reuse `assertValidState` + `assertJourneyStateTransition` unchanged. Indexed queries serve reads/prefilter; integrity logic is not rewritten as triggers.
-- FTS5 ships day one as prefilter only: `search_docs(doc_id UNINDEXED, user_id UNINDEXED, quarter_id UNINDEXED, group_type UNINDEXED, content_type UNINDEXED, occurred_at UNINDEXED, title, body, tokenize='unicode61 remove_diacritics 1')`, app-maintained inside the same `BEGIN IMMEDIATE` transaction (delete + reinsert per touched doc). Final ranking/excerpts/cursor stay in existing `searchRecords` code; `bm25` orders prefilter only.
+- FTS5 prefilters candidate IDs. `search_docs` keeps source fields and filters; normalized `search_substrings` uses trigrams to preserve the existing accent-insensitive substring behavior. Both are maintained in the same write transaction. Queries shorter than three Unicode characters scan filtered `search_docs` rows. Final ranking, excerpts, and cursors stay in `searchRecords`.
 - Field-level crypto unchanged: scrypt password verifiers + AES-256-GCM TOTP secrets with `data/store/auth.key`. No at-rest DB encryption beyond filesystem perms + host disk encryption.
 
 ## Why
@@ -31,7 +31,7 @@ Satisfies "proper DB with indexes" without violating KISS: normalized storage an
   - `waypoint.db` exists → open SQLite, verify, serve. Untouched `journey-state.json` (if still present) is ignored; SQLite is authoritative.
   - `waypoint.db` missing + `journey-state.json` exists → run the one-time `v1 → v2` importer inside startup before listening: validate source (fail closed, no repair), copy `journey-state.json` to `journey-state.pre-sqlite-<timestamp>.json` in the same directory, create `waypoint.db` (`0600`), load in FK order in one transaction, rebuild FTS, verify row counts + `storeRevision` + receipts + zero double-active-timers + FK check + search parity sample. Log counts + backup path. Then serve from SQLite.
   - Neither exists → fresh SQLite init with the production seed (same semantics as current JSON first-run).
-  - Partial `waypoint.db` (crash mid-migration, integrity/meta check fails) → delete partial DB, retry from the untouched JSON on next boot. JSON is never deleted or overwritten by the migrator.
+  - An existing `waypoint.db` that fails verification is preserved and startup stops, even when JSON remains; the JSON may be stale. The importer removes files only when its own attempt fails before startup returns.
   - Corrupt JSON or failed verification → fatal startup error (`STORE_CORRUPT` / `RECOVERY_REQUIRED`), no listening, everything preserved, operator restores from backup. Same fail-closed posture as today.
 - No dual-write: after a successful auto-migration all writes go to SQLite only; the frozen JSON + pre-sqlite backup remain as file-restore rollback for one release, then are eligible for manual deletion after an encrypted off-Pi backup is verified.
 - No receipt expiry, no backup rotation, no keyset pagination, no downgrade path. Multi-process sharing remains unsupported beyond `BEGIN IMMEDIATE` + mutex.

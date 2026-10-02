@@ -451,13 +451,15 @@ No advanced query language exists in v1.
 GET /api/email/preferences
 POST /api/email/preferences
 GET /api/email/unsubscribe?token=…
+POST /api/email/unsubscribe?token=…
 GET /api/email/resubscribe?token=…
+POST /api/email/resubscribe?token=…
 ```
 
 Invite delivery (owner-only `POST /api/auth/invites`) sends a best-effort Resend email after the invite row commits; delivery failure never loses the invite. The response carries required `emailSent: boolean` (`AuthInviteCreateResponse`); old clients ignore the extra field.
 
 - `GET`/`POST /api/email/preferences` are authenticated and read/write `{ digestUnsubscribed: boolean }` for the current user.
-- `GET /api/email/unsubscribe` and `/api/email/resubscribe` are public, IP rate-limited, token-credentialed links (HMAC of the user ID under the installation key). Forged tokens and removed accounts return the identical invalid-link response. Only bulk mail (the future digest) honors the opt-out; one-to-one mail does not.
+- Public, IP rate-limited `GET` links validate the signed token (HMAC of the user ID under the installation key) and show a confirmation form without changing preferences. The corresponding `POST` submits the preference change. Forged tokens and removed accounts return the identical invalid-link response. Only bulk mail (the future digest) honors the opt-out; one-to-one mail does not.
 
 There is no `/api/media`: binary image upload was removed (ADR-0015). Images are pasted `https://` URL strings inside existing markdown fields; the server never fetches them.
 

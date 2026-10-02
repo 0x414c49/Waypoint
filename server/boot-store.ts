@@ -4,16 +4,11 @@
 //   - waypoint.db missing + journey-state.json exists → one-time import first.
 //   - neither exists → fresh SQLite init with the production seed.
 //
-// A partial waypoint.db (crash mid-migration: integrity/meta check fails with
-// STORE_CORRUPT or STORE_SCHEMA_UNSUPPORTED) is deleted and the boot retries
-// from the untouched JSON in the same startup — the equivalent of the
-// "retry on next boot" rule without requiring an operator restart. The JSON
-// source and the pre-sqlite backup are never touched by this path. Marker
-// problems (RECOVERY_REQUIRED) always fail closed: the database may belong to
-// another store, so it is never deleted here.
+// An existing waypoint.db is always preserved on verification failure. A
+// failed import removes its own incomplete files; any file left at boot may
+// contain authoritative writes newer than the leftover JSON source.
 
-import { rm, stat } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { resolve } from "node:path";
 import { SqliteJourneyStore } from "./adapters/sqlite-store/index.js";
 import {
   importJsonDirectory,
@@ -21,7 +16,6 @@ import {
   type BootMode,
   type ImportCounts,
 } from "./adapters/sqlite-store/import-json.js";
-import { StoreError } from "./adapters/store-errors.js";
 import type { StoreDiagnostics } from "./adapters/store-types.js";
 import type { JourneyState } from "./domain/journey-state.js";
 import type { Clock } from "./ports/clock.js";
@@ -42,16 +36,6 @@ export interface BootStoreResult {
   readonly backupPath: string | undefined;
   readonly orphansPath: string | undefined;
   readonly counts: ImportCounts | undefined;
-}
-
-async function exists(path: string): Promise<boolean> {
-  try {
-    await stat(path);
-    return true;
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return false;
-    throw error;
-  }
 }
 
 export async function bootJourneyStore(dependencies: BootStoreDependencies): Promise<BootStoreResult> {
@@ -99,36 +83,7 @@ export async function bootJourneyStore(dependencies: BootStoreDependencies): Pro
     dependencies.log?.("SQLite store ready; leftover JSON (if any) is ignored", { storeId: diagnostics.storeId });
     return { store, mode, diagnostics, backupPath: undefined, orphansPath: undefined, counts: undefined };
   } catch (error) {
-    const retryable =
-      error instanceof StoreError && (error.code === "STORE_CORRUPT" || error.code === "STORE_SCHEMA_UNSUPPORTED");
-    if (!retryable || !(await exists(join(directory, "journey-state.json")))) {
-      store.close();
-      throw error;
-    }
-    // Partial database from a crashed migration: remove it and migrate from
-    // the untouched JSON source in this same boot.
-    dependencies.log?.("Partial SQLite database found; re-importing from untouched JSON", { code: error.code });
     store.close();
-    const dbPath = join(directory, "waypoint.db");
-    await rm(dbPath, { force: true });
-    await rm(`${dbPath}-wal`, { force: true });
-    await rm(`${dbPath}-shm`, { force: true });
-    const summary = await importJsonDirectory({
-      directory,
-      clock: dependencies.clock,
-      idGenerator: dependencies.idGenerator,
-    });
-    dependencies.log?.("JSON → SQLite migration completed after partial cleanup", {
-      backupPath: summary.backupPath,
-      storeRevision: summary.counts.storeRevision,
-    });
-    return {
-      store: summary.store,
-      mode: "migrate",
-      diagnostics: summary.diagnostics,
-      backupPath: summary.backupPath,
-      orphansPath: summary.orphansPath,
-      counts: summary.counts,
-    };
+    throw error;
   }
 }

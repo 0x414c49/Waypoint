@@ -71,7 +71,7 @@ The callback performs no network/filesystem side effects and cannot leak its mut
 - Indexes: quarters `(user_id, start_date, end_date)`; tasks `(quarter_id, planned_date)`, `(milestone_id)`, `(focus_area_id)`, `(status)`; sessions `(task_id, started_at)`, `(owner_user_id, started_at)` plus partial `UNIQUE(owner_user_id) WHERE ended_at IS NULL`; lifecycle `(task_id, sequence)` unique; `daily_reviews(finish_event_id)` unique; journey `(user_id, occurred_at)`; decisions `(user_id)`, `(quarter_id)`; reviews `(decision_id, sequence)` unique + `(next_review_date)`; auth/receipt lookup indexes.
 - Pragmas: `journal_mode=WAL; synchronous=FULL; foreign_keys=ON; busy_timeout=5000`. File `data/store/waypoint.db` mode `0600`. The in-process mutex is kept; SQLite `BUSY` maps to `STORE_BUSY`.
 - Validation stays monolithic: the whole `JourneyState` is materialized and `assertValidState` + `assertJourneyStateTransition` run unchanged. Indexed queries serve reads/prefilter; integrity logic is not rewritten as triggers.
-- FTS5 ships as prefilter only (`search_docs`, app-maintained inside the same `BEGIN IMMEDIATE` transaction: delete + reinsert per touched doc). Final ranking/excerpts/cursor stay in `searchRecords`.
+- FTS5 prefilters candidates through normalized `search_substrings` trigrams derived from `search_docs`, both maintained in the same write transaction. Queries shorter than three Unicode characters use filtered `search_docs` rows. Final ranking, excerpts, and cursors stay in `searchRecords`.
 - The `media_records` table is retained for forensic import completeness only (ADR-0015): migrated rows are never served by any API and no transition intent writes them. The `media/` directory no longer exists.
 - Backup unit: `waypoint.db + auth.key` (plus the frozen `journey-state.pre-sqlite-<timestamp>.json` until the migration is verified).
 
@@ -82,7 +82,7 @@ Migration is automatic on boot, not a manual script (`server/boot-store.ts` + `s
 - `waypoint.db` exists → open SQLite, verify, serve. A leftover `journey-state.json` is ignored; SQLite is authoritative.
 - `waypoint.db` missing + `journey-state.json` exists → one-time `v1 → v2` import before listening: validate source fail-closed, copy to `journey-state.pre-sqlite-<timestamp>.json`, bulk-load in FK order in one transaction under `SCHEMA_MIGRATION` authority, rebuild FTS, then verify row counts per collection, `storeRevision`, receipts, zero double-active-timers, `foreign_key_check`, and search parity (6 sample queries, same ID sets). Log counts + backup path, then serve. The source JSON is never deleted or overwritten.
 - Neither exists → fresh SQLite init with the production seed (same semantics as the v1 first run).
-- Partial `waypoint.db` (integrity/meta check fails) with the JSON still present → delete the partial database files and re-import from the untouched JSON in the same boot. Corrupt JSON or failed verification → fatal `STORE_CORRUPT`/`RECOVERY_REQUIRED`, no listening, everything preserved.
+- Any existing `waypoint.db` that fails integrity, metadata, or schema verification is preserved even when JSON remains. Startup fails closed so an operator can inspect or restore it; an old JSON source might be stale. The importer removes only files from its own failed attempt before returning an error.
 
 ## Human-readable JSON document
 

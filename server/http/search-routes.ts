@@ -21,12 +21,15 @@ export function registerSearchRoutes<TLogger extends FastifyBaseLogger>(
   app.get("/api/search", { schema: { querystring: SearchQuerySchema, response: { 200: SearchResponseSchema } } }, async (request) => {
     const userId = await options.currentUserProvider.getCurrentUserId();
     const query = request.query as { q: string; type?: "PLAN" | "JOURNEY" | "DECISION"; quarterId?: string; cursor?: string; limit?: number };
-    return options.store.read((state) => searchRecords(state, userId, {
+    const input = {
       query: query.q,
       ...(query.type ? { type: query.type } : {}),
       ...(query.quarterId ? { quarterId: query.quarterId } : {}),
       ...(query.cursor ? { cursor: query.cursor } : {}),
       limit: query.limit ?? 25,
-    }));
+    };
+    return options.store.search
+      ? options.store.search(userId, input)
+      : options.store.read((state) => searchRecords(state, userId, input));
   });
 }

@@ -10,17 +10,19 @@ interface SearchHit {
   readonly tieBreak: string;
 }
 
-interface SearchInput {
+export interface SearchInput {
   readonly query: string;
   readonly type?: SearchGroupType;
   readonly quarterId?: string;
   readonly cursor?: string;
   readonly limit: number;
+  readonly candidateIds?: ReadonlySet<string>;
 }
 
-function normalize(value: string): string {
+export function normalizeSearchText(value: string): string {
   return value.normalize("NFKD").replace(/\p{Diacritic}/gu, "").toLocaleLowerCase();
 }
+const normalize = normalizeSearchText;
 
 function excerpt(value: string, query: string): string {
   const clean = value.replace(/\s+/g, " ").trim();
@@ -103,9 +105,10 @@ export function searchRecords(state: JourneyState, userId: string, input: Search
   const push = (hit: SearchHit | undefined) => { if (hit) hits.push(hit); };
   const include = (group: SearchGroupType, quarterId?: string) =>
     (!input.type || input.type === group) && (!input.quarterId || quarterId === input.quarterId);
+  const candidate = (kind: string, id: string) => !input.candidateIds || input.candidateIds.has(`${kind}:${id}`);
 
   for (const quarter of Object.values(state.records.quarters)) {
-    if (quarter.userId !== userId || !include("PLAN", quarter.id)) continue;
+    if (quarter.userId !== userId || !include("PLAN", quarter.id) || !candidate("quarter", quarter.id)) continue;
     const historicalTitle = quarter.intentSnapshot?.title;
     push(makeHit("PLAN", "QUARTER", quarter.id, quarter.title,
       [quarter.title, historicalTitle ?? "", quarter.description ?? "", quarter.mantra ?? "", ...quarter.successCriteria.map((item) => item.text), ...(quarter.intentSnapshot?.successCriteria.map((item) => item.text) ?? [])],
@@ -114,14 +117,14 @@ export function searchRecords(state: JourneyState, userId: string, input: Search
 
   for (const area of Object.values(state.records.focusAreas)) {
     const quarter = state.records.quarters[area.quarterId];
-    if (!quarter || quarter.userId !== userId || !include("PLAN", quarter.id)) continue;
+    if (!quarter || quarter.userId !== userId || !include("PLAN", quarter.id) || !candidate("focus-area", area.id)) continue;
     push(makeHit("PLAN", "FOCUS_AREA", area.id, area.name, [area.name, area.description ?? ""], query,
       { quarterId: quarter.id, focusAreaId: area.id }));
   }
 
   for (const milestone of Object.values(state.records.milestones)) {
     const quarter = state.records.quarters[milestone.quarterId];
-    if (!quarter || quarter.userId !== userId || !include("PLAN", quarter.id)) continue;
+    if (!quarter || quarter.userId !== userId || !include("PLAN", quarter.id) || !candidate("milestone", milestone.id)) continue;
     push(makeHit("PLAN", "MILESTONE", milestone.id, milestone.title,
       [milestone.title, milestone.intentSnapshot?.title ?? "", milestone.description ?? "", milestone.intentSnapshot?.description ?? ""],
       query, { quarterId: quarter.id, milestoneId: milestone.id }));
@@ -129,7 +132,7 @@ export function searchRecords(state: JourneyState, userId: string, input: Search
 
   for (const task of Object.values(state.records.tasks)) {
     const quarter = state.records.quarters[task.quarterId];
-    if (!quarter || quarter.userId !== userId || !include("PLAN", quarter.id)) continue;
+    if (!quarter || quarter.userId !== userId || !include("PLAN", quarter.id) || !candidate("task", task.id)) continue;
     const focusAreaId = task.planSnapshot?.focusAreaId ?? task.focusAreaId;
     const milestoneId = task.planSnapshot?.milestoneId ?? task.milestoneId;
     push(makeHit("PLAN", "TASK", task.id, task.planSnapshot?.title ?? task.title,
@@ -142,7 +145,7 @@ export function searchRecords(state: JourneyState, userId: string, input: Search
     const milestone = entry.relatedMilestoneId ? state.records.milestones[entry.relatedMilestoneId] : undefined;
     const decision = entry.relatedDecisionId ? state.records.decisionRecords[entry.relatedDecisionId] : undefined;
     const quarterId = task?.quarterId ?? milestone?.quarterId ?? decision?.quarterId;
-    if (entry.userId !== userId || !include("JOURNEY", quarterId)) continue;
+    if (entry.userId !== userId || !include("JOURNEY", quarterId) || !candidate("journey", entry.id)) continue;
     push(makeHit("JOURNEY", "THOUGHT", entry.id, task?.planSnapshot?.title ?? task?.title ?? milestone?.intentSnapshot?.title ?? milestone?.title ?? "Thought",
       [entry.text, ...entry.tags, task?.planSnapshot?.title ?? task?.title ?? "", milestone?.intentSnapshot?.title ?? milestone?.title ?? "", decision?.title ?? ""],
       query, {
@@ -157,7 +160,7 @@ export function searchRecords(state: JourneyState, userId: string, input: Search
 
   for (const decision of Object.values(state.records.decisionRecords)) {
     const relatedTask = decision.relatedTaskId ? state.records.tasks[decision.relatedTaskId] : undefined;
-    if (decision.userId !== userId || !include("DECISION", decision.quarterId ?? relatedTask?.quarterId)) continue;
+    if (decision.userId !== userId || !include("DECISION", decision.quarterId ?? relatedTask?.quarterId) || !candidate("decision", decision.id)) continue;
     const reviews = Object.values(state.records.decisionReviews).filter((review) => review.decisionId === decision.id);
     push(makeHit("DECISION", "DECISION", decision.id, decision.title,
       [decision.title, decision.context ?? "", decision.decision ?? "", decision.consequences ?? "", decision.falsifier ?? "", ...decision.constraints, ...decision.assumptions, ...decision.options.flatMap((option) => [option.title, option.description, ...option.strengths, ...option.weaknesses]), ...reviews.flatMap((review) => [review.outcome, review.notes ?? "", review.nextReviewDate ?? ""])],
